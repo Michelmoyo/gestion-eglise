@@ -1,0 +1,64 @@
+<h2 class="sr-only">Tableau de bord du departement Chorale pour un ouvrier simple, avec la liste des membres actifs et suspendus</h2>
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem 1rem; display:flex; justify-content:center;">
+  <div style="width:320px; background:var(--color-background-primary); border-radius:20px; border:0.5px solid var(--color-border-tertiary); padding:1.25rem 1rem;">
+
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:1.25rem;">
+      <span style="width:10px; height:10px; border-radius:50%; background:var(--color-text-success);"></span>
+      <p style="font-size:16px; font-weight:500; margin:0;">Chorale</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:8px; margin-bottom:1.25rem;">
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:0.65rem;">
+        <p style="font-size:11px; color:var(--color-text-secondary); margin:0 0 4px;">Presence</p>
+        <p style="font-size:17px; font-weight:500; margin:0;">88%</p>
+      </div>
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:0.65rem;">
+        <p style="font-size:11px; color:var(--color-text-secondary); margin:0 0 4px;">Activites</p>
+        <p style="font-size:17px; font-weight:500; margin:0;">6</p>
+      </div>
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:0.65rem;">
+        <p style="font-size:11px; color:var(--color-text-secondary); margin:0 0 4px;">Caisse</p>
+        <p style="font-size:17px; font-weight:500; margin:0;">145k FC</p>
+      </div>
+    </div>
+
+    <p style="font-size:13px; font-weight:500; color:var(--color-text-secondary); margin:0 0 8px;">Ouvriers actifs (6)</p>
+    <div id="active-list" style="display:flex; flex-direction:column; margin-bottom:1rem;"></div>
+
+    <p style="font-size:13px; font-weight:500; color:var(--color-text-secondary); margin:0 0 8px;">Ouvriers suspendus (1)</p>
+    <div id="suspended-list" style="display:flex; flex-direction:column;"></div>
+  </div>
+</div>
+
+<script>
+const active = [
+  {name:'Jean Kabila', role:'President'},
+  {name:'Marie Tshala', role:'Vice-president'},
+  {name:'Joseph Mbuyi', role:'Secretaire', nouveau:true},
+  {name:'Esther Kalonji', role:'Tresorier'},
+  {name:'Paul Ilunga', role:'Membre', nouveau:true},
+  {name:'Grace Mwamba', role:'Membre'}
+];
+const suspended = [
+  {name:'Patrick Ngoy', since:'10 juin'}
+];
+const al = document.getElementById('active-list');
+active.forEach(function(a) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:0.5px solid var(--color-border-tertiary);';
+  row.innerHTML =
+    '<span style="flex:1; font-size:13px;">' + a.name + '</span>' +
+    '<span style="font-size:11px; color:var(--color-text-secondary);">' + a.role + '</span>' +
+    (a.nouveau ? '<span style="font-size:10px; padding:2px 6px; border-radius:var(--border-radius-md); background:var(--color-background-info); color:var(--color-text-info); margin-left:6px;">Nouveau</span>' : '');
+  al.appendChild(row);
+});
+const sl = document.getElementById('suspended-list');
+suspended.forEach(function(s) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex; align-items:center; gap:8px; padding:7px 0;';
+  row.innerHTML =
+    '<span style="flex:1; font-size:13px; color:var(--color-text-secondary);">' + s.name + '</span>' +
+    '<span style="font-size:11px; color:var(--color-text-warning);">Depuis le ' + s.since + '</span>';
+  sl.appendChild(row);
+});
+</script>

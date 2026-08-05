@@ -1,0 +1,141 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { ouvrierSchema } from "@/lib/validations/ouvrier";
+
+async function assertPilotage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/connexion");
+
+  const { data: ouvrier } = await supabase
+    .from("ouvriers")
+    .select("id, role_global")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  if (!ouvrier?.role_global) {
+    throw new Error("Accès refusé.");
+  }
+  return { supabase, user, ouvrierId: ouvrier.id };
+}
+
+export async function creerOuvrier(formData: FormData) {
+  const { supabase } = await assertPilotage();
+
+  const raw = {
+    nom: formData.get("nom") as string,
+    postnom: (formData.get("postnom") as string) || undefined,
+    prenom: formData.get("prenom") as string,
+    email: formData.get("email") as string,
+    sexe: (formData.get("sexe") as string) || undefined,
+    date_naissance: (formData.get("date_naissance") as string) || undefined,
+    telephone: (formData.get("telephone") as string) || undefined,
+    adresse: (formData.get("adresse") as string) || undefined,
+    date_integration: (formData.get("date_integration") as string) || undefined,
+    role_global: (formData.get("role_global") as string) || null,
+  };
+
+  const parsed = ouvrierSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? "Données invalides." };
+  }
+
+  const { data, error } = await supabase
+    .from("ouvriers")
+    .insert(parsed.data)
+    .select("id, email")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") return { error: "Cet email est déjà utilisé." };
+    return { error: "Erreur lors de la création." };
+  }
+
+  // Envoyer l'invitation par email (service_role)
+  const admin = createAdminClient();
+  await admin.auth.admin.inviteUserByEmail(data.email);
+
+  revalidatePath("/ouvriers");
+  redirect("/ouvriers");
+}
+
+export async function modifierOuvrier(id: string, formData: FormData) {
+  const { supabase, ouvrierId } = await assertPilotage();
+
+  const raw = {
+    nom: formData.get("nom") as string,
+    postnom: (formData.get("postnom") as string) || undefined,
+    prenom: formData.get("prenom") as string,
+    email: formData.get("email") as string,
+    sexe: (formData.get("sexe") as string) || undefined,
+    date_naissance: (formData.get("date_naissance") as string) || undefined,
+    telephone: (formData.get("telephone") as string) || undefined,
+    adresse: (formData.get("adresse") as string) || undefined,
+    date_integration: (formData.get("date_integration") as string) || undefined,
+    role_global: (formData.get("role_global") as string) || null,
+  };
+
+  const parsed = ouvrierSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? "Données invalides." };
+  }
+
+  let error = null;
+
+  // Si l'utilisateur modifie SON PROPRE rôle global pour le retirer (NULL),
+  // la policy RLS empêchera l'opération car l'utilisateur perdrait ses droits
+  // pendant la transaction. Utiliser le client admin (service_role) pour
+  // effectuer cette opération spécifique évite ce blocage.
+  if (id === ouvrierId && parsed.data.role_global === null) {
+    const admin = createAdminClient();
+    const res = await admin
+      .from("ouvriers")
+      .update(parsed.data)
+      .eq("id", id);
+    error = res.error;
+  } else {
+    const res = await supabase
+      .from("ouvriers")
+      .update(parsed.data)
+      .eq("id", id);
+    error = res.error;
+  }
+
+  if (error) {
+    if (error.code === "23505") return { error: "Cet email est déjà utilisé." };
+    return { error: "Erreur lors de la modification." };
+  }
+
+  revalidatePath("/ouvriers");
+  redirect(`/ouvriers/${id}`);
+}
+
+export async function desactiverOuvrier(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/connexion");
+
+  const { data: moi } = await supabase
+    .from("ouvriers")
+    .select("role_global")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  if (moi?.role_global !== "pasteur") {
+    return { error: "Seul le pasteur peut désactiver un ouvrier." };
+  }
+
+  const { error } = await supabase
+    .from("ouvriers")
+    .update({ statut: "inactif" })
+    .eq("id", id);
+
+  if (error) return { error: "Erreur lors de la désactivation." };
+
+  revalidatePath("/ouvriers");
+  redirect("/ouvriers");
+}

@@ -1,0 +1,36 @@
+<h2 class="sr-only">Caisse du departement Chorale avec solde et historique des mouvements</h2>
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem 1rem; display:flex; justify-content:center;">
+  <div style="width:320px; background:var(--color-background-primary); border-radius:20px; border:0.5px solid var(--color-border-tertiary); padding:1.25rem 1rem;">
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <i class="ti ti-arrow-left" style="font-size:18px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+        <p style="font-size:16px; font-weight:500; margin:0;">Caisse</p>
+      </div>
+      <button onclick="sendPrompt('Montre le formulaire d\'ajout d\'un mouvement de caisse pour la Chorale')" style="font-size:12px; padding:6px 10px;">+ Mouvement</button>
+    </div>
+
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; margin-bottom:1.25rem; text-align:center;">
+      <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 4px;">Solde actuel</p>
+      <p style="font-size:26px; font-weight:500; margin:0;">145 000 FC</p>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:0.5px solid var(--color-border-tertiary);">
+        <i class="ti ti-arrow-up-right" style="font-size:16px; color:var(--color-text-success);" aria-hidden="true"></i>
+        <span style="flex:1; font-size:13px;">Offrande speciale<br><span style="font-size:11px; color:var(--color-text-secondary);">12 juin &middot; Jean Kabila</span></span>
+        <span style="font-size:13px; font-weight:500; color:var(--color-text-success);">+50 000</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:0.5px solid var(--color-border-tertiary);">
+        <i class="ti ti-arrow-down-right" style="font-size:16px; color:var(--color-text-danger);" aria-hidden="true"></i>
+        <span style="flex:1; font-size:13px;">Achat de partitions<br><span style="font-size:11px; color:var(--color-text-secondary);">15 juin &middot; Marie Tshala</span></span>
+        <span style="font-size:13px; font-weight:500; color:var(--color-text-danger);">-15 000</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; padding:10px 0;">
+        <i class="ti ti-arrow-down-right" style="font-size:16px; color:var(--color-text-danger);" aria-hidden="true"></i>
+        <span style="flex:1; font-size:13px;">Transport equipe<br><span style="font-size:11px; color:var(--color-text-secondary);">20 juin &middot; Jean Kabila</span></span>
+        <span style="font-size:13px; font-weight:500; color:var(--color-text-danger);">-8 000</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,30 @@
+<h2 class="sr-only">Liste des departements avec leur president et nombre d'ouvriers</h2>
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem 1rem; display:flex; justify-content:center;">
+  <div style="width:320px; background:var(--color-background-primary); border-radius:20px; border:0.5px solid var(--color-border-tertiary); padding:1.25rem 1rem;">
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+      <p style="font-size:16px; font-weight:500; margin:0;">Departements</p>
+      <button onclick="sendPrompt('Montre le formulaire de creation d\'un departement')" style="font-size:12px; padding:6px 10px;">+ Ajouter</button>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px;" id="depts-admin"></div>
+  </div>
+</div>
+
+<script>
+const depts = [
+  {name:'Chorale', president:'Jean Kabila', count:18},
+  {name:'Evangelisation', president:'David Kasongo', count:12},
+  {name:'Intercession', president:'Esther Kalonji', count:9},
+  {name:'Jeunesse', president:'(non assigne)', count:14}
+];
+const list = document.getElementById('depts-admin');
+depts.forEach(function(d) {
+  const row = document.createElement('div');
+  row.style.cssText = 'padding:10px 12px; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md);';
+  row.innerHTML =
+    '<span style="display:block; font-size:14px; font-weight:500; margin-bottom:2px;">' + d.name + '</span>' +
+    '<span style="display:block; font-size:12px; color:var(--color-text-secondary);">President : ' + d.president + ' &middot; ' + d.count + ' ouvriers</span>';
+  list.appendChild(row);
+});
+</script>

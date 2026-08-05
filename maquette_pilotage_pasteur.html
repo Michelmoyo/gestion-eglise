@@ -1,0 +1,66 @@
+<h2 class="sr-only">Tableau de bord du pasteur, avec statistiques de l'eglise et etat de sante de chaque departement</h2>
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem 1rem; display: flex; justify-content: center;">
+  <div style="width: 320px; background: var(--color-background-primary); border-radius: 20px; border: 0.5px solid var(--color-border-tertiary); padding: 1.25rem 1rem;">
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem;">
+      <div>
+        <p style="font-size:13px; color:var(--color-text-secondary); margin:0;">Bonjour,</p>
+        <p style="font-size:18px; font-weight:500; margin:0;">Pasteur Mukendi</p>
+      </div>
+      <i class="ti ti-bell" style="font-size:20px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; margin-bottom:1.5rem;">
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:1rem;">
+        <p style="font-size:13px; color:var(--color-text-secondary); margin:0 0 4px;">Ouvriers actifs</p>
+        <p style="font-size:24px; font-weight:500; margin:0;">128</p>
+      </div>
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:1rem;">
+        <p style="font-size:13px; color:var(--color-text-secondary); margin:0 0 4px;">Departements</p>
+        <p style="font-size:24px; font-weight:500; margin:0;">7</p>
+      </div>
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:1rem;">
+        <p style="font-size:13px; color:var(--color-text-secondary); margin:0 0 4px;">Presence globale</p>
+        <p style="font-size:24px; font-weight:500; margin:0;">78%</p>
+      </div>
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:1rem;">
+        <p style="font-size:13px; color:var(--color-text-secondary); margin:0 0 4px;">Activites ce mois</p>
+        <p style="font-size:24px; font-weight:500; margin:0;">14</p>
+      </div>
+    </div>
+
+    <p style="font-size:13px; font-weight:500; color:var(--color-text-secondary); margin:0 0 8px;">Departements</p>
+    <div id="dept-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+  </div>
+</div>
+
+<script>
+const depts = [
+  {name:'Chorale', status:'green', note:'Taux de presence 88%'},
+  {name:'Evangelisation', status:'amber', note:'Baisse de presence ce mois'},
+  {name:'Intercession', status:'green', note:'Taux de presence 91%'},
+  {name:'Jeunesse', status:'red', note:'Aucun rapport depuis 2 mois'},
+  {name:'Accueil', status:'green', note:'Taux de presence 84%'},
+  {name:'Protocole', status:'amber', note:'Rapport en retard'}
+];
+const colors = {
+  green: 'var(--color-text-success)',
+  amber: 'var(--color-text-warning)',
+  red: 'var(--color-text-danger)'
+};
+const list = document.getElementById('dept-list');
+depts.forEach(d => {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 12px; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); cursor:pointer;';
+  row.innerHTML = '<span style="width:10px; height:10px; border-radius:50%; background:' + colors[d.status] + '; flex-shrink:0;"></span>' +
+    '<span style="flex:1; min-width:0;">' +
+    '<span style="display:block; font-size:14px; font-weight:500;">' + d.name + '</span>' +
+    '<span style="display:block; font-size:12px; color:var(--color-text-secondary);">' + d.note + '</span>' +
+    '</span>' +
+    '<i class="ti ti-chevron-right" style="font-size:16px; color:var(--color-text-tertiary);" aria-hidden="true"></i>';
+  if (d.status !== 'green') {
+    row.onclick = function() { sendPrompt('Montre le detail des alertes du departement ' + d.name); };
+  }
+  list.appendChild(row);
+});
+</script>

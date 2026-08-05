@@ -1,0 +1,41 @@
+<h2 class="sr-only">Ecran de gestion du departement Chorale pour le president, avec l'activite du jour et l'enregistrement des presences</h2>
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem 1rem; display:flex; justify-content:center;">
+  <div style="width:320px; background:var(--color-background-primary); border-radius:20px; border:0.5px solid var(--color-border-tertiary); padding:1.25rem 1rem;">
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+      <p style="font-size:18px; font-weight:500; margin:0;">Chorale</p>
+      <span style="font-size:12px; padding:3px 10px; border-radius:var(--border-radius-md); background:var(--color-background-info); color:var(--color-text-info);">President</span>
+    </div>
+
+    <div style="display:flex; border-bottom:0.5px solid var(--color-border-tertiary); margin-bottom:1.25rem;">
+      <div style="flex:1; text-align:center; padding-bottom:8px; font-size:13px; font-weight:500; border-bottom:2px solid var(--color-text-primary);">Aujourd'hui</div>
+      <div style="flex:1; text-align:center; padding-bottom:8px; font-size:13px; color:var(--color-text-secondary); cursor:pointer;" onclick="sendPrompt('Montre le rapport mensuel du departement Chorale')">Rapport</div>
+      <div style="flex:1; text-align:center; padding-bottom:8px; font-size:13px; color:var(--color-text-secondary); cursor:pointer;" onclick="sendPrompt('Montre la caisse du departement Chorale')">Caisse</div>
+      <div style="flex:1; text-align:center; padding-bottom:8px; font-size:13px; color:var(--color-text-secondary); cursor:pointer;" onclick="sendPrompt('Montre la page equipe et roles du departement Chorale')">Equipe</div>
+    </div>
+
+    <p style="font-size:13px; font-weight:500; color:var(--color-text-secondary); margin:0 0 8px;">Activite du jour</p>
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem; margin-bottom:1.25rem;">
+      <p style="font-size:15px; font-weight:500; margin:0 0 4px;">Repetition</p>
+      <p style="font-size:13px; color:var(--color-text-secondary); margin:0 0 12px;">
+        <i class="ti ti-clock" style="font-size:14px; vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>18h00
+        &nbsp;&middot;&nbsp;
+        <i class="ti ti-map-pin" style="font-size:14px; vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>Salle de musique
+      </p>
+      <button style="width:100%;" onclick="sendPrompt('Montre l\'ecran d\'enregistrement des presences pour la repetition de la Chorale')">Enregistrer les presences ↗</button>
+    </div>
+
+    <p style="font-size:13px; font-weight:500; color:var(--color-text-secondary); margin:0 0 8px;">Activites a venir</p>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md);">
+        <span style="font-size:14px;">Concert de fin d'annee</span>
+        <span style="font-size:12px; color:var(--color-text-secondary);">28 juin</span>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md);">
+        <span style="font-size:14px;">Animation du culte</span>
+        <span style="font-size:12px; color:var(--color-text-secondary);">5 juillet</span>
+      </div>
+    </div>
+
+  </div>
+</div>

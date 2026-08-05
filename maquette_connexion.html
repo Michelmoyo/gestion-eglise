@@ -1,0 +1,24 @@
+<h2 class="sr-only">Page de connexion avec email et mot de passe</h2>
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem 1rem; display:flex; justify-content:center;">
+  <div style="width:320px; background:var(--color-background-primary); border-radius:20px; border:0.5px solid var(--color-border-tertiary); padding:1.5rem 1.25rem;">
+
+    <div style="text-align:center; margin-bottom:1.5rem;">
+      <p style="font-size:18px; font-weight:500; margin:0;">ChurchFlow</p>
+      <p style="font-size:12px; color:var(--color-text-secondary); margin:4px 0 0;">Gestion des departements</p>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:1rem;">
+      <div>
+        <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:4px;">Email</label>
+        <input type="email" placeholder="vous@eglise.org" style="width:100%;" />
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:4px;">Mot de passe</label>
+        <input type="password" style="width:100%;" />
+      </div>
+    </div>
+
+    <button style="width:100%; margin-bottom:12px;" onclick="sendPrompt('Connecte moi en tant que president de la Chorale')">Se connecter ↗</button>
+    <p style="text-align:center; margin:0;"><span style="font-size:12px; color:var(--color-text-info); cursor:pointer;" onclick="sendPrompt('Montre la page de recuperation de mot de passe')">Mot de passe oublie ?</span></p>
+  </div>
+</div>

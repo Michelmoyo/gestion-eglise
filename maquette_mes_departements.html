@@ -1,0 +1,30 @@
+<h2 class="sr-only">Liste des departements geres par un president qui gere plusieurs departements</h2>
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem 1rem; display:flex; justify-content:center;">
+  <div style="width:320px; background:var(--color-background-primary); border-radius:20px; border:0.5px solid var(--color-border-tertiary); padding:1.25rem 1rem;">
+
+    <p style="font-size:16px; font-weight:500; margin:0 0 1.25rem;">Mes departements</p>
+
+    <div style="display:flex; flex-direction:column; gap:8px;" id="my-depts"></div>
+  </div>
+</div>
+
+<script>
+const myDepts = [
+  {name:'Chorale', role:'President', status:'green'},
+  {name:'Evangelisation', role:'Membre', status:'amber'},
+  {name:'Protocole', role:'Vice-president', status:'green'}
+];
+const colors = { green:'var(--color-text-success)', amber:'var(--color-text-warning)', red:'var(--color-text-danger)' };
+const wrap = document.getElementById('my-depts');
+myDepts.forEach(function(d) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:12px; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); cursor:pointer;';
+  row.innerHTML =
+    '<span style="width:10px; height:10px; border-radius:50%; background:' + colors[d.status] + '; flex-shrink:0;"></span>' +
+    '<span style="flex:1;"><span style="display:block; font-size:14px; font-weight:500;">' + d.name + '</span>' +
+    '<span style="display:block; font-size:12px; color:var(--color-text-secondary);">' + d.role + '</span></span>' +
+    '<i class="ti ti-chevron-right" style="font-size:16px; color:var(--color-text-tertiary);" aria-hidden="true"></i>';
+  row.onclick = function() { sendPrompt('Montre la gestion du departement ' + d.name); };
+  wrap.appendChild(row);
+});
+</script>

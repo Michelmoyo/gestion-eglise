@@ -1,0 +1,30 @@
+<h2 class="sr-only">Detail des alertes du departement Jeunesse, en difficulte</h2>
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem 1rem; display:flex; justify-content:center;">
+  <div style="width:320px; background:var(--color-background-primary); border-radius:20px; border:0.5px solid var(--color-border-tertiary); padding:1.25rem 1rem;">
+
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:1.25rem;">
+      <i class="ti ti-arrow-left" style="font-size:18px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:10px; height:10px; border-radius:50%; background:var(--color-text-danger);"></span>
+        <p style="font-size:16px; font-weight:500; margin:0;">Jeunesse</p>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:1.25rem;">
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); padding:12px;">
+        <p style="font-size:13px; font-weight:500; margin:0 0 4px; color:var(--color-text-danger);"><i class="ti ti-user-off" style="font-size:14px; vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>Responsable inactif</p>
+        <p style="font-size:12px; color:var(--color-text-secondary); margin:0;">Aucune presence enregistree par le president depuis 35 jours</p>
+      </div>
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); padding:12px;">
+        <p style="font-size:13px; font-weight:500; margin:0 0 4px; color:var(--color-text-danger);"><i class="ti ti-file-off" style="font-size:14px; vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>Aucun rapport envoye</p>
+        <p style="font-size:12px; color:var(--color-text-secondary); margin:0;">Dernier rapport soumis il y a 2 mois</p>
+      </div>
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); padding:12px;">
+        <p style="font-size:13px; font-weight:500; margin:0 0 4px; color:var(--color-text-danger);"><i class="ti ti-trending-down" style="font-size:14px; vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>Faible participation</p>
+        <p style="font-size:12px; color:var(--color-text-secondary); margin:0;">Taux de presence a 42% sur les 30 derniers jours</p>
+      </div>
+    </div>
+
+    <button style="width:100%;" onclick="sendPrompt('Retourne au tableau de bord du pasteur')">Retour au tableau de bord ↗</button>
+  </div>
+</div>

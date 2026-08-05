@@ -1,0 +1,47 @@
+<h2 class="sr-only">Equipe et roles du departement Chorale avec le statut actif ou suspendu de chaque ouvrier</h2>
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem 1rem; display:flex; justify-content:center;">
+  <div style="width:320px; background:var(--color-background-primary); border-radius:20px; border:0.5px solid var(--color-border-tertiary); padding:1.25rem 1rem;">
+
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:1.25rem;">
+      <i class="ti ti-arrow-left" style="font-size:18px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      <p style="font-size:16px; font-weight:500; margin:0;">Equipe &middot; Chorale</p>
+    </div>
+
+    <div id="team-list" style="display:flex; flex-direction:column;"></div>
+  </div>
+</div>
+
+<script>
+const team = [
+  {name:'Jean Kabila', initials:'JK', role:'President', status:'actif'},
+  {name:'Marie Tshala', initials:'MT', role:'Vice-president', status:'actif'},
+  {name:'Joseph Mbuyi', initials:'JM', role:'Secretaire', status:'actif'},
+  {name:'Esther Kalonji', initials:'EK', role:'Tresorier', status:'actif'},
+  {name:'Paul Ilunga', initials:'PI', role:'Membre', status:'actif'},
+  {name:'Grace Mwamba', initials:'GM', role:'Membre', status:'actif'},
+  {name:'Patrick Ngoy', initials:'PN', role:'Membre', status:'suspendu'}
+];
+const list = document.getElementById('team-list');
+team.forEach(function(t) {
+  const row = document.createElement('div');
+  const muted = t.status === 'suspendu';
+  row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:0.5px solid var(--color-border-tertiary);' + (muted ? ' opacity:0.6;' : '');
+  let right = '';
+  if (muted) {
+    right = '<span style="font-size:11px; color:var(--color-text-warning);">Suspendu</span>' +
+      '<span class="reactivate" style="font-size:11px; color:var(--color-text-info); cursor:pointer; margin-left:8px;">Reactiver</span>';
+  } else {
+    right = '<span style="font-size:11px; padding:3px 8px; border-radius:var(--border-radius-md); background:var(--color-background-secondary); color:var(--color-text-secondary);">' + t.role + '</span>' +
+      '<i class="ti ti-edit team-edit" style="font-size:16px; color:var(--color-text-tertiary); cursor:pointer; margin-left:8px;" aria-hidden="true"></i>';
+  }
+  row.innerHTML =
+    '<span style="width:32px; height:32px; border-radius:50%; background:var(--color-background-info); color:var(--color-text-info); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:500; flex-shrink:0;">' + t.initials + '</span>' +
+    '<span style="flex:1; font-size:14px;">' + t.name + '</span>' +
+    right;
+  const edit = row.querySelector('.team-edit');
+  if (edit) edit.onclick = function() { sendPrompt('Change le role de ' + t.name + ' dans le departement Chorale'); };
+  const reactivate = row.querySelector('.reactivate');
+  if (reactivate) reactivate.onclick = function() { sendPrompt('Reactive ' + t.name + ' dans le departement Chorale'); };
+  list.appendChild(row);
+});
+</script>

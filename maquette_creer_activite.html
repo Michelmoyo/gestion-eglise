@@ -1,0 +1,45 @@
+<h2 class="sr-only">Formulaire de creation d'une activite pour le departement Chorale</h2>
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 2rem 1rem; display:flex; justify-content:center;">
+  <div style="width:320px; background:var(--color-background-primary); border-radius:20px; border:0.5px solid var(--color-border-tertiary); padding:1.25rem 1rem;">
+
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:1.25rem;">
+      <i class="ti ti-arrow-left" style="font-size:18px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      <p style="font-size:16px; font-weight:500; margin:0;">Nouvelle activite</p>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:1.25rem;">
+      <div>
+        <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:4px;">Titre</label>
+        <input type="text" placeholder="Ex : Repetition" style="width:100%;" />
+      </div>
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1;">
+          <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:4px;">Date</label>
+          <input type="date" style="width:100%;" />
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:4px;">Heure</label>
+          <input type="time" style="width:100%;" />
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:4px;">Lieu</label>
+        <input type="text" placeholder="Ex : Salle de musique" style="width:100%;" />
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:4px;">Description</label>
+        <textarea placeholder="Details de l'activite" style="width:100%; min-height:60px;"></textarea>
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:4px;">Responsable</label>
+        <select style="width:100%;">
+          <option>Jean Kabila</option>
+          <option>Marie Tshala</option>
+          <option>Joseph Mbuyi</option>
+        </select>
+      </div>
+    </div>
+
+    <button style="width:100%;" onclick="sendPrompt('Confirme la creation de l\'activite Repetition pour la Chorale')">Creer l'activite ↗</button>
+  </div>
+</div>
