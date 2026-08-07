@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { format } from "@/lib/format";
 
 export default async function RapportsPage() {
@@ -42,7 +44,15 @@ export default async function RapportsPage() {
     <>
       <TopBar title="Rapports" />
 
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-4">
+        <Link href="/rapports/nouveau">
+          <Button className="w-full gap-2">
+            <Plus size={16} />
+            Nouveau rapport
+          </Button>
+        </Link>
+
+        <div className="space-y-2">
         {!rapports?.length ? (
           <p className="text-center text-sm text-muted-foreground py-8">
             Aucun rapport soumis pour l&apos;instant.
@@ -68,6 +78,7 @@ export default async function RapportsPage() {
             </Link>
           ))
         )}
+        </div>
       </div>
     </>
   );
