@@ -35,13 +35,21 @@ export async function soumettrerapport(departementId: string, formData: FormData
   const periode = formData.get("periode") as string;
   if (!periode) return { error: "Période requise." };
 
+  function joindreEntrees(champ: string) {
+    const entrees = formData
+      .getAll(champ)
+      .map((v) => String(v).trim())
+      .filter(Boolean);
+    return entrees.length ? entrees.join("\n") : null;
+  }
+
   const { error } = await supabase.from("rapports").upsert(
     {
       departement_id: departementId,
       periode,
-      difficultes: (formData.get("difficultes") as string) || null,
-      besoins: (formData.get("besoins") as string) || null,
-      objectifs: (formData.get("objectifs") as string) || null,
+      difficultes: joindreEntrees("difficultes"),
+      besoins: joindreEntrees("besoins"),
+      objectifs: joindreEntrees("objectifs"),
       auteur_id: moi.id,
       date_soumission: new Date().toISOString(),
     },
