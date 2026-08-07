@@ -95,13 +95,21 @@ export default async function RapportPage({
       <TopBar title="Rapport mensuel" />
 
       <div className="p-4 space-y-4">
-        <Link
-          href={`/departements/${id}`}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft size={16} />
-          {dept.nom}
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link
+            href={`/departements/${id}`}
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft size={16} />
+            {dept.nom}
+          </Link>
+          <Link
+            href={`/departements/${id}/rapports`}
+            className="text-xs text-primary"
+          >
+            Historique →
+          </Link>
+        </div>
 
         {/* Sélection de la période */}
         <form method="GET" className="flex items-center justify-center gap-2">

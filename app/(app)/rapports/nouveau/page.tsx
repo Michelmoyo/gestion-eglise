@@ -12,13 +12,36 @@ export default async function NouveauRapportPage() {
 
   const { data: moi } = await supabase
     .from("ouvriers")
-    .select("role_global")
+    .select("id, role_global")
     .eq("auth_user_id", user.id)
     .single();
 
-  if (!moi?.role_global) redirect("/mon-espace");
+  if (!moi) redirect("/connexion");
 
-  const { data: departements } = await supabase.from("departements").select("id, nom").order("nom");
+  const isPilotage = !!moi.role_global;
+
+  let departements: { id: string; nom: string }[] | null = null;
+
+  if (isPilotage) {
+    const { data } = await supabase.from("departements").select("id, nom").order("nom");
+    departements = data;
+  } else {
+    const { data: aff } = await supabase
+      .from("affectations")
+      .select("departement_id")
+      .eq("ouvrier_id", moi.id)
+      .eq("statut", "actif")
+      .in("role", ["president", "vice_president", "secretaire"]);
+
+    const deptIds = (aff ?? []).map((a) => a.departement_id);
+    if (!deptIds.length) redirect("/mon-espace");
+
+    // Un seul département géré : pas besoin de choisir, on y va directement.
+    if (deptIds.length === 1) redirect(`/departements/${deptIds[0]}/rapport`);
+
+    const { data } = await supabase.from("departements").select("id, nom").in("id", deptIds).order("nom");
+    departements = data;
+  }
 
   return (
     <>

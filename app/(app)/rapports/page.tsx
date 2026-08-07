@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { format } from "@/lib/format";
+import { ChevronRight, Plus } from "lucide-react";
+import { ListeRapports } from "@/components/rapports/liste-rapports";
 
 export default async function RapportsPage() {
   const supabase = await createClient();
@@ -14,71 +14,102 @@ export default async function RapportsPage() {
 
   const { data: moi } = await supabase
     .from("ouvriers")
-    .select("role_global")
+    .select("id, role_global")
     .eq("auth_user_id", user.id)
     .single();
 
-  if (!moi?.role_global) redirect("/mon-espace");
+  if (!moi) redirect("/connexion");
+
+  const isPilotage = !!moi.role_global;
+
+  // Pasteur/assistant : on choisit d'abord le département, ensuite ses
+  // rapports (un pasteur suit toute l'église, pas un seul département).
+  if (isPilotage) {
+    const { data: departements } = await supabase.from("departements").select("id, nom").order("nom");
+
+    return (
+      <>
+        <TopBar title="Rapports" />
+
+        <div className="p-4 space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Choisissez un département pour voir ses rapports.
+          </p>
+
+          <div className="space-y-2">
+            {!departements?.length ? (
+              <p className="text-center text-sm text-muted-foreground py-8">
+                Aucun département créé.
+              </p>
+            ) : (
+              departements.map((d) => (
+                <Link key={d.id} href={`/departements/${d.id}/rapports`}>
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <p className="font-medium text-sm">{d.nom}</p>
+                      <ChevronRight size={16} className="text-muted-foreground" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Président / vice-président / secrétaire : directement la liste de leurs
+  // propres rapports soumis, avec le bouton pour en ajouter un.
+  const { data: aff } = await supabase
+    .from("affectations")
+    .select("departement_id")
+    .eq("ouvrier_id", moi.id)
+    .eq("statut", "actif")
+    .in("role", ["president", "vice_president", "secretaire"]);
+
+  const deptIds = (aff ?? []).map((a) => a.departement_id);
+  if (!deptIds.length) redirect("/mon-espace");
 
   const { data: rapports } = await supabase
     .from("rapports")
     .select("id, departement_id, periode, date_soumission, auteur_id")
-    .order("date_soumission", { ascending: false })
-    .limit(100);
-
-  const deptIds = [...new Set((rapports ?? []).map((r) => r.departement_id).filter((v): v is string => !!v))];
-  const { data: departements } = deptIds.length
-    ? await supabase.from("departements").select("id, nom").in("id", deptIds)
-    : { data: [] };
-  const deptNomById = Object.fromEntries((departements ?? []).map((d) => [d.id, d.nom]));
+    .in("departement_id", deptIds)
+    .order("date_soumission", { ascending: false });
 
   const auteurIds = [...new Set((rapports ?? []).map((r) => r.auteur_id))];
   const { data: auteurs } = auteurIds.length
     ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", auteurIds)
     : { data: [] };
-  const auteurNomById = Object.fromEntries(
-    (auteurs ?? []).map((a) => [a.id, `${a.prenom} ${a.nom}`])
-  );
+  const auteurNomById = Object.fromEntries((auteurs ?? []).map((a) => [a.id, `${a.prenom} ${a.nom}`]));
+
+  const deptNomById: Record<string, string> = {};
+  if (deptIds.length > 1) {
+    const { data: departements } = await supabase.from("departements").select("id, nom").in("id", deptIds);
+    (departements ?? []).forEach((d) => (deptNomById[d.id] = d.nom));
+  }
+
+  const rapportsAffiches = (rapports ?? []).map((r) => ({
+    id: r.id,
+    periode: r.periode,
+    date_soumission: r.date_soumission,
+    auteurNom: auteurNomById[r.auteur_id] ?? "—",
+    departementNom: r.departement_id ? deptNomById[r.departement_id] : undefined,
+  }));
 
   return (
     <>
       <TopBar title="Rapports" />
 
       <div className="p-4 space-y-4">
+        <ListeRapports rapports={rapportsAffiches} afficherDepartement={deptIds.length > 1} />
+
         <Link href="/rapports/nouveau">
           <Button className="w-full gap-2">
             <Plus size={16} />
             Nouveau rapport
           </Button>
         </Link>
-
-        <div className="space-y-2">
-        {!rapports?.length ? (
-          <p className="text-center text-sm text-muted-foreground py-8">
-            Aucun rapport soumis pour l&apos;instant.
-          </p>
-        ) : (
-          rapports.map((r) => (
-            <Link key={r.id} href={`/rapports/${r.id}`}>
-              <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <p className="font-semibold text-sm">
-                    {deptNomById[r.departement_id ?? ""] ?? "—"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 capitalize">
-                    {new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
-                      new Date(r.periode)
-                    )}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Soumis le {format.date(r.date_soumission)} par {auteurNomById[r.auteur_id] ?? "—"}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))
-        )}
-        </div>
       </div>
     </>
   );
