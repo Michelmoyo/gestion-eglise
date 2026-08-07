@@ -82,6 +82,22 @@ as $$
   select fn_role_departement(p_departement_id) in ('president', 'vice_president', 'secretaire')
 $$;
 
+-- L'utilisateur courant est-il president ou vice-president d'AU MOINS UN
+-- departement (peu importe lequel) ? Utilise pour les cultes : un culte
+-- n'appartient a aucun departement en particulier, donc on ne peut pas
+-- verifier un departement precis comme fn_gere_departement le fait.
+create or replace function fn_est_president_ou_vice()
+returns boolean language sql stable security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from affectations
+    where ouvrier_id = fn_ouvrier_id_courant()
+      and role in ('president', 'vice_president')
+      and statut = 'actif'
+  )
+$$;
+
 -- ----------------------------------------------------------------------------
 -- OUVRIERS
 -- ----------------------------------------------------------------------------
@@ -240,23 +256,27 @@ create policy cultes_delete on cultes for delete using (
 -- PRESENCES CULTE
 -- A la difference de "presences" (departement, petit effectif, visible par
 -- toute l'equipe), l'assemblee peut compter des centaines de personnes : un
--- ouvrier ne voit que sa propre ligne, jamais celle des autres. Saisie
--- reservee pasteur/assistant (decision produit -- pas de delegation en V1).
+-- ouvrier simple ne voit que sa propre ligne, jamais celle des autres.
+-- Saisie deleguee aux presidents/vice-presidents de departement (en plus du
+-- pasteur/assistant) -- decision produit : le pasteur ne doit pas etre le
+-- seul point de passage pour pointer un culte, ca embouteille la saisie.
 -- ----------------------------------------------------------------------------
 alter table presences_culte enable row level security;
 
 create policy presences_culte_select on presences_culte for select using (
-  fn_is_pasteur_ou_assistant() or ouvrier_id = fn_ouvrier_id_courant()
+  fn_is_pasteur_ou_assistant()
+  or fn_est_president_ou_vice()
+  or ouvrier_id = fn_ouvrier_id_courant()
 );
 
 create policy presences_culte_insert on presences_culte for insert with check (
-  fn_is_pasteur_ou_assistant()
+  fn_is_pasteur_ou_assistant() or fn_est_president_ou_vice()
 );
 
 create policy presences_culte_update on presences_culte for update using (
-  fn_is_pasteur_ou_assistant()
+  fn_is_pasteur_ou_assistant() or fn_est_president_ou_vice()
 ) with check (
-  fn_is_pasteur_ou_assistant()
+  fn_is_pasteur_ou_assistant() or fn_est_president_ou_vice()
 );
 
 -- ----------------------------------------------------------------------------

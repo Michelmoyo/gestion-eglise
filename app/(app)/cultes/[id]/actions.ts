@@ -11,11 +11,27 @@ export async function enregistrerPresencesCulte(culteId: string, formData: FormD
 
   const { data: moi } = await supabase
     .from("ouvriers")
-    .select("role_global")
+    .select("id, role_global")
     .eq("auth_user_id", user.id)
     .single();
 
-  if (!moi?.role_global) redirect(`/cultes/${culteId}`);
+  if (!moi) redirect("/connexion");
+
+  const isPilotage = !!moi.role_global;
+
+  let peutPointer = isPilotage;
+  if (!peutPointer) {
+    const { data: aff } = await supabase
+      .from("affectations")
+      .select("id")
+      .eq("ouvrier_id", moi.id)
+      .in("role", ["president", "vice_president"])
+      .eq("statut", "actif")
+      .limit(1);
+    peutPointer = !!aff?.length;
+  }
+
+  if (!peutPointer) redirect(`/cultes/${culteId}`);
 
   const upserts: { culte_id: string; ouvrier_id: string; statut: StatutPresenceEnum }[] = [];
 

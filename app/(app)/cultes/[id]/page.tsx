@@ -38,7 +38,19 @@ export default async function CulteDetailPage({
   const isPilotage = !!moi.role_global;
   const action = enregistrerPresencesCulte.bind(null, id);
 
-  if (isPilotage) {
+  let peutPointer = isPilotage;
+  if (!peutPointer) {
+    const { data: aff } = await supabase
+      .from("affectations")
+      .select("id")
+      .eq("ouvrier_id", moi.id)
+      .in("role", ["president", "vice_president"])
+      .eq("statut", "actif")
+      .limit(1);
+    peutPointer = !!aff?.length;
+  }
+
+  if (peutPointer) {
     const { data: ouvriers } = await supabase
       .from("ouvriers")
       .select("id, prenom, nom")
@@ -70,12 +82,14 @@ export default async function CulteDetailPage({
               <ChevronLeft size={16} />
               Cultes
             </Link>
-            <Link href={`/cultes/${id}/modifier`}>
-              <Button variant="outline" size="sm" className="gap-1">
-                <Pencil size={14} />
-                Modifier
-              </Button>
-            </Link>
+            {isPilotage && (
+              <Link href={`/cultes/${id}/modifier`}>
+                <Button variant="outline" size="sm" className="gap-1">
+                  <Pencil size={14} />
+                  Modifier
+                </Button>
+              </Link>
+            )}
           </div>
 
           <Card>
