@@ -157,6 +157,52 @@ create index idx_presences_activite on presences(activite_id);
 create index idx_presences_ouvrier on presences(ouvrier_id);
 
 -- ----------------------------------------------------------------------------
+-- CULTES
+-- Evenements a l'echelle de l'eglise (culte dominical, intercession, nuit de
+-- priere, retraite, formation...), distincts des activites de departement
+-- (cf. cahier des charges S4.5 et S5). "type" est en texte libre : le pasteur
+-- peut ajouter un nouveau type de rassemblement sans migration.
+-- Creation et saisie des presences reservees pasteur/assistant (rls_policies.sql).
+-- ----------------------------------------------------------------------------
+create table cultes (
+  id           uuid primary key default gen_random_uuid(),
+  type         text not null,
+  date_culte   date not null,
+  heure        time,
+  lieu         text,
+  description  text,
+  created_by   uuid not null references ouvriers(id),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+create trigger trg_cultes_updated_at
+  before update on cultes
+  for each row execute function fn_set_updated_at();
+
+create index idx_cultes_date on cultes(date_culte);
+
+-- Presence nominative au culte. Contrairement a "presences" (departement,
+-- petit effectif, visible de tous les membres), l'assemblee peut compter des
+-- centaines de personnes : un ouvrier ne voit que sa propre ligne (voir RLS).
+create table presences_culte (
+  id           uuid primary key default gen_random_uuid(),
+  culte_id     uuid not null references cultes(id) on delete cascade,
+  ouvrier_id   uuid not null references ouvriers(id) on delete cascade,
+  statut       statut_presence_enum not null,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  unique (culte_id, ouvrier_id)
+);
+
+create trigger trg_presences_culte_updated_at
+  before update on presences_culte
+  for each row execute function fn_set_updated_at();
+
+create index idx_presences_culte_culte on presences_culte(culte_id);
+create index idx_presences_culte_ouvrier on presences_culte(ouvrier_id);
+
+-- ----------------------------------------------------------------------------
 -- MOUVEMENTS DE CAISSE
 -- Aucune mise a jour ni suppression autorisee (voir rls_policies.sql) :
 -- une correction se fait par un mouvement inverse, jamais en editant l'historique.
@@ -312,6 +358,16 @@ select
   round(100.0 * count(*) filter (where statut = 'present') / nullif(count(*), 0), 1) as taux_presence
 from presences
 group by activite_id;
+
+-- Taux de presence par culte (indicateurs globaux, cahier des charges S5).
+create view v_taux_presence_culte as
+select
+  culte_id,
+  count(*) filter (where statut = 'present') as nb_presents,
+  count(*) as nb_total,
+  round(100.0 * count(*) filter (where statut = 'present') / nullif(count(*), 0), 1) as taux_presence
+from presences_culte
+group by culte_id;
 
 -- Taux de presence d'un departement sur les 30 derniers jours
 -- (fenetre glissante utilisee par l'algorithme de sante, cahier des charges S6).

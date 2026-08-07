@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Building2, UserPlus, Plus } from "lucide-react";
+import { Users, Building2, UserPlus, Plus, Church } from "lucide-react";
 import { calculerSante, type Sante } from "@/lib/sante";
 
 const PASTILLE: Record<Sante, { bg: string; label: string }> = {
@@ -265,6 +265,17 @@ export default async function PilotagePage() {
                 <div>
                   <p className="text-sm font-semibold">Départements</p>
                   <p className="text-xs text-muted-foreground">Vue d&apos;ensemble</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/cultes">
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="pt-4 flex items-center gap-3">
+                <Church size={24} className="text-primary" />
+                <div>
+                  <p className="text-sm font-semibold">Cultes</p>
+                  <p className="text-xs text-muted-foreground">Présence à l&apos;église</p>
                 </div>
               </CardContent>
             </Card>

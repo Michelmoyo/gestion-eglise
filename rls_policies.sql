@@ -210,6 +210,56 @@ create policy presences_update on presences for update using (
 );
 
 -- ----------------------------------------------------------------------------
+-- CULTES
+-- Evenement d'eglise (pas confidentiel) : visible par tout utilisateur
+-- connecte. Creation/modification/suppression reservees pasteur/assistant --
+-- un culte n'appartient a aucun departement, donc pas de fn_gere_departement
+-- possible ici.
+-- ----------------------------------------------------------------------------
+alter table cultes enable row level security;
+
+create policy cultes_select on cultes for select using (
+  auth.uid() is not null
+);
+
+create policy cultes_insert on cultes for insert with check (
+  fn_is_pasteur_ou_assistant()
+);
+
+create policy cultes_update on cultes for update using (
+  fn_is_pasteur_ou_assistant()
+) with check (
+  fn_is_pasteur_ou_assistant()
+);
+
+create policy cultes_delete on cultes for delete using (
+  fn_is_pasteur_ou_assistant()
+);
+
+-- ----------------------------------------------------------------------------
+-- PRESENCES CULTE
+-- A la difference de "presences" (departement, petit effectif, visible par
+-- toute l'equipe), l'assemblee peut compter des centaines de personnes : un
+-- ouvrier ne voit que sa propre ligne, jamais celle des autres. Saisie
+-- reservee pasteur/assistant (decision produit -- pas de delegation en V1).
+-- ----------------------------------------------------------------------------
+alter table presences_culte enable row level security;
+
+create policy presences_culte_select on presences_culte for select using (
+  fn_is_pasteur_ou_assistant() or ouvrier_id = fn_ouvrier_id_courant()
+);
+
+create policy presences_culte_insert on presences_culte for insert with check (
+  fn_is_pasteur_ou_assistant()
+);
+
+create policy presences_culte_update on presences_culte for update using (
+  fn_is_pasteur_ou_assistant()
+) with check (
+  fn_is_pasteur_ou_assistant()
+);
+
+-- ----------------------------------------------------------------------------
 -- MOUVEMENTS DE CAISSE
 -- Lecture des transactions detaillees reservee aux gestionnaires (president,
 -- vice-president, tresorier) -- un membre simple n'obtient que le solde

@@ -39,3 +39,6 @@ supabase/.temp/
 # logs
 server.log
 *.storage.zip
+
+# secrets accidentally dropped in the project root
+recovery-codes.txt

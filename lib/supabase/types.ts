@@ -199,6 +199,61 @@ export interface Database {
         };
         Relationships: [];
       };
+      cultes: {
+        Row: {
+          id: string;
+          type: string;
+          date_culte: string;
+          heure: string | null;
+          lieu: string | null;
+          description: string | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          type: string;
+          date_culte: string;
+          heure?: string | null;
+          lieu?: string | null;
+          description?: string | null;
+          created_by: string;
+        };
+        Update: {
+          id?: string;
+          type?: string;
+          date_culte?: string;
+          heure?: string | null;
+          lieu?: string | null;
+          description?: string | null;
+          created_by?: string;
+        };
+        Relationships: [];
+      };
+      presences_culte: {
+        Row: {
+          id: string;
+          culte_id: string;
+          ouvrier_id: string;
+          statut: StatutPresenceEnum;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          culte_id: string;
+          ouvrier_id: string;
+          statut: StatutPresenceEnum;
+        };
+        Update: {
+          id?: string;
+          culte_id?: string;
+          ouvrier_id?: string;
+          statut?: StatutPresenceEnum;
+        };
+        Relationships: [];
+      };
       mouvements_caisse: {
         Row: {
           id: string;
@@ -292,6 +347,15 @@ export interface Database {
       v_taux_presence_activite: {
         Row: {
           activite_id: string;
+          nb_presents: number;
+          nb_total: number;
+          taux_presence: number | null;
+        };
+        Relationships: [];
+      };
+      v_taux_presence_culte: {
+        Row: {
+          culte_id: string;
           nb_presents: number;
           nb_total: number;
           taux_presence: number | null;

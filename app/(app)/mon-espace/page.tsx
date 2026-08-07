@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, CheckCircle2, Clock } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, Church } from "lucide-react";
 import { format } from "@/lib/format";
 
 export default async function MonEspacePage() {
@@ -72,6 +73,14 @@ export default async function MonEspacePage() {
 
   void debutMois; // utilisé pour filtrer côté SQL plus tard
 
+  // Prochains cultes (evenement d'eglise, distinct des activites de departement)
+  const { data: prochainsCultes } = await supabase
+    .from("cultes")
+    .select("id, type, date_culte, heure, lieu")
+    .gte("date_culte", new Date().toISOString().split("T")[0])
+    .order("date_culte", { ascending: true })
+    .limit(3);
+
   return (
     <>
       <TopBar title="Mon espace" prenom={ouvrier.prenom} />
@@ -124,6 +133,35 @@ export default async function MonEspacePage() {
                   sur {totalPresences} activité{totalPresences > 1 ? "s" : ""}
                 </span>
               </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Prochains cultes */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Church size={16} />
+              Prochains cultes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!prochainsCultes?.length ? (
+              <p className="text-sm text-muted-foreground">Aucun culte planifié.</p>
+            ) : (
+              prochainsCultes.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/cultes/${c.id}`}
+                  className="flex items-center justify-between gap-2 hover:opacity-80"
+                >
+                  <span className="text-sm">{c.type}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {format.date(c.date_culte)}
+                    {c.heure ? ` · ${c.heure.slice(0, 5)}` : ""}
+                  </span>
+                </Link>
+              ))
             )}
           </CardContent>
         </Card>
