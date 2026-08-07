@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, UserPlus, CalendarDays } from "lucide-react";
+import { Bell, UserPlus, CalendarDays, FileText } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { format } from "@/lib/format";
 import { marquerLue, marquerToutesLues } from "./actions";
@@ -11,6 +11,7 @@ import { marquerLue, marquerToutesLues } from "./actions";
 const ICONES: Record<string, LucideIcon> = {
   nouvelle_affectation: UserPlus,
   nouvelle_activite: CalendarDays,
+  rapport_soumis: FileText,
 };
 
 export default async function NotificationsPage() {

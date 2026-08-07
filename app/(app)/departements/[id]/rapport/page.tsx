@@ -7,6 +7,8 @@ import { ChevronLeft } from "lucide-react";
 import { format } from "@/lib/format";
 import { RapportForm } from "@/components/departements/rapport-form";
 import { soumettrerapport } from "./actions";
+import { getDonneesRapport } from "@/lib/rapport";
+import { FileDown } from "lucide-react";
 
 export default async function RapportPage({
   params,
@@ -63,65 +65,8 @@ export default async function RapportPage({
     .single();
 
   // Données calculées pour le rapport pré-rempli
-  const debutMois = periodeCourante;
-  const finMois = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    .toISOString().split("T")[0];
-
-  // Activités du mois avec leur taux de présence
-  const { data: activitesMois } = await supabase
-    .from("activites")
-    .select("id, titre, date_activite, heure")
-    .eq("departement_id", id)
-    .gte("date_activite", debutMois)
-    .lte("date_activite", finMois)
-    .order("date_activite", { ascending: true });
-
-  // Présences par activité
-  const activiteIds = (activitesMois ?? []).map((a) => a.id);
-  const { data: presencesMois } = activiteIds.length
-    ? await supabase
-        .from("presences")
-        .select("activite_id, statut")
-        .in("activite_id", activiteIds)
-    : { data: [] };
-
-  const statsByActivite = (activitesMois ?? []).map((act) => {
-    const pres = (presencesMois ?? []).filter((p) => p.activite_id === act.id);
-    const nbPresent = pres.filter((p) => p.statut === "present").length;
-    const nbTotal = pres.length;
-    return {
-      ...act,
-      nbPresent,
-      nbTotal,
-      taux: nbTotal > 0 ? Math.round((nbPresent / nbTotal) * 100) : null,
-    };
-  });
-
-  // Effectifs : nouveaux ce mois, suspendus ce mois
-  const { data: nouveauxMois } = await supabase
-    .from("affectations")
-    .select("ouvrier_id, date_affectation")
-    .eq("departement_id", id)
-    .gte("date_affectation", debutMois)
-    .lte("date_affectation", finMois);
-
-  const nouveauxIds = (nouveauxMois ?? []).map((a) => a.ouvrier_id);
-  const { data: nouveauxOuvriers } = nouveauxIds.length
-    ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", nouveauxIds)
-    : { data: [] };
-
-  const { data: suspendusMois } = await supabase
-    .from("affectations")
-    .select("ouvrier_id, date_changement_statut")
-    .eq("departement_id", id)
-    .eq("statut", "suspendu")
-    .gte("date_changement_statut", debutMois)
-    .lte("date_changement_statut", finMois);
-
-  const suspendusIds = (suspendusMois ?? []).map((a) => a.ouvrier_id);
-  const { data: suspendusOuvriers } = suspendusIds.length
-    ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", suspendusIds)
-    : { data: [] };
+  const { statsByActivite, nouveauxOuvriers, suspendusOuvriers } =
+    await getDonneesRapport(supabase, id, periodeCourante);
 
   const action = soumettrerapport.bind(null, id);
   const moisLabel = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(now);
@@ -142,9 +87,18 @@ export default async function RapportPage({
         <div className="text-center">
           <h2 className="font-semibold text-lg capitalize">{moisLabel}</h2>
           {rapportExistant && (
-            <p className="text-xs text-green-600 mt-1">
-              Soumis le {format.date(rapportExistant.date_soumission)}
-            </p>
+            <>
+              <p className="text-xs text-green-600 mt-1">
+                Soumis le {format.date(rapportExistant.date_soumission)}
+              </p>
+              <Link
+                href={`/rapports/${rapportExistant.id}`}
+                className="inline-flex items-center gap-1 text-xs text-primary mt-1"
+              >
+                <FileDown size={13} />
+                Voir en document / télécharger
+              </Link>
+            </>
           )}
         </div>
 
