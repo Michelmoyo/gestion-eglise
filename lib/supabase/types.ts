@@ -379,6 +379,10 @@ export interface Database {
         Args: { p_departement_id: string };
         Returns: number;
       };
+      fn_solde_departement_a_date: {
+        Args: { p_departement_id: string; p_date: string };
+        Returns: number;
+      };
       rpc_assigner_role: {
         Args: {
           p_affectation_id: string;

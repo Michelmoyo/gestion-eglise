@@ -42,11 +42,36 @@ export default async function RapportDocumentPage({
     .eq("id", rapport.auteur_id)
     .single();
 
-  const { statsByActivite, nouveauxOuvriers, suspendusOuvriers } = await getDonneesRapport(
-    supabase,
-    rapport.departement_id,
-    rapport.periode
-  );
+  const { data: moi } = await supabase
+    .from("ouvriers")
+    .select("id, role_global")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  let peutVoirDetailCaisse = !!moi?.role_global;
+  if (moi && !peutVoirDetailCaisse) {
+    const { data: monAff } = await supabase
+      .from("affectations")
+      .select("role")
+      .eq("ouvrier_id", moi.id)
+      .eq("departement_id", rapport.departement_id)
+      .eq("statut", "actif")
+      .single();
+    peutVoirDetailCaisse = ["president", "vice_president", "tresorier"].includes(monAff?.role ?? "");
+  }
+
+  const {
+    statsByActivite,
+    nbActifs,
+    nouveauxOuvriers,
+    suspendusOuvriers,
+    statsCultes,
+    soldeDebut,
+    soldeFin,
+    mouvementsPeriode,
+  } = await getDonneesRapport(supabase, rapport.departement_id, rapport.periode, {
+    peutVoirDetailCaisse,
+  });
 
   const moisLabel = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
     new Date(rapport.periode)
@@ -77,31 +102,37 @@ export default async function RapportDocumentPage({
         </p>
       </div>
 
-      {(nouveauxOuvriers.length > 0 || suspendusOuvriers.length > 0) && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Mouvements d&apos;effectifs</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {nouveauxOuvriers.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-green-700 mb-1">Nouvelles adhésions</p>
-                {nouveauxOuvriers.map((o) => (
-                  <p key={o.id} className="text-sm">{o.prenom} {o.nom}</p>
-                ))}
-              </div>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">État des ouvriers</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm">
+            <span className="font-semibold text-lg">{nbActifs}</span>{" "}
+            <span className="text-muted-foreground">actif{nbActifs > 1 ? "s" : ""} actuellement</span>
+          </p>
+          <div>
+            <p className="text-xs font-semibold text-green-700 mb-1">
+              Adhérents ce mois {nouveauxOuvriers.length ? `(${nouveauxOuvriers.length})` : ""}
+            </p>
+            {!nouveauxOuvriers.length ? (
+              <p className="text-sm text-muted-foreground">Aucun.</p>
+            ) : (
+              nouveauxOuvriers.map((o) => <p key={o.id} className="text-sm">{o.prenom} {o.nom}</p>)
             )}
-            {suspendusOuvriers.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-orange-600 mb-1">Suspensions</p>
-                {suspendusOuvriers.map((o) => (
-                  <p key={o.id} className="text-sm">{o.prenom} {o.nom}</p>
-                ))}
-              </div>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-orange-600 mb-1">
+              Suspendus ce mois {suspendusOuvriers.length ? `(${suspendusOuvriers.length})` : ""}
+            </p>
+            {!suspendusOuvriers.length ? (
+              <p className="text-sm text-muted-foreground">Aucun.</p>
+            ) : (
+              suspendusOuvriers.map((o) => <p key={o.id} className="text-sm">{o.prenom} {o.nom}</p>)
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-2">
@@ -122,6 +153,68 @@ export default async function RapportDocumentPage({
                 </span>
               </div>
             ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Présence au culte ({statsCultes.length})</CardTitle>
+        </CardHeader>
+        <CardContent className="divide-y divide-border">
+          {!statsCultes.length ? (
+            <p className="text-sm text-muted-foreground py-2">Aucun culte ce mois.</p>
+          ) : (
+            statsCultes.map((c) => (
+              <div key={c.id} className="py-2 flex justify-between items-center text-sm">
+                <div>
+                  <p className="font-medium">{c.type}</p>
+                  <p className="text-xs text-muted-foreground">{format.date(c.date_culte)}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {c.taux !== null ? `${c.nbPresent}/${c.nbTotal} (${c.taux}%)` : "—"}
+                </span>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Caisse</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Solde en début de période</span>
+            <span className="font-medium">{format.montant(soldeDebut)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Solde en fin de période</span>
+            <span className="font-medium">{format.montant(soldeFin)}</span>
+          </div>
+          {peutVoirDetailCaisse ? (
+            <div className="pt-2 border-t border-border divide-y divide-border">
+              {!mouvementsPeriode.length ? (
+                <p className="text-sm text-muted-foreground py-2">Aucun mouvement ce mois.</p>
+              ) : (
+                mouvementsPeriode.map((m) => (
+                  <div key={m.id} className="py-2 flex items-start justify-between gap-2 text-sm">
+                    <div className="flex-1 min-w-0">
+                      <p>{m.motif || (m.type === "entree" ? "Entrée" : "Sortie")}</p>
+                      <p className="text-xs text-muted-foreground">{format.date(m.date_mouvement)}</p>
+                    </div>
+                    <span className={m.type === "entree" ? "text-green-600" : "text-destructive"}>
+                      {m.type === "entree" ? "+" : "-"}{format.montant(m.montant)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+              Détail des mouvements réservé au président, vice-président ou trésorier.
+            </p>
           )}
         </CardContent>
       </Card>
