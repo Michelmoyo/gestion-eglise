@@ -257,10 +257,10 @@ export default async function DepartementDetailPage({
           )}
           {peutGerer && (
             <>
-              <Link href={`/departements/${id}/rapport`}>
+              <Link href={`/departements/${id}/rapports`}>
                 <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
                   <span className="text-lg">📄</span>
-                  Rapport
+                  Rapports
                 </Button>
               </Link>
               <Link href={`/departements/${id}/equipe`}>
