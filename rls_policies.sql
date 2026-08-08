@@ -99,6 +99,24 @@ as $$
 $$;
 
 -- ----------------------------------------------------------------------------
+-- PARAMETRES EGLISE
+-- Lecture ouverte a tout utilisateur connecte (alimente l'entete des rapports
+-- generes, utile a tout gestionnaire qui produit un document). Modification
+-- reservee au pasteur -- explicitement PAS aux assistants (decision produit).
+-- ----------------------------------------------------------------------------
+alter table parametres_eglise enable row level security;
+
+create policy parametres_eglise_select on parametres_eglise for select using (
+  auth.uid() is not null
+);
+
+create policy parametres_eglise_update on parametres_eglise for update using (
+  fn_is_pasteur()
+) with check (
+  fn_is_pasteur()
+);
+
+-- ----------------------------------------------------------------------------
 -- OUVRIERS
 -- ----------------------------------------------------------------------------
 alter table ouvriers enable row level security;

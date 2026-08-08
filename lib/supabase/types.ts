@@ -27,6 +27,28 @@ export type SanteEnum = "vert" | "orange" | "rouge";
 export interface Database {
   public: {
     Tables: {
+      parametres_eglise: {
+        Row: {
+          id: string;
+          adresse: string | null;
+          telephone: string | null;
+          email: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          adresse?: string | null;
+          telephone?: string | null;
+          email?: string | null;
+        };
+        Update: {
+          id?: string;
+          adresse?: string | null;
+          telephone?: string | null;
+          email?: string | null;
+        };
+        Relationships: [];
+      };
       ouvriers: {
         Row: {
           id: string;

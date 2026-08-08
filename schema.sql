@@ -35,6 +35,26 @@ end;
 $$;
 
 -- ----------------------------------------------------------------------------
+-- PARAMETRES EGLISE
+-- Ligne unique (pas de eglise_id, une seule eglise -- cf. hypotheses en tete
+-- de fichier). Alimente l'entete des documents generes (rapports).
+-- Modifiable par le pasteur uniquement, cf. rls_policies.sql.
+-- ----------------------------------------------------------------------------
+create table parametres_eglise (
+  id          uuid primary key default gen_random_uuid(),
+  adresse     text,
+  telephone   text,
+  email       text,
+  updated_at  timestamptz not null default now()
+);
+
+create trigger trg_parametres_eglise_updated_at
+  before update on parametres_eglise
+  for each row execute function fn_set_updated_at();
+
+insert into parametres_eglise (adresse, telephone, email) values (null, null, null);
+
+-- ----------------------------------------------------------------------------
 -- OUVRIERS
 -- Fiche individuelle + lien vers le compte de connexion Supabase Auth.
 -- role_global est NULL pour un ouvrier "normal" : ses seuls roles viennent
