@@ -22,6 +22,7 @@ create type statut_affectation_enum as enum ('actif', 'suspendu', 'quitte');
 create type statut_presence_enum as enum ('present', 'absent', 'excuse');
 create type type_mouvement_enum as enum ('entree', 'sortie');
 create type sante_enum as enum ('vert', 'orange', 'rouge');
+create type statut_point_suivi_enum as enum ('a_faire', 'en_cours', 'termine');
 
 -- ----------------------------------------------------------------------------
 -- FONCTION GENERIQUE : mise a jour automatique de updated_at
@@ -274,8 +275,9 @@ create index idx_caisse_departement on mouvements_caisse(departement_id);
 -- du departement, cf. fn_seed_listes_suivi plus bas), mais le responsable
 -- peut en ajouter d'autres a l'avenir (ex. "Risques", "Projets"...).
 -- Un point de suivi vit independamment du cycle mensuel du rapport, peut
--- rester ouvert plusieurs mois, et se coche comme resolu par le responsable
--- du departement (president, vice-president, secretaire, ou pasteur/
+-- rester ouvert plusieurs mois, et suit un statut a trois valeurs (a_faire,
+-- en_cours, termine) mis a jour par le responsable du departement
+-- (president, vice-president, secretaire, ou pasteur/
 -- assistant). Visible en permanence sur la page du departement -- mais
 -- information sensible : reservee aux responsables et au pilotage, un
 -- simple ouvrier n'y a pas acces (cf. rls_policies.sql).
@@ -305,7 +307,7 @@ create table points_suivi (
   description        text,          -- description longue, fiche detail uniquement
   piece_jointe_path  text,          -- chemin dans le bucket storage "pieces-jointes"
   piece_jointe_nom   text,          -- nom de fichier original, pour l'affichage
-  resolu             boolean not null default false,
+  statut             statut_point_suivi_enum not null default 'a_faire',
   date_creation      date not null default current_date,
   date_resolution    date,
   cree_par           uuid not null references ouvriers(id),

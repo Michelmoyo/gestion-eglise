@@ -7,8 +7,7 @@ import { PointSuiviDetail } from "@/components/departements/point-suivi-detail";
 import { CommentairesSuivi } from "@/components/departements/commentaires-suivi";
 import {
   modifierPointSuivi,
-  resoudrePointSuivi,
-  rouvrirPointSuivi,
+  changerStatutPointSuivi,
   supprimerPointSuivi,
   uploaderPieceJointe,
   supprimerPieceJointe,
@@ -29,7 +28,7 @@ export default async function PointSuiviDetailPage({
   const { data: point } = await supabase
     .from("points_suivi")
     .select(
-      "id, contenu, description, resolu, date_creation, date_resolution, piece_jointe_path, piece_jointe_nom, liste_id"
+      "id, contenu, description, statut, date_creation, date_resolution, piece_jointe_path, piece_jointe_nom, liste_id"
     )
     .eq("id", pointId)
     .eq("departement_id", id)
@@ -120,8 +119,7 @@ export default async function PointSuiviDetailPage({
           pieceJointeUrl={pieceJointeUrl}
           peutGerer={peutGerer}
           modifierAction={modifierPointSuivi.bind(null, id, pointId)}
-          resoudreAction={resoudrePointSuivi.bind(null, id, pointId)}
-          rouvrirAction={rouvrirPointSuivi.bind(null, id, pointId)}
+          changerStatutAction={changerStatutPointSuivi.bind(null, id, pointId)}
           supprimerAction={supprimerPointSuivi.bind(null, id, pointId)}
           uploaderAction={uploaderPieceJointe.bind(null, id, pointId)}
           supprimerPieceJointeAction={supprimerPieceJointe.bind(null, id, pointId)}

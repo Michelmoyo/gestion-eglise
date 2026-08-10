@@ -23,6 +23,7 @@ export type StatutAffectationEnum = "actif" | "suspendu" | "quitte";
 export type StatutPresenceEnum = "present" | "absent" | "excuse";
 export type TypeMouvementEnum = "entree" | "sortie";
 export type SanteEnum = "vert" | "orange" | "rouge";
+export type StatutPointSuiviEnum = "a_faire" | "en_cours" | "termine";
 
 export interface Database {
   public: {
@@ -340,7 +341,7 @@ export interface Database {
           description: string | null;
           piece_jointe_path: string | null;
           piece_jointe_nom: string | null;
-          resolu: boolean;
+          statut: StatutPointSuiviEnum;
           date_creation: string;
           date_resolution: string | null;
           cree_par: string;
@@ -356,7 +357,7 @@ export interface Database {
           description?: string | null;
           piece_jointe_path?: string | null;
           piece_jointe_nom?: string | null;
-          resolu?: boolean;
+          statut?: StatutPointSuiviEnum;
           date_creation?: string;
           date_resolution?: string | null;
           cree_par: string;
@@ -370,7 +371,7 @@ export interface Database {
           description?: string | null;
           piece_jointe_path?: string | null;
           piece_jointe_nom?: string | null;
-          resolu?: boolean;
+          statut?: StatutPointSuiviEnum;
           date_creation?: string;
           date_resolution?: string | null;
           cree_par?: string;

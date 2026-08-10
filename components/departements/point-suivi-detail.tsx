@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, Trash2, Paperclip, Download, X } from "lucide-react";
+import { Trash2, Paperclip, Download, X } from "lucide-react";
 import { format } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import type { StatutPointSuiviEnum } from "@/lib/supabase/types";
+import { STATUTS_POINT_SUIVI, STATUT_POINT_SUIVI_STYLE } from "@/lib/suivi";
 
 interface Props {
   departementId: string;
@@ -15,7 +18,7 @@ interface Props {
     id: string;
     contenu: string;
     description: string | null;
-    resolu: boolean;
+    statut: StatutPointSuiviEnum;
     date_creation: string;
     date_resolution: string | null;
     piece_jointe_nom: string | null;
@@ -23,8 +26,7 @@ interface Props {
   pieceJointeUrl: string | null;
   peutGerer: boolean;
   modifierAction: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
-  resoudreAction: () => Promise<{ error?: string; success?: boolean }>;
-  rouvrirAction: () => Promise<{ error?: string; success?: boolean }>;
+  changerStatutAction: (statut: StatutPointSuiviEnum) => Promise<{ error?: string; success?: boolean }>;
   supprimerAction: () => Promise<{ error?: string; success?: boolean }>;
   uploaderAction: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
   supprimerPieceJointeAction: () => Promise<{ error?: string; success?: boolean }>;
@@ -36,8 +38,7 @@ export function PointSuiviDetail({
   pieceJointeUrl,
   peutGerer,
   modifierAction,
-  resoudreAction,
-  rouvrirAction,
+  changerStatutAction,
   supprimerAction,
   uploaderAction,
   supprimerPieceJointeAction,
@@ -63,10 +64,10 @@ export function PointSuiviDetail({
     });
   }
 
-  function toggleResolu() {
+  function changerStatut(statut: StatutPointSuiviEnum) {
     startTransition(async () => {
       setError(null);
-      const res = point.resolu ? await rouvrirAction() : await resoudreAction();
+      const res = await changerStatutAction(statut);
       if (res.error) setError(res.error);
     });
   }
@@ -105,29 +106,29 @@ export function PointSuiviDetail({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         {peutGerer ? (
-          <button
-            type="button"
-            onClick={toggleResolu}
-            disabled={isPending}
-            className={`inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border transition-colors ${
-              point.resolu
-                ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
-                : "border-input hover:bg-accent"
-            }`}
-          >
-            {point.resolu && <Check size={14} />}
-            {point.resolu ? "Résolu" : "Marquer résolu"}
-          </button>
+          <div className="flex gap-1.5">
+            {STATUTS_POINT_SUIVI.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => changerStatut(s.value)}
+                disabled={isPending}
+                className={cn(
+                  "text-xs px-3 py-1.5 rounded-full border transition-colors",
+                  point.statut === s.value
+                    ? `border-transparent ${STATUT_POINT_SUIVI_STYLE[s.value]}`
+                    : "border-input text-muted-foreground hover:bg-accent"
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         ) : (
-          <span
-            className={`inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border ${
-              point.resolu ? "bg-green-500 border-green-500 text-white" : "border-input text-muted-foreground"
-            }`}
-          >
-            {point.resolu && <Check size={14} />}
-            {point.resolu ? "Résolu" : "Ouvert"}
+          <span className={cn("text-sm px-3 py-1.5 rounded-full", STATUT_POINT_SUIVI_STYLE[point.statut])}>
+            {STATUTS_POINT_SUIVI.find((s) => s.value === point.statut)?.label}
           </span>
         )}
         {peutGerer && (
@@ -145,7 +146,7 @@ export function PointSuiviDetail({
 
       <p className="text-xs text-muted-foreground">
         Émis le {format.date(point.date_creation)}
-        {point.resolu && point.date_resolution ? ` · résolu le ${format.date(point.date_resolution)}` : ""}
+        {point.statut === "termine" && point.date_resolution ? ` · résolu le ${format.date(point.date_resolution)}` : ""}
       </p>
 
       <form onSubmit={enregistrer} className="space-y-3">

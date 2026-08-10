@@ -88,7 +88,7 @@ export default async function RapportPage({
   } = await getDonneesRapport(supabase, id, periodeCourante, { peutVoirDetailCaisse });
 
   const suiviOuvert = (listeId: string) =>
-    pointsSuivi.filter((p) => p.liste_id === listeId && !p.resolu);
+    pointsSuivi.filter((p) => p.liste_id === listeId && p.statut !== "termine");
 
   const action = soumettrerapport.bind(null, id);
   const moisLabel = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(

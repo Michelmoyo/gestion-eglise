@@ -10,6 +10,7 @@ import {
   commentaireSuiviSchema,
   MAX_TAILLE_PIECE_JOINTE,
 } from "@/lib/validations/suivi";
+import type { StatutPointSuiviEnum } from "@/lib/supabase/types";
 
 const BUCKET_PIECES_JOINTES = "pieces-jointes";
 
@@ -121,39 +122,28 @@ export async function ajouterPointSuivi(
   return { success: true };
 }
 
-export async function resoudrePointSuivi(departementId: string, pointId: string) {
+export async function changerStatutPointSuivi(
+  departementId: string,
+  pointId: string,
+  statut: StatutPointSuiviEnum
+) {
   const { supabase, moi, peutGerer } = await getContexte(departementId);
   if (!peutGerer) return { error: "Accès refusé." };
 
   const { error } = await supabase
     .from("points_suivi")
-    .update({
-      resolu: true,
-      date_resolution: new Date().toISOString().split("T")[0],
-      resolu_par: moi.id,
-    })
+    .update(
+      statut === "termine"
+        ? { statut, date_resolution: new Date().toISOString().split("T")[0], resolu_par: moi.id }
+        : { statut, date_resolution: null, resolu_par: null }
+    )
     .eq("id", pointId)
     .eq("departement_id", departementId);
 
   if (error) return { error: "Erreur." };
 
   revalidatePath(`/departements/${departementId}/suivi`);
-  return { success: true };
-}
-
-export async function rouvrirPointSuivi(departementId: string, pointId: string) {
-  const { supabase, peutGerer } = await getContexte(departementId);
-  if (!peutGerer) return { error: "Accès refusé." };
-
-  const { error } = await supabase
-    .from("points_suivi")
-    .update({ resolu: false, date_resolution: null, resolu_par: null })
-    .eq("id", pointId)
-    .eq("departement_id", departementId);
-
-  if (error) return { error: "Erreur." };
-
-  revalidatePath(`/departements/${departementId}/suivi`);
+  revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
   return { success: true };
 }
 

@@ -227,7 +227,7 @@ export async function getDonneesRapport(
 
   const { data: pointsSuivi } = await supabase
     .from("points_suivi")
-    .select("id, liste_id, contenu, resolu, date_creation, date_resolution")
+    .select("id, liste_id, contenu, statut, date_creation, date_resolution")
     .eq("departement_id", departementId)
     .order("date_creation", { ascending: true });
 
@@ -235,12 +235,12 @@ export async function getDonneesRapport(
     const listeId = (listesSuivi ?? []).find((l) => l.nom === nomListe)?.id;
     if (!listeId) return null;
     const items = (pointsSuivi ?? []).filter((p) => p.liste_id === listeId).filter((p) => {
-      if (!p.resolu) return true;
+      if (p.statut !== "termine") return true;
       return !!p.date_resolution && p.date_resolution >= debutMois && p.date_resolution <= finMois;
     });
     if (!items.length) return null;
     return items
-      .map((p) => (p.resolu ? `${p.contenu} — résolu le ${format.date(p.date_resolution)}` : p.contenu))
+      .map((p) => (p.statut === "termine" ? `${p.contenu} — résolu le ${format.date(p.date_resolution)}` : p.contenu))
       .join("\n");
   }
 

@@ -7,8 +7,7 @@ import { SuiviSection } from "@/components/departements/suivi-section";
 import { NouvelleListeForm } from "@/components/departements/nouvelle-liste-form";
 import {
   ajouterPointSuivi,
-  resoudrePointSuivi,
-  rouvrirPointSuivi,
+  changerStatutPointSuivi,
   supprimerPointSuivi,
   ajouterListe,
   supprimerListe,
@@ -67,12 +66,11 @@ export default async function SuiviPage({
 
   const { data: points } = await supabase
     .from("points_suivi")
-    .select("id, liste_id, contenu, resolu, date_creation, date_resolution, piece_jointe_nom")
+    .select("id, liste_id, contenu, statut, date_creation, date_resolution, piece_jointe_nom")
     .eq("departement_id", id)
     .order("date_creation", { ascending: false });
 
-  const resoudre = resoudrePointSuivi.bind(null, id);
-  const rouvrir = rouvrirPointSuivi.bind(null, id);
+  const changerStatut = changerStatutPointSuivi.bind(null, id);
   const supprimerPoint = supprimerPointSuivi.bind(null, id);
   const supprimerListeAction = supprimerListe.bind(null, id);
   const ajouterListeAction = ajouterListe.bind(null, id);
@@ -104,8 +102,7 @@ export default async function SuiviPage({
               items={(points ?? []).filter((p) => p.liste_id === liste.id)}
               peutGerer={peutGerer}
               ajouterAction={ajouterPointSuivi.bind(null, id, liste.id)}
-              resoudreAction={resoudre}
-              rouvrirAction={rouvrir}
+              changerStatutAction={changerStatut}
               supprimerAction={supprimerPoint}
               supprimerListeAction={supprimerListeAction}
             />
