@@ -36,23 +36,18 @@ export async function soumettrerapport(departementId: string, formData: FormData
   const periode = formData.get("periode") as string;
   if (!periode) return { error: "Période requise." };
 
-  // Difficultés/besoins/objectifs ne se saisissent plus par rapport : on
-  // capture ici un instantané de ce qui est ouvert (ou résolu ce mois-ci)
-  // dans le suivi du département au moment de la soumission.
-  const { difficultesTexte, besoinsTexte, objectifsTexte } = await getDonneesRapport(
-    supabase,
-    departementId,
-    periode,
-    { peutVoirDetailCaisse: false }
-  );
+  // Le suivi ne se saisit plus par rapport : on capture ici un instantané de
+  // ce qui est ouvert (ou résolu ce mois-ci) dans chaque liste marquée
+  // "inclure dans le rapport" au moment de la soumission.
+  const { suiviInclus } = await getDonneesRapport(supabase, departementId, periode, {
+    peutVoirDetailCaisse: false,
+  });
 
   const { error } = await supabase.from("rapports").upsert(
     {
       departement_id: departementId,
       periode,
-      difficultes: difficultesTexte,
-      besoins: besoinsTexte,
-      objectifs: objectifsTexte,
+      suivi_snapshot: suiviInclus,
       auteur_id: moi.id,
       date_soumission: new Date().toISOString(),
     },

@@ -11,6 +11,7 @@ import {
   supprimerPointSuivi,
   ajouterListe,
   supprimerListe,
+  changerInclureRapport,
 } from "./actions";
 
 export default async function SuiviPage({
@@ -60,7 +61,7 @@ export default async function SuiviPage({
 
   const { data: listes } = await supabase
     .from("listes_suivi")
-    .select("id, nom, ordre")
+    .select("id, nom, ordre, inclure_rapport")
     .eq("departement_id", id)
     .order("ordre", { ascending: true });
 
@@ -74,6 +75,7 @@ export default async function SuiviPage({
   const supprimerPoint = supprimerPointSuivi.bind(null, id);
   const supprimerListeAction = supprimerListe.bind(null, id);
   const ajouterListeAction = ajouterListe.bind(null, id);
+  const changerInclureRapportAction = changerInclureRapport.bind(null, id);
 
   return (
     <>
@@ -99,12 +101,14 @@ export default async function SuiviPage({
               departementId={id}
               listeId={liste.id}
               nom={liste.nom}
+              inclureRapport={liste.inclure_rapport}
               items={(points ?? []).filter((p) => p.liste_id === liste.id)}
               peutGerer={peutGerer}
               ajouterAction={ajouterPointSuivi.bind(null, id, liste.id)}
               changerStatutAction={changerStatut}
               supprimerAction={supprimerPoint}
               supprimerListeAction={supprimerListeAction}
+              changerInclureRapportAction={changerInclureRapportAction}
             />
           ))
         )}

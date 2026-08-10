@@ -285,21 +285,25 @@ export default async function RapportPage({
           </CardContent>
         </Card>
 
-        {/* Suivi du département — géré depuis /suivi, prévisualisé ici */}
+        {/* Suivi du département — géré depuis /suivi, prévisualisé ici.
+            Seules les listes marquées "inclure dans le rapport" apparaissent :
+            c'est un aperçu de ce que la soumission va effectivement capturer. */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center justify-between">
-              <span>Suivi du département</span>
+              <span>Suivi inclus dans le rapport</span>
               <Link href={`/departements/${id}/suivi`} className="text-xs text-primary font-normal">
                 Gérer →
               </Link>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {!listesSuivi.length ? (
-              <p className="text-sm text-muted-foreground">Aucune liste de suivi.</p>
+            {!listesSuivi.some((l) => l.inclure_rapport) ? (
+              <p className="text-sm text-muted-foreground">
+                Aucune liste incluse dans le rapport. Choisis-en depuis « Gérer ».
+              </p>
             ) : (
-              listesSuivi.map((liste) => {
+              listesSuivi.filter((l) => l.inclure_rapport).map((liste) => {
                 const items = suiviOuvert(liste.id);
                 return (
                   <div key={liste.id}>
@@ -314,6 +318,13 @@ export default async function RapportPage({
                   </div>
                 );
               })
+            )}
+            {listesSuivi.some((l) => !l.inclure_rapport) && (
+              <p className="text-xs text-muted-foreground pt-1 border-t border-border">
+                {listesSuivi.filter((l) => !l.inclure_rapport).length} liste
+                {listesSuivi.filter((l) => !l.inclure_rapport).length > 1 ? "s" : ""} non incluse
+                {listesSuivi.filter((l) => !l.inclure_rapport).length > 1 ? "s" : ""} dans le rapport.
+              </p>
             )}
           </CardContent>
         </Card>

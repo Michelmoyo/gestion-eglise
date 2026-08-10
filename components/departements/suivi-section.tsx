@@ -25,6 +25,7 @@ interface Props {
   departementId: string;
   listeId: string;
   nom: string;
+  inclureRapport: boolean;
   items: PointSuivi[];
   peutGerer: boolean;
   ajouterAction: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
@@ -34,6 +35,10 @@ interface Props {
   ) => Promise<{ error?: string; success?: boolean }>;
   supprimerAction: (pointId: string) => Promise<{ error?: string; success?: boolean }>;
   supprimerListeAction: (listeId: string) => Promise<{ error?: string; success?: boolean }>;
+  changerInclureRapportAction: (
+    listeId: string,
+    inclure: boolean
+  ) => Promise<{ error?: string; success?: boolean }>;
 }
 
 const FILTRES: { value: Filtre; label: string }[] = [
@@ -45,12 +50,14 @@ export function SuiviSection({
   departementId,
   listeId,
   nom,
+  inclureRapport,
   items,
   peutGerer,
   ajouterAction,
   changerStatutAction,
   supprimerAction,
   supprimerListeAction,
+  changerInclureRapportAction,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +106,14 @@ export function SuiviSection({
     });
   }
 
+  function toggleInclureRapport(checked: boolean) {
+    startTransition(async () => {
+      setError(null);
+      const res = await changerInclureRapportAction(listeId, checked);
+      if (res.error) setError(res.error);
+    });
+  }
+
   return (
     <Card>
       <details open className="group">
@@ -142,6 +157,19 @@ export function SuiviSection({
               </button>
             ))}
           </div>
+
+          {peutGerer && (
+            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer w-fit">
+              <input
+                type="checkbox"
+                checked={inclureRapport}
+                onChange={(e) => toggleInclureRapport(e.target.checked)}
+                disabled={isPending}
+                className="h-3.5 w-3.5 rounded border-input accent-primary cursor-pointer"
+              />
+              Inclure dans le rapport mensuel
+            </label>
+          )}
 
           {!visibles.length ? (
             <p className="text-sm text-muted-foreground">Rien à afficher.</p>

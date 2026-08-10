@@ -76,6 +76,26 @@ export async function ajouterListe(departementId: string, formData: FormData) {
   return { success: true };
 }
 
+export async function changerInclureRapport(
+  departementId: string,
+  listeId: string,
+  inclure: boolean
+) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const { error } = await supabase
+    .from("listes_suivi")
+    .update({ inclure_rapport: inclure })
+    .eq("id", listeId)
+    .eq("departement_id", departementId);
+
+  if (error) return { error: "Erreur." };
+
+  revalidatePath(`/departements/${departementId}/suivi`);
+  return { success: true };
+}
+
 export async function supprimerListe(departementId: string, listeId: string) {
   const { supabase, peutGerer } = await getContexte(departementId);
   if (!peutGerer) return { error: "Accès refusé." };

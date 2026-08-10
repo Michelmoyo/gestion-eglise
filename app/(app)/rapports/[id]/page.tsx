@@ -20,6 +20,16 @@ function listeDepuisTexte(texte: string | null): string[] {
   return texte.split("\n").map((l) => l.trim()).filter(Boolean);
 }
 
+// Libelle plus descriptif pour les 3 listes par defaut ; les listes
+// personnalisees s'affichent avec leur propre nom tel quel.
+const LIBELLE_SUIVI: Record<string, string> = {
+  "Difficultés": "Difficultés rencontrées",
+  "Objectifs": "Objectifs — mois prochain",
+};
+function libelleSuivi(nom: string): string {
+  return LIBELLE_SUIVI[nom] ?? nom;
+}
+
 function chunk<T>(items: T[], taille: number): T[][] {
   const groupes: T[][] = [];
   for (let i = 0; i < items.length; i += taille) groupes.push(items.slice(i, i + taille));
@@ -77,7 +87,7 @@ export default async function RapportDocumentPage({
 
   const { data: rapport } = await supabase
     .from("rapports")
-    .select("id, departement_id, periode, difficultes, besoins, objectifs, auteur_id, date_soumission")
+    .select("id, departement_id, periode, difficultes, besoins, objectifs, suivi_snapshot, auteur_id, date_soumission")
     .eq("id", id)
     .single();
 
@@ -160,9 +170,17 @@ export default async function RapportDocumentPage({
   );
   const reference = `RAP-${anneeNum}-${String(moisNum).padStart(2, "0")}-${normaliserReference(dept.nom)}`;
 
-  const difficultes = listeDepuisTexte(rapport.difficultes);
-  const besoins = listeDepuisTexte(rapport.besoins);
-  const objectifs = listeDepuisTexte(rapport.objectifs);
+  // suivi_snapshot est le format courant (nombre de listes variable, cf.
+  // listes_suivi.inclure_rapport). Les rapports soumis avant l'introduction
+  // des listes personnalisees n'ont que les 3 colonnes figees historiques.
+  const blocsSuivi: { nom: string; texte: string | null }[] =
+    rapport.suivi_snapshot && rapport.suivi_snapshot.length
+      ? rapport.suivi_snapshot
+      : [
+          { nom: "Difficultés", texte: rapport.difficultes },
+          { nom: "Besoins", texte: rapport.besoins },
+          { nom: "Objectifs", texte: rapport.objectifs },
+        ];
 
   const nomEglise = parametres?.nom_eglise || "Église";
   const contactLigne2 = [parametres?.telephone, parametres?.email].filter(Boolean).join(" · ");
@@ -481,31 +499,24 @@ export default async function RapportDocumentPage({
           </section>
 
           <section className={styles.section}>
-            <SectionHead num="V." titre="Difficultés, besoins & objectifs" />
-            <div className={styles.qualBlock}>
-              <h3>Difficultés rencontrées</h3>
-              {difficultes.length ? (
-                <ul>{difficultes.map((d, i) => <li key={i}>{d}</li>)}</ul>
-              ) : (
-                <p className={styles.empty}>Aucune.</p>
-              )}
-            </div>
-            <div className={styles.qualBlock}>
-              <h3>Besoins</h3>
-              {besoins.length ? (
-                <ul>{besoins.map((b, i) => <li key={i}>{b}</li>)}</ul>
-              ) : (
-                <p className={styles.empty}>Aucun.</p>
-              )}
-            </div>
-            <div className={styles.qualBlock}>
-              <h3>Objectifs — mois prochain</h3>
-              {objectifs.length ? (
-                <ul>{objectifs.map((o, i) => <li key={i}>{o}</li>)}</ul>
-              ) : (
-                <p className={styles.empty}>Aucun.</p>
-              )}
-            </div>
+            <SectionHead num="V." titre="Suivi du département" />
+            {!blocsSuivi.length ? (
+              <p className={styles.empty}>Aucune liste de suivi incluse dans ce rapport.</p>
+            ) : (
+              blocsSuivi.map((bloc, i) => {
+                const lignes = listeDepuisTexte(bloc.texte);
+                return (
+                  <div key={i} className={styles.qualBlock}>
+                    <h3>{libelleSuivi(bloc.nom)}</h3>
+                    {lignes.length ? (
+                      <ul>{lignes.map((l, j) => <li key={j}>{l}</li>)}</ul>
+                    ) : (
+                      <p className={styles.empty}>Aucun.</p>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </section>
 
           <footer className={styles.footer}>

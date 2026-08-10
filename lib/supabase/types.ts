@@ -312,6 +312,7 @@ export interface Database {
           departement_id: string;
           nom: string;
           ordre: number;
+          inclure_rapport: boolean;
           cree_par: string | null;
           created_at: string;
           updated_at: string;
@@ -321,6 +322,7 @@ export interface Database {
           departement_id: string;
           nom: string;
           ordre?: number;
+          inclure_rapport?: boolean;
           cree_par?: string | null;
         };
         Update: {
@@ -328,6 +330,7 @@ export interface Database {
           departement_id?: string;
           nom?: string;
           ordre?: number;
+          inclure_rapport?: boolean;
           cree_par?: string | null;
         };
         Relationships: [];
@@ -415,6 +418,7 @@ export interface Database {
           difficultes: string | null;
           besoins: string | null;
           objectifs: string | null;
+          suivi_snapshot: { nom: string; texte: string | null }[] | null;
           auteur_id: string;
           date_soumission: string;
         };
@@ -425,6 +429,7 @@ export interface Database {
           difficultes?: string | null;
           besoins?: string | null;
           objectifs?: string | null;
+          suivi_snapshot?: { nom: string; texte: string | null }[] | null;
           auteur_id: string;
           date_soumission?: string;
         };

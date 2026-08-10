@@ -216,14 +216,15 @@ export async function getDonneesRapport(
   // Remplace la saisie manuelle par rapport : on prend tout ce qui est
   // encore ouvert (peu importe depuis quand) + ce qui a été résolu pendant
   // cette période précise, pour que le rapport montre à la fois ce qui reste
-  // en cours et ce qui a été accompli ce mois-ci. Seules les 3 listes par
-  // defaut alimentent les colonnes du rapport (difficultes/besoins/objectifs) ;
-  // une liste personnalisee supplementaire reste visible sur /suivi mais
-  // n'a pas encore de section dediee dans le document genere.
+  // en cours et ce qui a été accompli ce mois-ci. Seules les listes marquees
+  // inclure_rapport alimentent le document genere -- le responsable choisit
+  // lesquelles (les 3 listes par defaut le sont, mais peuvent etre
+  // desactivees ; une liste personnalisee peut au contraire etre incluse).
   const { data: listesSuivi } = await supabase
     .from("listes_suivi")
-    .select("id, nom")
-    .eq("departement_id", departementId);
+    .select("id, nom, inclure_rapport")
+    .eq("departement_id", departementId)
+    .order("ordre", { ascending: true });
 
   const { data: pointsSuivi } = await supabase
     .from("points_suivi")
@@ -231,9 +232,7 @@ export async function getDonneesRapport(
     .eq("departement_id", departementId)
     .order("date_creation", { ascending: true });
 
-  function texteSuivi(nomListe: string): string | null {
-    const listeId = (listesSuivi ?? []).find((l) => l.nom === nomListe)?.id;
-    if (!listeId) return null;
+  function texteSuiviListe(listeId: string): string | null {
     const items = (pointsSuivi ?? []).filter((p) => p.liste_id === listeId).filter((p) => {
       if (p.statut !== "termine") return true;
       return !!p.date_resolution && p.date_resolution >= debutMois && p.date_resolution <= finMois;
@@ -243,6 +242,10 @@ export async function getDonneesRapport(
       .map((p) => (p.statut === "termine" ? `${p.contenu} — résolu le ${format.date(p.date_resolution)}` : p.contenu))
       .join("\n");
   }
+
+  const suiviInclus = (listesSuivi ?? [])
+    .filter((l) => l.inclure_rapport)
+    .map((l) => ({ nom: l.nom, texte: texteSuiviListe(l.id) }));
 
   return {
     roster,
@@ -259,8 +262,6 @@ export async function getDonneesRapport(
     peutVoirDetailCaisse: options.peutVoirDetailCaisse,
     listesSuivi: listesSuivi ?? [],
     pointsSuivi: pointsSuivi ?? [],
-    difficultesTexte: texteSuivi("Difficultés"),
-    besoinsTexte: texteSuivi("Besoins"),
-    objectifsTexte: texteSuivi("Objectifs"),
+    suiviInclus,
   };
 }

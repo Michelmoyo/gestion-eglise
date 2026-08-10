@@ -283,13 +283,14 @@ create index idx_caisse_departement on mouvements_caisse(departement_id);
 -- simple ouvrier n'y a pas acces (cf. rls_policies.sql).
 -- ----------------------------------------------------------------------------
 create table listes_suivi (
-  id             uuid primary key default gen_random_uuid(),
-  departement_id uuid not null references departements(id) on delete cascade,
-  nom            text not null,
-  ordre          int not null default 0,
-  cree_par       uuid references ouvriers(id),
-  created_at     timestamptz not null default now(),
-  updated_at     timestamptz not null default now(),
+  id                uuid primary key default gen_random_uuid(),
+  departement_id    uuid not null references departements(id) on delete cascade,
+  nom               text not null,
+  ordre             int not null default 0,
+  inclure_rapport   boolean not null default true, -- apparait dans le rapport mensuel genere
+  cree_par          uuid references ouvriers(id),
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
   unique (departement_id, nom)
 );
 
@@ -411,18 +412,23 @@ create trigger trg_seed_listes_suivi
 -- RAPPORTS
 -- La partie quantitative (effectifs, activites, caisse) n'est PAS dupliquee
 -- ici : elle se calcule via les vues ci-dessous, filtrees sur "periode".
--- difficultes/besoins/objectifs sont desormais une COPIE figee, prise depuis
--- points_suivi au moment de la soumission (voir soumettrerapport) -- plus de
--- saisie manuelle a chaque rapport. Aucune mise a jour libre par ailleurs :
--- un rapport soumis reste une archive datee.
+-- Le suivi (Difficultes/Besoins/Objectifs + listes personnalisees) est une
+-- COPIE figee, prise depuis points_suivi au moment de la soumission (voir
+-- soumettrerapport) -- plus de saisie manuelle a chaque rapport. Aucune mise
+-- a jour libre par ailleurs : un rapport soumis reste une archive datee.
+-- difficultes/besoins/objectifs sont l'ancien format (3 colonnes fixes),
+-- conserve tel quel pour les rapports deja soumis avant l'introduction des
+-- listes personnalisees ; suivi_snapshot (nombre de listes variable, cf.
+-- listes_suivi.inclure_rapport) est le format utilise depuis.
 -- ----------------------------------------------------------------------------
 create table rapports (
   id              uuid primary key default gen_random_uuid(),
   departement_id  uuid references departements(id) on delete cascade,
   periode         date not null, -- premier jour du mois couvert
-  difficultes     text,
-  besoins         text,
-  objectifs       text,
+  difficultes     text,          -- legacy, cf. commentaire ci-dessus
+  besoins         text,          -- legacy
+  objectifs       text,          -- legacy
+  suivi_snapshot  jsonb,         -- [{ nom: string, texte: string | null }, ...]
   auteur_id       uuid not null references ouvriers(id),
   date_soumission timestamptz not null default now(),
   unique (departement_id, periode)
