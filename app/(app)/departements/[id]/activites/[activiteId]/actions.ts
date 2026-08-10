@@ -62,5 +62,5 @@ export async function enregistrerPresences(
     });
   }
 
-  redirect(`/departements/${departementId}/activites/${activiteId}`);
+  redirect(`/departements/${departementId}/activites/${activiteId}/presences`);
 }

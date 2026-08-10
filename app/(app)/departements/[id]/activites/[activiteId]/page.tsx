@@ -2,12 +2,10 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Pencil, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Users } from "lucide-react";
 import { format } from "@/lib/format";
-import { PresencesForm } from "@/components/activites/presences-form";
-import { enregistrerPresences } from "./actions";
 
 export default async function ActiviteDetailPage({
   params,
@@ -60,44 +58,16 @@ export default async function ActiviteDetailPage({
     peutGerer = ["president", "vice_president", "secretaire"].includes(aff.role);
   }
 
-  // Membres actifs du département
-  const { data: affectations } = await supabase
-    .from("affectations")
-    .select("ouvrier_id")
-    .eq("departement_id", departementId)
-    .eq("statut", "actif");
-
-  const ouvrierIds = (affectations ?? []).map((a) => a.ouvrier_id);
-  const { data: membres } = ouvrierIds.length
-    ? await supabase
-        .from("ouvriers")
-        .select("id, prenom, nom")
-        .in("id", ouvrierIds)
-        .order("nom")
-    : { data: [] };
-
-  // Présences déjà enregistrées
-  const { data: presences } = await supabase
-    .from("presences")
-    .select("ouvrier_id, statut")
-    .eq("activite_id", activiteId);
-
-  const presenceByOuvrier = Object.fromEntries(
-    (presences ?? []).map((p) => [p.ouvrier_id, p.statut])
-  );
-
   // Responsable nom
   let responsableNom: string | null = null;
   if (activite.responsable_id) {
-    const membre = (membres ?? []).find((m) => m.id === activite.responsable_id);
-    if (membre) responsableNom = `${membre.prenom} ${membre.nom}`;
+    const { data: responsable } = await supabase
+      .from("ouvriers")
+      .select("prenom, nom")
+      .eq("id", activite.responsable_id)
+      .single();
+    if (responsable) responsableNom = `${responsable.prenom} ${responsable.nom}`;
   }
-
-  // Stats présences
-  const nbPresents = (presences ?? []).filter((p) => p.statut === "present").length;
-  const nbTotal = membres?.length ?? 0;
-
-  const action = enregistrerPresences.bind(null, departementId, activiteId);
 
   return (
     <>
@@ -126,50 +96,31 @@ export default async function ActiviteDetailPage({
         <Card>
           <CardContent className="pt-4 space-y-1 text-sm">
             <p className="font-semibold text-base">{activite.titre}</p>
-            <p className="text-muted-foreground">{format.date(activite.date_activite)}{activite.heure ? ` · ${activite.heure.slice(0, 5)}` : ""}</p>
+            <p className="text-muted-foreground">
+              {format.date(activite.date_activite)}
+              {activite.heure ? ` · ${activite.heure.slice(0, 5)}` : ""}
+            </p>
             {activite.lieu && <p className="text-muted-foreground">📍 {activite.lieu}</p>}
             {responsableNom && <p className="text-muted-foreground">Responsable : {responsableNom}</p>}
             {activite.description && <p className="mt-2">{activite.description}</p>}
           </CardContent>
         </Card>
 
-        {/* Résumé présences */}
-        {presences && presences.length > 0 && (
-          <Card>
-            <CardContent className="pt-4 flex items-center gap-3">
-              <Users size={20} className="text-primary" />
-              <div>
-                <p className="font-semibold text-sm">{nbPresents} / {nbTotal} présents</p>
-                <p className="text-xs text-muted-foreground">
-                  {nbTotal > 0 ? Math.round((nbPresents / nbTotal) * 100) : 0}% de présence
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Saisie des présences : reservee a la gestion du departement, pas a
+            la simple consultation de l'activite. */}
+        {peutGerer && (
+          <Link href={`/departements/${departementId}/activites/${activiteId}/presences`}>
+            <Card className="hover:bg-accent transition-colors">
+              <CardContent className="pt-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Users size={20} className="text-primary" />
+                  <p className="font-semibold text-sm">Présences</p>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
         )}
-
-        {/* Saisie des présences */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">
-              {peutGerer ? "Saisir les présences" : "Présences"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {nbTotal > 0 ? (
-              <PresencesForm
-                action={action}
-                membres={membres ?? []}
-                presenceByOuvrier={presenceByOuvrier}
-                readonly={!peutGerer}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Aucun membre actif dans ce département — impossible d&apos;enregistrer des présences.
-              </p>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </>
   );

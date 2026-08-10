@@ -48,8 +48,7 @@ export default async function MonEspacePage() {
 
   const deptMap = Object.fromEntries((departements ?? []).map((d) => [d.id, d.nom]));
 
-  // Prochaines activités (une de plus que la limite affichée, pour savoir
-  // s'il faut proposer "Voir tout")
+  // Prochaines activités (les 3 plus proches ; le reste via "Voir tout")
   const { data: prochainesActivitesData } = departementIds.length
     ? await supabase
         .from("activites")
@@ -57,11 +56,10 @@ export default async function MonEspacePage() {
         .in("departement_id", departementIds)
         .gte("date_activite", new Date().toISOString().split("T")[0])
         .order("date_activite", { ascending: true })
-        .limit(4)
+        .limit(3)
     : { data: [] };
 
-  const prochainesActivites = (prochainesActivitesData ?? []).slice(0, 3);
-  const dAutresActivites = (prochainesActivitesData ?? []).length > 3;
+  const prochainesActivites = prochainesActivitesData ?? [];
 
   // Présences ce mois (activités de département + cultes)
   const debutMois = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
@@ -78,10 +76,9 @@ export default async function MonEspacePage() {
     .select("id, type, date_culte, heure, lieu")
     .gte("date_culte", new Date().toISOString().split("T")[0])
     .order("date_culte", { ascending: true })
-    .limit(4);
+    .limit(3);
 
-  const prochainsCultes = (prochainsCultesData ?? []).slice(0, 3);
-  const dAutresCultes = (prochainsCultesData ?? []).length > 3;
+  const prochainsCultes = prochainsCultesData ?? [];
 
   return (
     <>
@@ -146,12 +143,17 @@ export default async function MonEspacePage() {
 
         {/* Prochains cultes */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Church size={16} />
-              Prochains cultes
-            </CardTitle>
-          </CardHeader>
+          <Link href="/cultes">
+            <CardHeader className="pb-2 hover:bg-accent transition-colors rounded-t-xl">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <Church size={16} />
+                  Prochains cultes
+                </span>
+                <ChevronRight size={16} />
+              </CardTitle>
+            </CardHeader>
+          </Link>
           <CardContent className="space-y-3">
             {!prochainsCultes.length ? (
               <p className="text-sm text-muted-foreground">Aucun culte planifié.</p>
@@ -170,32 +172,32 @@ export default async function MonEspacePage() {
                 </Link>
               ))
             )}
-            {dAutresCultes && (
-              <Link
-                href="/cultes"
-                className="flex items-center justify-center gap-1 text-xs font-medium text-primary pt-1"
-              >
-                Voir tout
-                <ChevronRight size={14} />
-              </Link>
-            )}
           </CardContent>
         </Card>
 
         {/* Prochaines activités */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CalendarDays size={16} />
-              Prochaines activités
-            </CardTitle>
-          </CardHeader>
+          <Link href="/mon-espace/activites">
+            <CardHeader className="pb-2 hover:bg-accent transition-colors rounded-t-xl">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <CalendarDays size={16} />
+                  Prochaines activités
+                </span>
+                <ChevronRight size={16} />
+              </CardTitle>
+            </CardHeader>
+          </Link>
           <CardContent className="space-y-3">
             {!prochainesActivites.length ? (
               <p className="text-sm text-muted-foreground">Aucune activité planifiée.</p>
             ) : (
               prochainesActivites.map((act) => (
-                <div key={act.id} className="flex items-start gap-3">
+                <Link
+                  key={act.id}
+                  href={`/departements/${act.departement_id}/activites/${act.id}`}
+                  className="flex items-start gap-3 hover:opacity-80"
+                >
                   <div className="mt-0.5">
                     <Clock size={14} className="text-muted-foreground" />
                   </div>
@@ -208,17 +210,8 @@ export default async function MonEspacePage() {
                       {act.lieu ? ` · ${act.lieu}` : ""}
                     </p>
                   </div>
-                </div>
+                </Link>
               ))
-            )}
-            {dAutresActivites && (
-              <Link
-                href="/mon-espace/activites"
-                className="flex items-center justify-center gap-1 text-xs font-medium text-primary pt-1"
-              >
-                Voir tout
-                <ChevronRight size={14} />
-              </Link>
             )}
           </CardContent>
         </Card>
