@@ -26,8 +26,11 @@ type Filtre = StatutPointSuiviEnum | "tous";
 // entier une fois la liste depliee.
 const LONGUEUR_MAX_CONTENU = 40;
 
-function tronquer(texte: string, max: number): string {
-  return texte.length > max ? `${texte.slice(0, max).trimEnd()}…` : texte;
+// Affichage seulement : le contenu stocke garde la casse telle que saisie.
+function formaterContenu(texte: string, max: number): string {
+  const minuscule = texte.toLowerCase();
+  const capitalise = minuscule.charAt(0).toUpperCase() + minuscule.slice(1);
+  return capitalise.length > max ? `${capitalise.slice(0, max).trimEnd()}…` : capitalise;
 }
 
 interface Props {
@@ -193,12 +196,12 @@ export function SuiviSection({
                     <div className="min-w-0">
                       <p
                         className={cn(
-                          "text-sm lowercase group-hover/link:underline",
+                          "text-sm group-hover/link:underline",
                           item.statut === "termine" && "text-muted-foreground line-through"
                         )}
                         title={item.contenu}
                       >
-                        {tronquer(item.contenu, LONGUEUR_MAX_CONTENU)}
+                        {formaterContenu(item.contenu, LONGUEUR_MAX_CONTENU)}
                         {item.piece_jointe_nom && (
                           <Paperclip size={11} className="inline-block ml-1.5 text-muted-foreground align-middle" />
                         )}
