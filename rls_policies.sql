@@ -329,15 +329,18 @@ create policy caisse_insert on mouvements_caisse for insert with check (
 
 -- ----------------------------------------------------------------------------
 -- LISTES DE SUIVI + POINTS DE SUIVI
--- Information sensible : visible et gerable UNIQUEMENT par les responsables
--- du departement (president/vice-president/secretaire) et le pilotage
--- (pasteur/assistant) -- un simple ouvrier (membre, tresorier) n'y a pas
--- acces du tout, contrairement aux rapports.
+-- Information sensible : geree UNIQUEMENT par les responsables du
+-- departement (president/vice-president/secretaire) et le pilotage
+-- (pasteur/assistant). En lecture (et pour changer le statut d'une tache,
+-- cf. rpc_changer_statut_point_suivi), l'acces s'etend aussi aux membres
+-- explicitement ajoutes a une liste (fn_est_membre_liste) ou a une tache
+-- precise (fn_est_membre_tache) -- un simple ouvrier n'y a sinon aucun
+-- acces, contrairement aux rapports.
 -- ----------------------------------------------------------------------------
 alter table listes_suivi enable row level security;
 
 create policy listes_suivi_select on listes_suivi for select using (
-  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
+  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id) or fn_est_membre_liste(id)
 );
 
 create policy listes_suivi_insert on listes_suivi for insert with check (
@@ -351,7 +354,7 @@ create policy listes_suivi_delete on listes_suivi for delete using (
 alter table points_suivi enable row level security;
 
 create policy points_suivi_select on points_suivi for select using (
-  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
+  fn_peut_voir_tache(id)
 );
 
 create policy points_suivi_insert on points_suivi for insert with check (
@@ -366,6 +369,66 @@ create policy points_suivi_update on points_suivi for update using (
 
 create policy points_suivi_delete on points_suivi for delete using (
   fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
+);
+
+-- ----------------------------------------------------------------------------
+-- MEMBRES DE SUIVI (liste_suivi_membres / point_suivi_membres)
+-- Ajout/retrait reserve aux responsables du departement concerne. Un
+-- ouvrier peut en plus lire ses PROPRES lignes d'appartenance (necessaire
+-- pour qu'il retrouve ses listes/taches sur "Mes taches").
+-- ----------------------------------------------------------------------------
+alter table liste_suivi_membres enable row level security;
+
+create policy liste_suivi_membres_select on liste_suivi_membres for select using (
+  ouvrier_id = fn_ouvrier_id_courant()
+  or exists (
+    select 1 from listes_suivi l
+    where l.id = liste_id
+      and (fn_is_pasteur_ou_assistant() or fn_gere_departement(l.departement_id))
+  )
+);
+
+create policy liste_suivi_membres_insert on liste_suivi_membres for insert with check (
+  exists (
+    select 1 from listes_suivi l
+    where l.id = liste_id
+      and (fn_is_pasteur_ou_assistant() or fn_gere_departement(l.departement_id))
+  )
+);
+
+create policy liste_suivi_membres_delete on liste_suivi_membres for delete using (
+  exists (
+    select 1 from listes_suivi l
+    where l.id = liste_id
+      and (fn_is_pasteur_ou_assistant() or fn_gere_departement(l.departement_id))
+  )
+);
+
+alter table point_suivi_membres enable row level security;
+
+create policy point_suivi_membres_select on point_suivi_membres for select using (
+  ouvrier_id = fn_ouvrier_id_courant()
+  or exists (
+    select 1 from points_suivi p
+    where p.id = point_id
+      and (fn_is_pasteur_ou_assistant() or fn_gere_departement(p.departement_id))
+  )
+);
+
+create policy point_suivi_membres_insert on point_suivi_membres for insert with check (
+  exists (
+    select 1 from points_suivi p
+    where p.id = point_id
+      and (fn_is_pasteur_ou_assistant() or fn_gere_departement(p.departement_id))
+  )
+);
+
+create policy point_suivi_membres_delete on point_suivi_membres for delete using (
+  exists (
+    select 1 from points_suivi p
+    where p.id = point_id
+      and (fn_is_pasteur_ou_assistant() or fn_gere_departement(p.departement_id))
+  )
 );
 
 -- ----------------------------------------------------------------------------
@@ -399,18 +462,19 @@ create policy pieces_jointes_delete on storage.objects for delete using (
 
 -- ----------------------------------------------------------------------------
 -- COMMENTAIRES SUR UN POINT DE SUIVI
--- Meme regle de sensibilite que les points de suivi : reserve aux
--- responsables du departement et au pilotage, pas aux simples ouvriers.
--- Suppression : l'auteur (deja un responsable) ou tout gestionnaire.
+-- Meme regle d'acces que la tache concernee (fn_peut_voir_tache) : les
+-- responsables du departement et le pilotage, ainsi que les membres ajoutes
+-- a la liste ou a cette tache precise. Suppression : l'auteur ou tout
+-- gestionnaire.
 -- ----------------------------------------------------------------------------
 alter table commentaires_suivi enable row level security;
 
 create policy commentaires_suivi_select on commentaires_suivi for select using (
-  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
+  fn_peut_voir_tache(point_suivi_id)
 );
 
 create policy commentaires_suivi_insert on commentaires_suivi for insert with check (
-  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
+  fn_peut_voir_tache(point_suivi_id)
 );
 
 create policy commentaires_suivi_delete on commentaires_suivi for delete using (

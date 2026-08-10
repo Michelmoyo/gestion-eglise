@@ -14,6 +14,7 @@ const ICONES: Record<string, LucideIcon> = {
   rapport_soumis: FileText,
   nouveau_point_suivi: Pin,
   nouveau_commentaire_suivi: MessageCircle,
+  ajout_membre_suivi: UserPlus,
 };
 
 export default async function NotificationsPage() {

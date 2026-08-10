@@ -325,6 +325,36 @@ create index idx_points_suivi_departement on points_suivi(departement_id);
 create index idx_points_suivi_liste on points_suivi(liste_id);
 
 -- ----------------------------------------------------------------------------
+-- MEMBRES DE SUIVI
+-- Acces etendu, en plus des responsables du departement et du pilotage : un
+-- ouvrier precis peut etre ajoute a une LISTE entiere (voit/agit sur toutes
+-- ses taches) ou a une seule TACHE (voit/agit uniquement sur celle-ci).
+-- Gere exclusivement par les responsables/pilotage (rls_policies.sql).
+-- ----------------------------------------------------------------------------
+create table liste_suivi_membres (
+  id         uuid primary key default gen_random_uuid(),
+  liste_id   uuid not null references listes_suivi(id) on delete cascade,
+  ouvrier_id uuid not null references ouvriers(id) on delete cascade,
+  ajoute_par uuid references ouvriers(id),
+  created_at timestamptz not null default now(),
+  unique (liste_id, ouvrier_id)
+);
+
+create table point_suivi_membres (
+  id         uuid primary key default gen_random_uuid(),
+  point_id   uuid not null references points_suivi(id) on delete cascade,
+  ouvrier_id uuid not null references ouvriers(id) on delete cascade,
+  ajoute_par uuid references ouvriers(id),
+  created_at timestamptz not null default now(),
+  unique (point_id, ouvrier_id)
+);
+
+create index idx_liste_suivi_membres_liste on liste_suivi_membres(liste_id);
+create index idx_liste_suivi_membres_ouvrier on liste_suivi_membres(ouvrier_id);
+create index idx_point_suivi_membres_point on point_suivi_membres(point_id);
+create index idx_point_suivi_membres_ouvrier on point_suivi_membres(ouvrier_id);
+
+-- ----------------------------------------------------------------------------
 -- STOCKAGE DES PIECES JOINTES (fiche detail d'un point de suivi)
 -- Bucket prive : fichiers accessibles uniquement via URL signee generee cote
 -- serveur. Chemin "<departement_id>/<point_suivi_id>-<nom_fichier>" -- le
@@ -353,33 +383,120 @@ create table commentaires_suivi (
 
 create index idx_commentaires_suivi_point on commentaires_suivi(point_suivi_id);
 
--- Personnes "taguables" dans un commentaire de suivi : exactement le meme
--- ensemble que "qui a acces au suivi" (jamais un simple ouvrier). SECURITY
--- DEFINER car un president ne peut normalement pas lire la fiche d'un
--- pasteur/assistant via ouvriers_select -- ici on ne renvoie que
--- id/prenom/nom, et seulement si l'appelant a lui-meme acces a ce suivi.
-create or replace function fn_personnes_taguables_suivi(p_departement_id uuid)
+-- Membre explicite d'une liste entiere, ou d'une seule tache -- acces
+-- accorde en plus des responsables/pilotage (cf. liste_suivi_membres /
+-- point_suivi_membres plus haut).
+create or replace function fn_est_membre_liste(p_liste_id uuid)
+returns boolean language sql stable security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from liste_suivi_membres
+    where liste_id = p_liste_id and ouvrier_id = fn_ouvrier_id_courant()
+  )
+$$;
+
+create or replace function fn_est_membre_tache(p_point_id uuid)
+returns boolean language sql stable security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from point_suivi_membres
+    where point_id = p_point_id and ouvrier_id = fn_ouvrier_id_courant()
+  )
+$$;
+
+-- Manager du departement, membre de la liste, ou membre de cette tache
+-- precise : les trois façons de "voir" (et faire avancer) une tache.
+create or replace function fn_peut_voir_tache(p_point_id uuid)
+returns boolean language sql stable security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from points_suivi p
+    where p.id = p_point_id
+      and (
+        fn_is_pasteur_ou_assistant()
+        or fn_gere_departement(p.departement_id)
+        or fn_est_membre_liste(p.liste_id)
+        or fn_est_membre_tache(p_point_id)
+      )
+  )
+$$;
+
+-- Changer le statut d'une tache : les managers ET les membres ajoutes
+-- peuvent le faire, mais la policy UPDATE de points_suivi (rls_policies.sql)
+-- reste reservee aux managers -- elle couvre aussi contenu/description,
+-- qu'un simple membre ne doit pas pouvoir modifier. D'ou une fonction
+-- SECURITY DEFINER dediee plutot qu'un update direct.
+create or replace function rpc_changer_statut_point_suivi(p_point_id uuid, p_statut statut_point_suivi_enum)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not fn_peut_voir_tache(p_point_id) then
+    raise exception 'Non autorise.';
+  end if;
+
+  update points_suivi
+    set statut = p_statut,
+        date_resolution = case when p_statut = 'termine' then current_date else null end,
+        resolu_par = case when p_statut = 'termine' then fn_ouvrier_id_courant() else null end
+    where id = p_point_id;
+end;
+$$;
+
+revoke execute on function rpc_changer_statut_point_suivi(uuid, statut_point_suivi_enum) from public;
+grant execute on function rpc_changer_statut_point_suivi(uuid, statut_point_suivi_enum) to authenticated;
+
+-- Personnes "taguables" dans un commentaire de suivi : calcule pour UNE
+-- tache precise (managers/pilotage du departement + membres de sa liste +
+-- membres de cette tache), jamais un simple ouvrier au-dela de ce perimetre.
+-- SECURITY DEFINER car un president ne peut normalement pas lire la fiche
+-- d'un pasteur/assistant via ouvriers_select -- ici on ne renvoie que
+-- id/prenom/nom, et seulement si l'appelant a lui-meme acces a cette tache.
+create or replace function fn_personnes_taguables_suivi(p_point_id uuid)
 returns table(id uuid, prenom text, nom text)
 language plpgsql
 security definer
 set search_path = public
 stable
 as $$
+declare
+  v_departement_id uuid;
+  v_liste_id uuid;
 begin
-  if not (fn_is_pasteur_ou_assistant() or fn_gere_departement(p_departement_id)) then
+  select departement_id, liste_id into v_departement_id, v_liste_id
+    from points_suivi where id = p_point_id;
+
+  if v_departement_id is null then
+    raise exception 'Element introuvable.';
+  end if;
+
+  if not fn_peut_voir_tache(p_point_id) then
     raise exception 'Non autorise.';
   end if;
 
   return query
-    select o.id, o.prenom, o.nom
+    select distinct o.id, o.prenom, o.nom
     from ouvriers o
     where o.role_global in ('pasteur', 'assistant')
        or exists (
          select 1 from affectations a
          where a.ouvrier_id = o.id
-           and a.departement_id = p_departement_id
+           and a.departement_id = v_departement_id
            and a.statut = 'actif'
            and a.role in ('president', 'vice_president', 'secretaire')
+       )
+       or exists (
+         select 1 from liste_suivi_membres m
+         where m.liste_id = v_liste_id and m.ouvrier_id = o.id
+       )
+       or exists (
+         select 1 from point_suivi_membres m
+         where m.point_id = p_point_id and m.ouvrier_id = o.id
        );
 end;
 $$;
@@ -587,6 +704,10 @@ begin
           and a.statut = 'actif'
           and a.role in ('president', 'vice_president', 'secretaire')
       )
+      or exists (
+        select 1 from liste_suivi_membres m
+        where m.liste_id = new.liste_id and m.ouvrier_id = o.id
+      )
     );
 
   return new;
@@ -611,9 +732,10 @@ declare
   v_nom_departement text;
   v_titre_point text;
   v_nom_auteur text;
+  v_liste_id uuid;
 begin
   select nom into v_nom_departement from departements where id = new.departement_id;
-  select contenu into v_titre_point from points_suivi where id = new.point_suivi_id;
+  select contenu, liste_id into v_titre_point, v_liste_id from points_suivi where id = new.point_suivi_id;
   select prenom || ' ' || nom into v_nom_auteur from ouvriers where id = new.auteur_id;
 
   insert into notifications (destinataire_id, type, contenu)
@@ -642,6 +764,14 @@ begin
           and a.statut = 'actif'
           and a.role in ('president', 'vice_president', 'secretaire')
       )
+      or exists (
+        select 1 from liste_suivi_membres m
+        where m.liste_id = v_liste_id and m.ouvrier_id = o.id
+      )
+      or exists (
+        select 1 from point_suivi_membres m
+        where m.point_id = new.point_suivi_id and m.ouvrier_id = o.id
+      )
     );
 
   return new;
@@ -652,6 +782,69 @@ drop trigger if exists trg_notifier_nouveau_commentaire_suivi on commentaires_su
 create trigger trg_notifier_nouveau_commentaire_suivi
   after insert on commentaires_suivi
   for each row execute function fn_notifier_nouveau_commentaire_suivi();
+
+-- Prevenir l'ouvrier lui-meme quand on l'ajoute a une liste ou une tache.
+create or replace function fn_notifier_ajout_membre_liste()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_nom_departement text;
+  v_nom_liste text;
+begin
+  select d.nom, l.nom into v_nom_departement, v_nom_liste
+    from listes_suivi l join departements d on d.id = l.departement_id
+    where l.id = new.liste_id;
+
+  insert into notifications (destinataire_id, type, contenu)
+  values (
+    new.ouvrier_id,
+    'ajout_membre_suivi',
+    'Vous avez été ajouté à la liste « ' || coalesce(v_nom_liste, '') || ' » ('
+      || coalesce(v_nom_departement, '') || ')'
+  );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notifier_ajout_membre_liste on liste_suivi_membres;
+create trigger trg_notifier_ajout_membre_liste
+  after insert on liste_suivi_membres
+  for each row execute function fn_notifier_ajout_membre_liste();
+
+create or replace function fn_notifier_ajout_membre_tache()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_nom_departement text;
+  v_titre_point text;
+begin
+  select d.nom, p.contenu into v_nom_departement, v_titre_point
+    from points_suivi p join departements d on d.id = p.departement_id
+    where p.id = new.point_id;
+
+  insert into notifications (destinataire_id, type, contenu)
+  values (
+    new.ouvrier_id,
+    'ajout_membre_suivi',
+    'Vous avez été ajouté à la tâche « ' || coalesce(v_titre_point, '') || ' » ('
+      || coalesce(v_nom_departement, '') || ')'
+  );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notifier_ajout_membre_tache on point_suivi_membres;
+create trigger trg_notifier_ajout_membre_tache
+  after insert on point_suivi_membres
+  for each row execute function fn_notifier_ajout_membre_tache();
 
 -- ============================================================================
 -- VUES DE CALCUL

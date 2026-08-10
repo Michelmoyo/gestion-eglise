@@ -382,6 +382,40 @@ export interface Database {
         };
         Relationships: [];
       };
+      liste_suivi_membres: {
+        Row: {
+          id: string;
+          liste_id: string;
+          ouvrier_id: string;
+          ajoute_par: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          liste_id: string;
+          ouvrier_id: string;
+          ajoute_par?: string | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      point_suivi_membres: {
+        Row: {
+          id: string;
+          point_id: string;
+          ouvrier_id: string;
+          ajoute_par: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          point_id: string;
+          ouvrier_id: string;
+          ajoute_par?: string | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       commentaires_suivi: {
         Row: {
           id: string;
@@ -519,8 +553,12 @@ export interface Database {
         Returns: number;
       };
       fn_personnes_taguables_suivi: {
-        Args: { p_departement_id: string };
+        Args: { p_point_id: string };
         Returns: { id: string; prenom: string; nom: string }[];
+      };
+      rpc_changer_statut_point_suivi: {
+        Args: { p_point_id: string; p_statut: StatutPointSuiviEnum };
+        Returns: void;
       };
       rpc_assigner_role: {
         Args: {

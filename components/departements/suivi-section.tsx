@@ -9,6 +9,7 @@ import { Plus, Trash2, ChevronDown, ChevronRight, Paperclip } from "lucide-react
 import { cn } from "@/lib/utils";
 import type { StatutPointSuiviEnum } from "@/lib/supabase/types";
 import { STATUTS_POINT_SUIVI, STATUT_POINT_SUIVI_STYLE } from "@/lib/suivi";
+import { MembresSuivi, type OuvrierSuivi } from "@/components/departements/membres-suivi";
 
 export interface PointSuivi {
   id: string;
@@ -39,18 +40,28 @@ interface Props {
   nom: string;
   inclureRapport: boolean;
   items: PointSuivi[];
+  // Gestion structurelle (ajouter/supprimer une tache, supprimer la liste,
+  // inclusion au rapport, membres) : responsables du departement/pilotage
+  // uniquement.
   peutGerer: boolean;
-  ajouterAction: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
+  // Voir + agir sur les taches (changer le statut) : peutGerer, ou membre
+  // ajoute a cette liste (cf. "Mes tâches").
+  peutAgir: boolean;
   changerStatutAction: (
     pointId: string,
     statut: StatutPointSuiviEnum
   ) => Promise<{ error?: string; success?: boolean }>;
-  supprimerAction: (pointId: string) => Promise<{ error?: string; success?: boolean }>;
-  supprimerListeAction: (listeId: string) => Promise<{ error?: string; success?: boolean }>;
-  changerInclureRapportAction: (
+  ajouterAction?: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
+  supprimerAction?: (pointId: string) => Promise<{ error?: string; success?: boolean }>;
+  supprimerListeAction?: (listeId: string) => Promise<{ error?: string; success?: boolean }>;
+  changerInclureRapportAction?: (
     listeId: string,
     inclure: boolean
   ) => Promise<{ error?: string; success?: boolean }>;
+  membresListe?: OuvrierSuivi[];
+  candidatsListe?: OuvrierSuivi[];
+  ajouterMembreListeAction?: (ouvrierId: string) => Promise<{ error?: string; success?: boolean }>;
+  retirerMembreListeAction?: (ouvrierId: string) => Promise<{ error?: string; success?: boolean }>;
 }
 
 const FILTRES: { value: Filtre; label: string }[] = [
@@ -65,11 +76,16 @@ export function SuiviSection({
   inclureRapport,
   items,
   peutGerer,
-  ajouterAction,
+  peutAgir,
   changerStatutAction,
+  ajouterAction,
   supprimerAction,
   supprimerListeAction,
   changerInclureRapportAction,
+  membresListe,
+  candidatsListe,
+  ajouterMembreListeAction,
+  retirerMembreListeAction,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +97,7 @@ export function SuiviSection({
 
   function ajouter(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!nouveauTexte.trim()) return;
+    if (!nouveauTexte.trim() || !ajouterAction) return;
     const fd = new FormData();
     fd.set("contenu", nouveauTexte.trim());
     startTransition(async () => {
@@ -101,7 +117,7 @@ export function SuiviSection({
   }
 
   function supprimer(id: string) {
-    if (!confirm("Supprimer cet élément ?")) return;
+    if (!supprimerAction || !confirm("Supprimer cet élément ?")) return;
     startTransition(async () => {
       setError(null);
       const res = await supprimerAction(id);
@@ -110,7 +126,7 @@ export function SuiviSection({
   }
 
   function supprimerListe() {
-    if (!confirm(`Supprimer la liste « ${nom} » et tout son contenu ?`)) return;
+    if (!supprimerListeAction || !confirm(`Supprimer la liste « ${nom} » et tout son contenu ?`)) return;
     startTransition(async () => {
       setError(null);
       const res = await supprimerListeAction(listeId);
@@ -119,6 +135,7 @@ export function SuiviSection({
   }
 
   function toggleInclureRapport(checked: boolean) {
+    if (!changerInclureRapportAction) return;
     startTransition(async () => {
       setError(null);
       const res = await changerInclureRapportAction(listeId, checked);
@@ -135,7 +152,7 @@ export function SuiviSection({
             {nom}
             {nbActifs > 0 && <span className="text-muted-foreground font-normal">({nbActifs})</span>}
           </span>
-          {peutGerer && (
+          {peutGerer && supprimerListeAction && (
             <button
               type="button"
               onClick={(e) => {
@@ -170,7 +187,7 @@ export function SuiviSection({
             ))}
           </div>
 
-          {peutGerer && (
+          {peutGerer && changerInclureRapportAction && (
             <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer w-fit">
               <input
                 type="checkbox"
@@ -181,6 +198,16 @@ export function SuiviSection({
               />
               Inclure dans le rapport mensuel
             </label>
+          )}
+
+          {peutGerer && ajouterMembreListeAction && retirerMembreListeAction && (
+            <MembresSuivi
+              label="Membres ajoutés à cette liste"
+              membres={membresListe ?? []}
+              candidats={candidatsListe ?? []}
+              ajouterAction={ajouterMembreListeAction}
+              retirerAction={retirerMembreListeAction}
+            />
           )}
 
           {!visibles.length ? (
@@ -209,7 +236,7 @@ export function SuiviSection({
                     </div>
                     <ChevronRight size={14} className="text-muted-foreground flex-shrink-0 mt-0.5" />
                   </Link>
-                  {peutGerer ? (
+                  {peutAgir ? (
                     <select
                       value={item.statut}
                       onChange={(e) => changerStatut(item.id, e.target.value as StatutPointSuiviEnum)}
@@ -234,7 +261,7 @@ export function SuiviSection({
                       {STATUTS_POINT_SUIVI.find((s) => s.value === item.statut)?.label}
                     </span>
                   )}
-                  {peutGerer && (
+                  {peutGerer && supprimerAction && (
                     <button
                       type="button"
                       onClick={() => supprimer(item.id)}
@@ -253,7 +280,7 @@ export function SuiviSection({
 
           {error && <p className="text-xs text-destructive">{error}</p>}
 
-          {peutGerer && (
+          {peutGerer && ajouterAction && (
             <form onSubmit={ajouter} className="flex gap-2 pt-1">
               <Input
                 value={nouveauTexte}

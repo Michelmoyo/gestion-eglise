@@ -12,6 +12,8 @@ import {
   ajouterListe,
   supprimerListe,
   changerInclureRapport,
+  ajouterMembreListe,
+  retirerMembreListe,
 } from "./actions";
 
 export default async function SuiviPage({
@@ -55,8 +57,9 @@ export default async function SuiviPage({
     peutGerer = ["president", "vice_president", "secretaire"].includes(aff?.role ?? "");
   }
 
-  // Information sensible : un simple ouvrier (membre, tresorier) n'a pas
-  // acces a cette page du tout, pas meme en lecture seule.
+  // Aperçu d'ensemble (toutes les listes) : reserve aux responsables du
+  // departement et au pilotage. Un ouvrier ajoute a une liste ou une tache
+  // precise y accede via "Mes tâches", pas ici.
   if (!peutGerer) redirect(`/departements/${id}`);
 
   const { data: listes } = await supabase
@@ -70,6 +73,35 @@ export default async function SuiviPage({
     .select("id, liste_id, contenu, statut, date_creation, date_resolution, piece_jointe_nom")
     .eq("departement_id", id)
     .order("date_creation", { ascending: false });
+
+  // Candidats a l'ajout : ouvriers actifs du departement qui n'ont pas deja
+  // acces via un role de gestion (ils l'ont deja, inutile de les "ajouter").
+  const { data: affectationsRoster } = await supabase
+    .from("affectations")
+    .select("ouvrier_id, role")
+    .eq("departement_id", id)
+    .eq("statut", "actif")
+    .not("role", "in", "(president,vice_president,secretaire)");
+
+  const rosterIds = (affectationsRoster ?? []).map((a) => a.ouvrier_id);
+  const { data: rosterOuvriers } = rosterIds.length
+    ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", rosterIds).order("nom")
+    : { data: [] };
+  const candidatsDepartement = rosterOuvriers ?? [];
+
+  const listeIds = (listes ?? []).map((l) => l.id);
+  const { data: membresListesLiens } = listeIds.length
+    ? await supabase
+        .from("liste_suivi_membres")
+        .select("liste_id, ouvrier_id")
+        .in("liste_id", listeIds)
+    : { data: [] };
+
+  const membresListesOuvrierIds = [...new Set((membresListesLiens ?? []).map((m) => m.ouvrier_id))];
+  const { data: membresListesOuvriersData } = membresListesOuvrierIds.length
+    ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", membresListesOuvrierIds)
+    : { data: [] };
+  const ouvrierParId = Object.fromEntries((membresListesOuvriersData ?? []).map((o) => [o.id, o]));
 
   const changerStatut = changerStatutPointSuivi.bind(null, id);
   const supprimerPoint = supprimerPointSuivi.bind(null, id);
@@ -95,22 +127,37 @@ export default async function SuiviPage({
             Aucune liste de suivi pour ce département.
           </p>
         ) : (
-          listes.map((liste) => (
-            <SuiviSection
-              key={liste.id}
-              departementId={id}
-              listeId={liste.id}
-              nom={liste.nom}
-              inclureRapport={liste.inclure_rapport}
-              items={(points ?? []).filter((p) => p.liste_id === liste.id)}
-              peutGerer={peutGerer}
-              ajouterAction={ajouterPointSuivi.bind(null, id, liste.id)}
-              changerStatutAction={changerStatut}
-              supprimerAction={supprimerPoint}
-              supprimerListeAction={supprimerListeAction}
-              changerInclureRapportAction={changerInclureRapportAction}
-            />
-          ))
+          listes.map((liste) => {
+            const membresListe = (membresListesLiens ?? [])
+              .filter((m) => m.liste_id === liste.id)
+              .map((m) => ouvrierParId[m.ouvrier_id])
+              .filter((o): o is { id: string; prenom: string; nom: string } => !!o);
+            const candidatsListe = candidatsDepartement.filter(
+              (c) => !membresListe.some((m) => m.id === c.id)
+            );
+
+            return (
+              <SuiviSection
+                key={liste.id}
+                departementId={id}
+                listeId={liste.id}
+                nom={liste.nom}
+                inclureRapport={liste.inclure_rapport}
+                items={(points ?? []).filter((p) => p.liste_id === liste.id)}
+                peutGerer={peutGerer}
+                peutAgir={peutGerer}
+                ajouterAction={ajouterPointSuivi.bind(null, id, liste.id)}
+                changerStatutAction={changerStatut}
+                supprimerAction={supprimerPoint}
+                supprimerListeAction={supprimerListeAction}
+                changerInclureRapportAction={changerInclureRapportAction}
+                membresListe={membresListe}
+                candidatsListe={candidatsListe}
+                ajouterMembreListeAction={ajouterMembreListe.bind(null, id, liste.id)}
+                retirerMembreListeAction={retirerMembreListe.bind(null, id, liste.id)}
+              />
+            );
+          })
         )}
 
         {peutGerer && <NouvelleListeForm action={ajouterListeAction} />}

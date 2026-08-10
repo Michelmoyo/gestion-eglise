@@ -11,6 +11,7 @@ import { format } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { StatutPointSuiviEnum } from "@/lib/supabase/types";
 import { STATUTS_POINT_SUIVI, STATUT_POINT_SUIVI_STYLE } from "@/lib/suivi";
+import { MembresSuivi, type OuvrierSuivi } from "@/components/departements/membres-suivi";
 
 interface Props {
   departementId: string;
@@ -24,12 +25,21 @@ interface Props {
     piece_jointe_nom: string | null;
   };
   pieceJointeUrl: string | null;
+  // Gestion structurelle (titre/description, suppression, piece jointe) :
+  // responsables du departement/pilotage uniquement.
   peutGerer: boolean;
+  // Voir + agir (changer le statut, commenter) : peutGerer, ou membre
+  // ajoute a la liste ou a cette tache precise.
+  peutAgir: boolean;
   modifierAction: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
   changerStatutAction: (statut: StatutPointSuiviEnum) => Promise<{ error?: string; success?: boolean }>;
   supprimerAction: () => Promise<{ error?: string; success?: boolean }>;
   uploaderAction: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
   supprimerPieceJointeAction: () => Promise<{ error?: string; success?: boolean }>;
+  membresTache: OuvrierSuivi[];
+  candidatsTache: OuvrierSuivi[];
+  ajouterMembreTacheAction: (ouvrierId: string) => Promise<{ error?: string; success?: boolean }>;
+  retirerMembreTacheAction: (ouvrierId: string) => Promise<{ error?: string; success?: boolean }>;
 }
 
 export function PointSuiviDetail({
@@ -37,11 +47,16 @@ export function PointSuiviDetail({
   point,
   pieceJointeUrl,
   peutGerer,
+  peutAgir,
   modifierAction,
   changerStatutAction,
   supprimerAction,
   uploaderAction,
   supprimerPieceJointeAction,
+  membresTache,
+  candidatsTache,
+  ajouterMembreTacheAction,
+  retirerMembreTacheAction,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -107,7 +122,7 @@ export function PointSuiviDetail({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        {peutGerer ? (
+        {peutAgir ? (
           <div className="flex gap-1.5">
             {STATUTS_POINT_SUIVI.map((s) => (
               <button
@@ -222,6 +237,18 @@ export function PointSuiviDetail({
           </label>
         )}
       </div>
+
+      {peutGerer && (
+        <div className="pt-2 border-t border-border">
+          <MembresSuivi
+            label="Membres ajoutés à cette tâche"
+            membres={membresTache}
+            candidats={candidatsTache}
+            ajouterAction={ajouterMembreTacheAction}
+            retirerAction={retirerMembreTacheAction}
+          />
+        </div>
+      )}
     </div>
   );
 }

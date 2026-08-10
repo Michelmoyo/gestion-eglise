@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, CheckCircle2, Clock, Church, ChevronRight } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, Church, ChevronRight, ListChecks } from "lucide-react";
 import { format } from "@/lib/format";
 import { getPresencesMois } from "@/lib/presences";
 
@@ -80,6 +80,19 @@ export default async function MonEspacePage() {
 
   const prochainsCultes = prochainsCultesData ?? [];
 
+  // "Mes tâches" ne s'affiche que si on a ete ajoute a au moins une liste ou
+  // tache de suivi -- pas de carte vide pour la grande majorite des ouvriers
+  // qui n'y seront jamais ajoutes.
+  const { count: nbListesMembre } = await supabase
+    .from("liste_suivi_membres")
+    .select("id", { count: "exact", head: true })
+    .eq("ouvrier_id", ouvrier.id);
+  const { count: nbTachesMembre } = await supabase
+    .from("point_suivi_membres")
+    .select("id", { count: "exact", head: true })
+    .eq("ouvrier_id", ouvrier.id);
+  const aDesTachesPartagees = (nbListesMembre ?? 0) > 0 || (nbTachesMembre ?? 0) > 0;
+
   return (
     <>
       <TopBar title="Mon espace" prenom={ouvrier.prenom} />
@@ -113,6 +126,23 @@ export default async function MonEspacePage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mes tâches (visible seulement si des listes/taches ont ete partagées) */}
+        {aDesTachesPartagees && (
+          <Link href="/mon-espace/mes-taches">
+            <Card className="hover:bg-accent transition-colors">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    <ListChecks size={16} />
+                    Mes tâches
+                  </span>
+                  <ChevronRight size={16} />
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
 
         {/* Présences ce mois */}
         <Link href="/mon-espace/presences">

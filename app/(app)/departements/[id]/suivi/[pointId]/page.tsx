@@ -13,6 +13,8 @@ import {
   supprimerPieceJointe,
   ajouterCommentaire,
   supprimerCommentaire,
+  ajouterMembreTache,
+  retirerMembreTache,
 } from "../actions";
 
 export default async function PointSuiviDetailPage({
@@ -25,6 +27,8 @@ export default async function PointSuiviDetailPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/connexion");
 
+  // La RLS (fn_peut_voir_tache) filtre deja tout ce que l'appelant ne
+  // devrait pas voir : pas de tache trouvee = pas d'acces, pas d'existence.
   const { data: point } = await supabase
     .from("points_suivi")
     .select(
@@ -36,6 +40,8 @@ export default async function PointSuiviDetailPage({
 
   if (!point) notFound();
 
+  // Peut etre null pour un ouvrier ajoute a cette seule tache (sans acces a
+  // la liste elle-meme) -- cf. liste?.nom en repli plus bas.
   const { data: liste } = await supabase
     .from("listes_suivi")
     .select("nom")
@@ -65,9 +71,24 @@ export default async function PointSuiviDetailPage({
     peutGerer = ["president", "vice_president", "secretaire"].includes(aff?.role ?? "");
   }
 
-  // Information sensible : un simple ouvrier n'a pas acces a cette fiche,
-  // pas meme en lecture seule.
-  if (!peutGerer) redirect(`/departements/${id}`);
+  // Voir + agir (changer le statut, commenter) : peutGerer, ou membre
+  // ajoute a la liste, ou membre de cette tache precise.
+  let peutAgir = peutGerer;
+  if (!peutAgir) {
+    const { data: membreListe } = await supabase
+      .from("liste_suivi_membres")
+      .select("id")
+      .eq("liste_id", point.liste_id)
+      .eq("ouvrier_id", moi.id)
+      .single();
+    const { data: membreTache } = await supabase
+      .from("point_suivi_membres")
+      .select("id")
+      .eq("point_id", pointId)
+      .eq("ouvrier_id", moi.id)
+      .single();
+    peutAgir = !!membreListe || !!membreTache;
+  }
 
   let pieceJointeUrl: string | null = null;
   if (point.piece_jointe_path) {
@@ -84,7 +105,7 @@ export default async function PointSuiviDetailPage({
     .order("created_at", { ascending: true });
 
   const { data: taguables } = await supabase.rpc("fn_personnes_taguables_suivi", {
-    p_departement_id: id,
+    p_point_id: pointId,
   });
 
   const auteurIds = [...new Set((commentairesData ?? []).map((c) => c.auteur_id))];
@@ -100,17 +121,52 @@ export default async function PointSuiviDetailPage({
     mentionsNoms: (c.mentions ?? []).map((mid) => nomById[mid]).filter((n): n is string => !!n),
   }));
 
+  // Membres de la tache : uniquement utile (et visible) pour les managers,
+  // qui sont seuls a pouvoir gerer cette liste.
+  let membresTache: { id: string; prenom: string; nom: string }[] = [];
+  let candidatsTache: { id: string; prenom: string; nom: string }[] = [];
+  if (peutGerer) {
+    const { data: membresLiens } = await supabase
+      .from("point_suivi_membres")
+      .select("ouvrier_id")
+      .eq("point_id", pointId);
+    const membreIds = (membresLiens ?? []).map((m) => m.ouvrier_id);
+    const { data: membresOuvriers } = membreIds.length
+      ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", membreIds)
+      : { data: [] };
+    membresTache = membresOuvriers ?? [];
+
+    const { data: affectationsRoster } = await supabase
+      .from("affectations")
+      .select("ouvrier_id, role")
+      .eq("departement_id", id)
+      .eq("statut", "actif")
+      .not("role", "in", "(president,vice_president,secretaire)");
+    const rosterIds = (affectationsRoster ?? []).map((a) => a.ouvrier_id);
+    const { data: rosterOuvriers } = rosterIds.length
+      ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", rosterIds).order("nom")
+      : { data: [] };
+    candidatsTache = (rosterOuvriers ?? []).filter(
+      (o) => !membresTache.some((m) => m.id === o.id)
+    );
+  }
+
+  // Un ouvrier ajoute a une seule tache (pas la liste) n'a pas acces a la
+  // page de la liste -- le "retour" doit alors pointer vers "Mes tâches".
+  const retourHref = peutGerer ? `/departements/${id}/suivi` : "/mon-espace/mes-taches";
+  const retourLabel = peutGerer ? (liste?.nom ?? "Suivi") : "Mes tâches";
+
   return (
     <>
       <TopBar title={liste?.nom ?? "Suivi"} />
 
       <div className="p-4 space-y-4">
         <Link
-          href={`/departements/${id}/suivi`}
+          href={retourHref}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft size={16} />
-          {liste?.nom ?? "Suivi"}
+          {retourLabel}
         </Link>
 
         <PointSuiviDetail
@@ -118,11 +174,16 @@ export default async function PointSuiviDetailPage({
           point={point}
           pieceJointeUrl={pieceJointeUrl}
           peutGerer={peutGerer}
+          peutAgir={peutAgir}
           modifierAction={modifierPointSuivi.bind(null, id, pointId)}
           changerStatutAction={changerStatutPointSuivi.bind(null, id, pointId)}
           supprimerAction={supprimerPointSuivi.bind(null, id, pointId)}
           uploaderAction={uploaderPieceJointe.bind(null, id, pointId)}
           supprimerPieceJointeAction={supprimerPieceJointe.bind(null, id, pointId)}
+          membresTache={membresTache}
+          candidatsTache={candidatsTache}
+          ajouterMembreTacheAction={ajouterMembreTache.bind(null, id, pointId)}
+          retirerMembreTacheAction={retirerMembreTache.bind(null, id, pointId)}
         />
 
         <CommentairesSuivi

@@ -42,10 +42,28 @@ async function getContexte(departementId: string) {
     peutGerer = ["president", "vice_president", "secretaire"].includes(aff?.role ?? "");
   }
 
-  // Le suivi est une information sensible : seuls les responsables du
-  // departement et le pilotage y ont acces, meme en lecture (pas de notion
-  // de "peutVoir" plus large pour un simple ouvrier -- cf. rls_policies.sql).
+  // Gestion structurelle du suivi (ajouter/supprimer une tache ou une liste,
+  // changer l'inclusion au rapport, gerer les membres) : reservee aux
+  // responsables du departement et au pilotage. Voir/agir sur une tache
+  // precise est plus large (managers + membres ajoutes) -- gere directement
+  // par les RLS/RPC concernees, pas ici (cf. rls_policies.sql).
   return { supabase, moi, peutGerer };
+}
+
+async function getUtilisateur() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/connexion");
+
+  const { data: moi } = await supabase
+    .from("ouvriers")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  if (!moi) redirect("/connexion");
+
+  return { supabase, moi };
 }
 
 export async function ajouterListe(departementId: string, formData: FormData) {
@@ -112,6 +130,49 @@ export async function supprimerListe(departementId: string, listeId: string) {
   return { success: true };
 }
 
+export async function ajouterMembreListe(
+  departementId: string,
+  listeId: string,
+  ouvrierId: string
+) {
+  const { supabase, moi, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const { error } = await supabase.from("liste_suivi_membres").insert({
+    liste_id: listeId,
+    ouvrier_id: ouvrierId,
+    ajoute_par: moi.id,
+  });
+
+  if (error) {
+    if (error.code === "23505") return { error: "Déjà membre de cette liste." };
+    return { error: "Erreur lors de l'ajout." };
+  }
+
+  revalidatePath(`/departements/${departementId}/suivi`);
+  return { success: true };
+}
+
+export async function retirerMembreListe(
+  departementId: string,
+  listeId: string,
+  ouvrierId: string
+) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const { error } = await supabase
+    .from("liste_suivi_membres")
+    .delete()
+    .eq("liste_id", listeId)
+    .eq("ouvrier_id", ouvrierId);
+
+  if (error) return { error: "Erreur." };
+
+  revalidatePath(`/departements/${departementId}/suivi`);
+  return { success: true };
+}
+
 export async function ajouterPointSuivi(
   departementId: string,
   listeId: string,
@@ -142,28 +203,28 @@ export async function ajouterPointSuivi(
   return { success: true };
 }
 
+// Ouvert aux managers ET aux membres ajoutes a la liste ou a cette tache
+// precise (voir + agir). L'autorisation est verifiee par la fonction SQL
+// elle-meme (fn_peut_voir_tache), pas ici -- la policy UPDATE directe sur
+// points_suivi reste reservee aux managers (elle couvre aussi contenu/
+// description), d'ou le passage par une fonction dediee.
 export async function changerStatutPointSuivi(
   departementId: string,
   pointId: string,
   statut: StatutPointSuiviEnum
 ) {
-  const { supabase, moi, peutGerer } = await getContexte(departementId);
-  if (!peutGerer) return { error: "Accès refusé." };
+  const { supabase } = await getUtilisateur();
 
-  const { error } = await supabase
-    .from("points_suivi")
-    .update(
-      statut === "termine"
-        ? { statut, date_resolution: new Date().toISOString().split("T")[0], resolu_par: moi.id }
-        : { statut, date_resolution: null, resolu_par: null }
-    )
-    .eq("id", pointId)
-    .eq("departement_id", departementId);
+  const { error } = await supabase.rpc("rpc_changer_statut_point_suivi", {
+    p_point_id: pointId,
+    p_statut: statut,
+  });
 
-  if (error) return { error: "Erreur." };
+  if (error) return { error: "Accès refusé ou erreur." };
 
   revalidatePath(`/departements/${departementId}/suivi`);
   revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
+  revalidatePath("/mon-espace/mes-taches");
   return { success: true };
 }
 
@@ -221,6 +282,49 @@ export async function modifierPointSuivi(
     .eq("departement_id", departementId);
 
   if (error) return { error: "Erreur lors de l'enregistrement." };
+
+  revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
+  return { success: true };
+}
+
+export async function ajouterMembreTache(
+  departementId: string,
+  pointId: string,
+  ouvrierId: string
+) {
+  const { supabase, moi, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const { error } = await supabase.from("point_suivi_membres").insert({
+    point_id: pointId,
+    ouvrier_id: ouvrierId,
+    ajoute_par: moi.id,
+  });
+
+  if (error) {
+    if (error.code === "23505") return { error: "Déjà membre de cette tâche." };
+    return { error: "Erreur lors de l'ajout." };
+  }
+
+  revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
+  return { success: true };
+}
+
+export async function retirerMembreTache(
+  departementId: string,
+  pointId: string,
+  ouvrierId: string
+) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const { error } = await supabase
+    .from("point_suivi_membres")
+    .delete()
+    .eq("point_id", pointId)
+    .eq("ouvrier_id", ouvrierId);
+
+  if (error) return { error: "Erreur." };
 
   revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
   return { success: true };
@@ -301,13 +405,14 @@ export async function supprimerPieceJointe(departementId: string, pointId: strin
   return { success: true };
 }
 
+// Ouvert aux managers ET aux membres (liste ou tache) : la policy RLS
+// commentaires_suivi_insert (fn_peut_voir_tache) fait foi.
 export async function ajouterCommentaire(
   departementId: string,
   pointId: string,
   formData: FormData
 ) {
-  const { supabase, moi, peutGerer } = await getContexte(departementId);
-  if (!peutGerer) return { error: "Accès refusé." };
+  const { supabase, moi } = await getUtilisateur();
 
   const parsed = commentaireSuiviSchema.safeParse({ contenu: formData.get("contenu") });
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Commentaire invalide." };
@@ -319,7 +424,7 @@ export async function ajouterCommentaire(
   let mentions: string[] = [];
   if (mentionsSoumises.length) {
     const { data: taguables } = await supabase.rpc("fn_personnes_taguables_suivi", {
-      p_departement_id: departementId,
+      p_point_id: pointId,
     });
     const idsTaguables = new Set((taguables ?? []).map((t) => t.id));
     mentions = mentionsSoumises.filter((id) => idsTaguables.has(id));
@@ -333,19 +438,22 @@ export async function ajouterCommentaire(
     mentions,
   });
 
-  if (error) return { error: "Erreur lors de l'envoi." };
+  if (error) return { error: "Erreur lors de l'envoi (accès refusé ?)." };
 
   revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
   return { success: true };
 }
 
+// Suppression : l'auteur (managers ou membres, sur leur propre commentaire)
+// ou tout manager -- la policy RLS commentaires_suivi_delete fait foi, pas
+// de gate peutGerer ici sinon un membre ne pourrait jamais retirer son propre
+// commentaire.
 export async function supprimerCommentaire(
   departementId: string,
   pointId: string,
   commentaireId: string
 ) {
-  const { supabase, peutGerer } = await getContexte(departementId);
-  if (!peutGerer) return { error: "Accès refusé." };
+  const { supabase } = await getUtilisateur();
 
   const { error } = await supabase
     .from("commentaires_suivi")
