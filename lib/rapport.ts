@@ -1,5 +1,4 @@
 import type { createClient } from "@/lib/supabase/server";
-import { format } from "@/lib/format";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -232,15 +231,14 @@ export async function getDonneesRapport(
     .eq("departement_id", departementId)
     .order("date_creation", { ascending: true });
 
+  // Le rapport ne montre que ce qui reste a faire -- les taches terminees
+  // (meme terminees ce mois-ci) n'y figurent plus.
   function texteSuiviListe(listeId: string): string | null {
-    const items = (pointsSuivi ?? []).filter((p) => p.liste_id === listeId).filter((p) => {
-      if (p.statut !== "termine") return true;
-      return !!p.date_resolution && p.date_resolution >= debutMois && p.date_resolution <= finMois;
-    });
+    const items = (pointsSuivi ?? []).filter(
+      (p) => p.liste_id === listeId && p.statut !== "termine"
+    );
     if (!items.length) return null;
-    return items
-      .map((p) => (p.statut === "termine" ? `${p.contenu} — résolu le ${format.date(p.date_resolution)}` : p.contenu))
-      .join("\n");
+    return items.map((p) => p.contenu).join("\n");
   }
 
   const suiviInclus = (listesSuivi ?? [])
