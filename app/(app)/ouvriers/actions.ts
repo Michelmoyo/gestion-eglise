@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ouvrierSchema } from "@/lib/validations/ouvrier";
+import { getOrigin } from "@/lib/url";
 
 async function assertPilotage() {
   const supabase = await createClient();
@@ -57,7 +58,10 @@ export async function creerOuvrier(formData: FormData) {
 
   // Envoyer l'invitation par email (service_role)
   const admin = createAdminClient();
-  await admin.auth.admin.inviteUserByEmail(data.email);
+  const origin = await getOrigin();
+  await admin.auth.admin.inviteUserByEmail(data.email, {
+    redirectTo: `${origin}/reinitialiser-mot-de-passe`,
+  });
 
   revalidatePath("/ouvriers");
   redirect("/ouvriers");

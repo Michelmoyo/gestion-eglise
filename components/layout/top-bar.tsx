@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { logout } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
-import { LogOut, Bell } from "lucide-react";
+import { LogOut, Bell, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 interface TopBarProps {
@@ -46,6 +46,11 @@ export async function TopBar({ title, prenom }: TopBarProps) {
             {nbNonLues > 0 && (
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
             )}
+          </Button>
+        </Link>
+        <Link href="/mon-compte">
+          <Button variant="ghost" size="icon" aria-label="Mon compte">
+            <Settings size={18} />
           </Button>
         </Link>
         <form action={logout}>

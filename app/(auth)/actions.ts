@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getOrigin } from "@/lib/url";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
@@ -35,9 +36,10 @@ export async function login(formData: FormData) {
 export async function sendResetEmail(formData: FormData) {
   const supabase = await createClient();
   const email = formData.get("email") as string;
+  const origin = await getOrigin();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(".supabase.co", "")}/reinitialiser-mot-de-passe`,
+    redirectTo: `${origin}/reinitialiser-mot-de-passe`,
   });
 
   if (error) {
@@ -55,6 +57,20 @@ export async function updatePassword(formData: FormData) {
 
   if (error) {
     return { error: "Impossible de mettre à jour le mot de passe." };
+  }
+
+  // Rediriger selon le rôle global (§12 cahier des charges)
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: ouvrier } = await supabase
+      .from("ouvriers")
+      .select("role_global")
+      .eq("auth_user_id", user.id)
+      .single();
+
+    if (ouvrier?.role_global === "pasteur" || ouvrier?.role_global === "assistant") {
+      redirect("/pilotage");
+    }
   }
 
   redirect("/mon-espace");
