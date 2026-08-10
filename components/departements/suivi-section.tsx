@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, ChevronDown, ChevronRight, Paperclip } from "lucide-react";
-import { format } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { StatutPointSuiviEnum } from "@/lib/supabase/types";
 import { STATUTS_POINT_SUIVI, STATUT_POINT_SUIVI_STYLE } from "@/lib/suivi";
@@ -160,10 +159,6 @@ export function SuiviSection({
                         {item.piece_jointe_nom && (
                           <Paperclip size={11} className="inline-block ml-1.5 text-muted-foreground align-middle" />
                         )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Émis le {format.date(item.date_creation)}
-                        {item.statut === "termine" && item.date_resolution ? ` · résolu le ${format.date(item.date_resolution)}` : ""}
                       </p>
                     </div>
                     <ChevronRight size={14} className="text-muted-foreground flex-shrink-0 mt-0.5" />
