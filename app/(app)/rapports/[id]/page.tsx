@@ -123,12 +123,19 @@ export default async function RapportDocumentPage({
           </div>
           <div>
             <p className="text-xs font-semibold text-orange-600 mb-1">
-              Suspendus ce mois {suspendusOuvriers.length ? `(${suspendusOuvriers.length})` : ""}
+              Ouvriers suspendus {suspendusOuvriers.length ? `(${suspendusOuvriers.length})` : ""}
             </p>
             {!suspendusOuvriers.length ? (
               <p className="text-sm text-muted-foreground">Aucun.</p>
             ) : (
-              suspendusOuvriers.map((o) => <p key={o.id} className="text-sm">{o.prenom} {o.nom}</p>)
+              suspendusOuvriers.map((o) => (
+                <p key={o.id} className="text-sm">
+                  {o.prenom} {o.nom}
+                  {o.date_changement_statut && (
+                    <span className="text-xs text-muted-foreground"> · depuis le {format.date(o.date_changement_statut)}</span>
+                  )}
+                </p>
+              ))
             )}
           </div>
         </CardContent>

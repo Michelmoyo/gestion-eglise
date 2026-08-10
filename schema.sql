@@ -242,11 +242,43 @@ create table mouvements_caisse (
 create index idx_caisse_departement on mouvements_caisse(departement_id);
 
 -- ----------------------------------------------------------------------------
+-- POINTS DE SUIVI (difficultes / besoins / objectifs)
+-- Remplace la saisie en texte libre par rapport : un point de suivi vit
+-- independamment du cycle mensuel, peut rester ouvert plusieurs mois, et se
+-- coche comme resolu par le responsable du departement (president,
+-- vice-president, secretaire, ou pasteur/assistant). Visible en permanence
+-- sur la page du departement, pas seulement dans un rapport genere.
+-- ----------------------------------------------------------------------------
+create type type_suivi_enum as enum ('difficulte', 'besoin', 'objectif');
+
+create table points_suivi (
+  id              uuid primary key default gen_random_uuid(),
+  departement_id  uuid not null references departements(id) on delete cascade,
+  type            type_suivi_enum not null,
+  contenu         text not null,
+  resolu          boolean not null default false,
+  date_creation   date not null default current_date,
+  date_resolution date,
+  cree_par        uuid not null references ouvriers(id),
+  resolu_par      uuid references ouvriers(id),
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+create trigger trg_points_suivi_updated_at
+  before update on points_suivi
+  for each row execute function fn_set_updated_at();
+
+create index idx_points_suivi_departement on points_suivi(departement_id);
+
+-- ----------------------------------------------------------------------------
 -- RAPPORTS
 -- La partie quantitative (effectifs, activites, caisse) n'est PAS dupliquee
 -- ici : elle se calcule via les vues ci-dessous, filtrees sur "periode".
--- Cette table ne porte que la partie qualitative + les metadonnees.
--- Aucune mise a jour autorisee : un rapport soumis reste une archive datee.
+-- difficultes/besoins/objectifs sont desormais une COPIE figee, prise depuis
+-- points_suivi au moment de la soumission (voir soumettrerapport) -- plus de
+-- saisie manuelle a chaque rapport. Aucune mise a jour libre par ailleurs :
+-- un rapport soumis reste une archive datee.
 -- ----------------------------------------------------------------------------
 create table rapports (
   id              uuid primary key default gen_random_uuid(),

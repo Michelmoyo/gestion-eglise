@@ -1,6 +1,8 @@
 import type { createClient } from "@/lib/supabase/server";
+import { format } from "@/lib/format";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+type TypeSuivi = "difficulte" | "besoin" | "objectif";
 
 interface OptionsRapport {
   peutVoirDetailCaisse: boolean;
@@ -72,18 +74,26 @@ export async function getDonneesRapport(
     ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", nouveauxIds)
     : { data: [] };
 
-  const { data: suspendusMois } = await supabase
+  // Tous les suspendus actuels du departement, quelle que soit la date de
+  // suspension (une suspension ancienne reste pertinente pour le rapport).
+  const { data: suspendusAffectations } = await supabase
     .from("affectations")
     .select("ouvrier_id, date_changement_statut")
     .eq("departement_id", departementId)
-    .eq("statut", "suspendu")
-    .gte("date_changement_statut", debutMois)
-    .lte("date_changement_statut", finMois);
+    .eq("statut", "suspendu");
 
-  const suspendusIds = (suspendusMois ?? []).map((a) => a.ouvrier_id);
-  const { data: suspendusOuvriers } = suspendusIds.length
+  const suspendusIds = (suspendusAffectations ?? []).map((a) => a.ouvrier_id);
+  const { data: suspendusOuvriersData } = suspendusIds.length
     ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", suspendusIds)
     : { data: [] };
+
+  const dateChangementById = Object.fromEntries(
+    (suspendusAffectations ?? []).map((a) => [a.ouvrier_id, a.date_changement_statut])
+  );
+  const suspendusOuvriers = (suspendusOuvriersData ?? []).map((o) => ({
+    ...o,
+    date_changement_statut: dateChangementById[o.id] ?? null,
+  }));
 
   // ── Présence des membres du département aux cultes de la période ───────
   const { data: cultesPeriode } = await supabase
@@ -144,6 +154,28 @@ export async function getDonneesRapport(
     mouvementsPeriode = data ?? [];
   }
 
+  // ── Points de suivi (difficultés/besoins/objectifs) ─────────────────────
+  // Remplace la saisie manuelle par rapport : on prend tout ce qui est
+  // encore ouvert (peu importe depuis quand) + ce qui a été résolu pendant
+  // cette période précise, pour que le rapport montre à la fois ce qui reste
+  // en cours et ce qui a été accompli ce mois-ci.
+  const { data: pointsSuivi } = await supabase
+    .from("points_suivi")
+    .select("id, type, contenu, resolu, date_creation, date_resolution")
+    .eq("departement_id", departementId)
+    .order("date_creation", { ascending: true });
+
+  function texteSuivi(type: TypeSuivi): string | null {
+    const items = (pointsSuivi ?? []).filter((p) => p.type === type).filter((p) => {
+      if (!p.resolu) return true;
+      return !!p.date_resolution && p.date_resolution >= debutMois && p.date_resolution <= finMois;
+    });
+    if (!items.length) return null;
+    return items
+      .map((p) => (p.resolu ? `${p.contenu} — résolu le ${format.date(p.date_resolution)}` : p.contenu))
+      .join("\n");
+  }
+
   return {
     statsByActivite,
     nbActifs: nbActifs ?? 0,
@@ -154,5 +186,9 @@ export async function getDonneesRapport(
     soldeFin: (soldeFinData as number) ?? 0,
     mouvementsPeriode,
     peutVoirDetailCaisse: options.peutVoirDetailCaisse,
+    pointsSuivi: pointsSuivi ?? [],
+    difficultesTexte: texteSuivi("difficulte"),
+    besoinsTexte: texteSuivi("besoin"),
+    objectifsTexte: texteSuivi("objectif"),
   };
 }

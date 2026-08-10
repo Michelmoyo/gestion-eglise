@@ -83,7 +83,11 @@ export default async function RapportPage({
     soldeDebut,
     soldeFin,
     mouvementsPeriode,
+    pointsSuivi,
   } = await getDonneesRapport(supabase, id, periodeCourante, { peutVoirDetailCaisse });
+
+  const suiviOuvert = (type: "difficulte" | "besoin" | "objectif") =>
+    pointsSuivi.filter((p) => p.type === type && !p.resolu);
 
   const action = soumettrerapport.bind(null, id);
   const moisLabel = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
@@ -170,13 +174,18 @@ export default async function RapportPage({
             </div>
             <div>
               <p className="text-xs font-semibold text-orange-600 mb-1">
-                Suspendus ce mois {suspendusOuvriers.length ? `(${suspendusOuvriers.length})` : ""}
+                Ouvriers suspendus {suspendusOuvriers.length ? `(${suspendusOuvriers.length})` : ""}
               </p>
               {!suspendusOuvriers.length ? (
                 <p className="text-sm text-muted-foreground">Aucun.</p>
               ) : (
                 suspendusOuvriers.map((o) => (
-                  <p key={o.id} className="text-sm">{o.prenom} {o.nom}</p>
+                  <p key={o.id} className="text-sm">
+                    {o.prenom} {o.nom}
+                    {o.date_changement_statut && (
+                      <span className="text-xs text-muted-foreground"> · depuis le {format.date(o.date_changement_statut)}</span>
+                    )}
+                  </p>
                 ))
               )}
             </div>
@@ -275,16 +284,38 @@ export default async function RapportPage({
           </CardContent>
         </Card>
 
-        {/* Formulaire difficultés / besoins / objectifs */}
-        <RapportForm
-          action={action}
-          periode={periodeCourante}
-          initialData={{
-            difficultes: rapportExistant?.difficultes ?? "",
-            besoins: rapportExistant?.besoins ?? "",
-            objectifs: rapportExistant?.objectifs ?? "",
-          }}
-        />
+        {/* Difficultés / besoins / objectifs — gérés depuis /suivi, prévisualisés ici */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center justify-between">
+              <span>Difficultés, besoins & objectifs</span>
+              <Link href={`/departements/${id}/suivi`} className="text-xs text-primary font-normal">
+                Gérer →
+              </Link>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(["difficulte", "besoin", "objectif"] as const).map((type) => {
+              const items = suiviOuvert(type);
+              const label =
+                type === "difficulte" ? "Difficultés" : type === "besoin" ? "Besoins" : "Objectifs";
+              return (
+                <div key={type}>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">
+                    {label} ({items.length})
+                  </p>
+                  {!items.length ? (
+                    <p className="text-sm text-muted-foreground">Aucun élément ouvert.</p>
+                  ) : (
+                    items.map((p) => <p key={p.id} className="text-sm">{p.contenu}</p>)
+                  )}
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+
+        <RapportForm action={action} periode={periodeCourante} />
       </div>
     </>
   );

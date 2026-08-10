@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getDonneesRapport } from "@/lib/rapport";
 
 export async function soumettrerapport(departementId: string, formData: FormData) {
   const supabase = await createClient();
@@ -35,21 +36,23 @@ export async function soumettrerapport(departementId: string, formData: FormData
   const periode = formData.get("periode") as string;
   if (!periode) return { error: "Période requise." };
 
-  function joindreEntrees(champ: string) {
-    const entrees = formData
-      .getAll(champ)
-      .map((v) => String(v).trim())
-      .filter(Boolean);
-    return entrees.length ? entrees.join("\n") : null;
-  }
+  // Difficultés/besoins/objectifs ne se saisissent plus par rapport : on
+  // capture ici un instantané de ce qui est ouvert (ou résolu ce mois-ci)
+  // dans le suivi du département au moment de la soumission.
+  const { difficultesTexte, besoinsTexte, objectifsTexte } = await getDonneesRapport(
+    supabase,
+    departementId,
+    periode,
+    { peutVoirDetailCaisse: false }
+  );
 
   const { error } = await supabase.from("rapports").upsert(
     {
       departement_id: departementId,
       periode,
-      difficultes: joindreEntrees("difficultes"),
-      besoins: joindreEntrees("besoins"),
-      objectifs: joindreEntrees("objectifs"),
+      difficultes: difficultesTexte,
+      besoins: besoinsTexte,
+      objectifs: objectifsTexte,
       auteur_id: moi.id,
       date_soumission: new Date().toISOString(),
     },

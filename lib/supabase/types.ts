@@ -23,6 +23,7 @@ export type StatutAffectationEnum = "actif" | "suspendu" | "quitte";
 export type StatutPresenceEnum = "present" | "absent" | "excuse";
 export type TypeMouvementEnum = "entree" | "sortie";
 export type SanteEnum = "vert" | "orange" | "rouge";
+export type TypeSuiviEnum = "difficulte" | "besoin" | "objectif";
 
 export interface Database {
   public: {
@@ -297,6 +298,44 @@ export interface Database {
           auteur_id: string;
         };
         Update: Record<string, never>;
+        Relationships: [];
+      };
+      points_suivi: {
+        Row: {
+          id: string;
+          departement_id: string;
+          type: TypeSuiviEnum;
+          contenu: string;
+          resolu: boolean;
+          date_creation: string;
+          date_resolution: string | null;
+          cree_par: string;
+          resolu_par: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          departement_id: string;
+          type: TypeSuiviEnum;
+          contenu: string;
+          resolu?: boolean;
+          date_creation?: string;
+          date_resolution?: string | null;
+          cree_par: string;
+          resolu_par?: string | null;
+        };
+        Update: {
+          id?: string;
+          departement_id?: string;
+          type?: TypeSuiviEnum;
+          contenu?: string;
+          resolu?: boolean;
+          date_creation?: string;
+          date_resolution?: string | null;
+          cree_par?: string;
+          resolu_par?: string | null;
+        };
         Relationships: [];
       };
       rapports: {
