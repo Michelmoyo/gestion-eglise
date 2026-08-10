@@ -319,10 +319,45 @@ create table commentaires_suivi (
   departement_id uuid not null references departements(id) on delete cascade,
   auteur_id      uuid not null references ouvriers(id),
   contenu        text not null,
+  mentions       uuid[] not null default '{}', -- ouvriers tagues (@nom), notification dediee
   created_at     timestamptz not null default now()
 );
 
 create index idx_commentaires_suivi_point on commentaires_suivi(point_suivi_id);
+
+-- Personnes "taguables" dans un commentaire de suivi : exactement le meme
+-- ensemble que "qui a acces au suivi" (jamais un simple ouvrier). SECURITY
+-- DEFINER car un president ne peut normalement pas lire la fiche d'un
+-- pasteur/assistant via ouvriers_select -- ici on ne renvoie que
+-- id/prenom/nom, et seulement si l'appelant a lui-meme acces a ce suivi.
+create or replace function fn_personnes_taguables_suivi(p_departement_id uuid)
+returns table(id uuid, prenom text, nom text)
+language plpgsql
+security definer
+set search_path = public
+stable
+as $$
+begin
+  if not (fn_is_pasteur_ou_assistant() or fn_gere_departement(p_departement_id)) then
+    raise exception 'Non autorise.';
+  end if;
+
+  return query
+    select o.id, o.prenom, o.nom
+    from ouvriers o
+    where o.role_global in ('pasteur', 'assistant')
+       or exists (
+         select 1 from affectations a
+         where a.ouvrier_id = o.id
+           and a.departement_id = p_departement_id
+           and a.statut = 'actif'
+           and a.role in ('president', 'vice_president', 'secretaire')
+       );
+end;
+$$;
+
+revoke execute on function fn_personnes_taguables_suivi(uuid) from public;
+grant execute on function fn_personnes_taguables_suivi(uuid) to authenticated;
 
 -- Nouveau departement : seed automatique des 3 listes par defaut.
 create or replace function fn_seed_listes_suivi()
@@ -530,6 +565,9 @@ create trigger trg_notifier_nouveau_point_suivi
   after insert on points_suivi
   for each row execute function fn_notifier_nouveau_point_suivi();
 
+-- Message dedie pour les personnes taguees (new.mentions), message
+-- generique pour le reste des personnes concernees -- jamais les deux a la
+-- meme personne, jamais l'auteur.
 create or replace function fn_notifier_nouveau_commentaire_suivi()
 returns trigger
 language plpgsql
@@ -539,9 +577,20 @@ as $$
 declare
   v_nom_departement text;
   v_titre_point text;
+  v_nom_auteur text;
 begin
   select nom into v_nom_departement from departements where id = new.departement_id;
   select contenu into v_titre_point from points_suivi where id = new.point_suivi_id;
+  select prenom || ' ' || nom into v_nom_auteur from ouvriers where id = new.auteur_id;
+
+  insert into notifications (destinataire_id, type, contenu)
+  select o.id,
+    'mention_commentaire_suivi',
+    coalesce(v_nom_auteur, 'Quelqu''un') || ' vous a mentionné dans un commentaire sur « '
+      || coalesce(v_titre_point, '') || ' » (' || coalesce(v_nom_departement, '') || ')'
+  from ouvriers o
+  where o.id = any(new.mentions)
+    and o.id <> new.auteur_id;
 
   insert into notifications (destinataire_id, type, contenu)
   select distinct o.id,
@@ -550,6 +599,7 @@ begin
       || coalesce(v_nom_departement, '') || ')'
   from ouvriers o
   where o.id <> new.auteur_id
+    and not (o.id = any(new.mentions))
     and (
       o.role_global in ('pasteur', 'assistant')
       or exists (

@@ -80,19 +80,25 @@ export default async function PointSuiviDetailPage({
 
   const { data: commentairesData } = await supabase
     .from("commentaires_suivi")
-    .select("id, contenu, created_at, auteur_id")
+    .select("id, contenu, created_at, auteur_id, mentions")
     .eq("point_suivi_id", pointId)
     .order("created_at", { ascending: true });
+
+  const { data: taguables } = await supabase.rpc("fn_personnes_taguables_suivi", {
+    p_departement_id: id,
+  });
 
   const auteurIds = [...new Set((commentairesData ?? []).map((c) => c.auteur_id))];
   const { data: auteurs } = auteurIds.length
     ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", auteurIds)
     : { data: [] };
   const auteurNomById = Object.fromEntries((auteurs ?? []).map((a) => [a.id, `${a.prenom} ${a.nom}`]));
+  const nomById = Object.fromEntries((taguables ?? []).map((t) => [t.id, `${t.prenom} ${t.nom}`]));
 
   const commentaires = (commentairesData ?? []).map((c) => ({
     ...c,
     auteurNom: auteurNomById[c.auteur_id] ?? "—",
+    mentionsNoms: (c.mentions ?? []).map((mid) => nomById[mid]).filter((n): n is string => !!n),
   }));
 
   return (
@@ -125,6 +131,7 @@ export default async function PointSuiviDetailPage({
           commentaires={commentaires}
           moiId={moi.id}
           peutSupprimerTout={peutGerer}
+          personnesTaguables={taguables ?? []}
           ajouterAction={ajouterCommentaire.bind(null, id, pointId)}
           supprimerAction={supprimerCommentaire.bind(null, id, pointId)}
         />

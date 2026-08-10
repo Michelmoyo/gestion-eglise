@@ -379,6 +379,7 @@ export interface Database {
           departement_id: string;
           auteur_id: string;
           contenu: string;
+          mentions: string[];
           created_at: string;
         };
         Insert: {
@@ -387,6 +388,7 @@ export interface Database {
           departement_id: string;
           auteur_id: string;
           contenu: string;
+          mentions?: string[];
         };
         Update: {
           id?: string;
@@ -394,6 +396,7 @@ export interface Database {
           departement_id?: string;
           auteur_id?: string;
           contenu?: string;
+          mentions?: string[];
         };
         Relationships: [];
       };
@@ -502,6 +505,10 @@ export interface Database {
       fn_solde_departement_a_date: {
         Args: { p_departement_id: string; p_date: string };
         Returns: number;
+      };
+      fn_personnes_taguables_suivi: {
+        Args: { p_departement_id: string };
+        Returns: { id: string; prenom: string; nom: string }[];
       };
       rpc_assigner_role: {
         Args: {

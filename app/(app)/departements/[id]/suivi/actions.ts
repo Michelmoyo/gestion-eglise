@@ -302,11 +302,25 @@ export async function ajouterCommentaire(
   const parsed = commentaireSuiviSchema.safeParse({ contenu: formData.get("contenu") });
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Commentaire invalide." };
 
+  // Les mentions soumises par le client sont revalidees contre la meme
+  // liste "taguable" cote serveur -- on ne fait jamais confiance aux ids
+  // envoyes tels quels.
+  const mentionsSoumises = formData.getAll("mentions").map(String);
+  let mentions: string[] = [];
+  if (mentionsSoumises.length) {
+    const { data: taguables } = await supabase.rpc("fn_personnes_taguables_suivi", {
+      p_departement_id: departementId,
+    });
+    const idsTaguables = new Set((taguables ?? []).map((t) => t.id));
+    mentions = mentionsSoumises.filter((id) => idsTaguables.has(id));
+  }
+
   const { error } = await supabase.from("commentaires_suivi").insert({
     point_suivi_id: pointId,
     departement_id: departementId,
     auteur_id: moi.id,
     contenu: parsed.data.contenu,
+    mentions,
   });
 
   if (error) return { error: "Erreur lors de l'envoi." };
