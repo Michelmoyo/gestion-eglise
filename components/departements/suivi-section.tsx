@@ -21,6 +21,15 @@ export interface PointSuivi {
 
 type Filtre = StatutPointSuiviEnum | "tous";
 
+// La ligne d'un element partage sa largeur avec le selecteur de statut, le
+// chevron et le bouton supprimer -- pas la place pour un titre long en
+// entier une fois la liste depliee.
+const LONGUEUR_MAX_CONTENU = 40;
+
+function tronquer(texte: string, max: number): string {
+  return texte.length > max ? `${texte.slice(0, max).trimEnd()}…` : texte;
+}
+
 interface Props {
   departementId: string;
   listeId: string;
@@ -182,8 +191,14 @@ export function SuiviSection({
                     className="flex-1 min-w-0 flex items-start justify-between gap-1 group/link"
                   >
                     <div className="min-w-0">
-                      <p className={cn("text-sm group-hover/link:underline", item.statut === "termine" && "text-muted-foreground line-through")}>
-                        {item.contenu}
+                      <p
+                        className={cn(
+                          "text-sm lowercase group-hover/link:underline",
+                          item.statut === "termine" && "text-muted-foreground line-through"
+                        )}
+                        title={item.contenu}
+                      >
+                        {tronquer(item.contenu, LONGUEUR_MAX_CONTENU)}
                         {item.piece_jointe_nom && (
                           <Paperclip size={11} className="inline-block ml-1.5 text-muted-foreground align-middle" />
                         )}
