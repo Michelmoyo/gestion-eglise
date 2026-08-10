@@ -2,7 +2,6 @@ import type { createClient } from "@/lib/supabase/server";
 import { format } from "@/lib/format";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
-type TypeSuivi = "difficulte" | "besoin" | "objectif";
 
 interface OptionsRapport {
   peutVoirDetailCaisse: boolean;
@@ -154,19 +153,30 @@ export async function getDonneesRapport(
     mouvementsPeriode = data ?? [];
   }
 
-  // ── Points de suivi (difficultés/besoins/objectifs) ─────────────────────
+  // ── Points de suivi (listes Difficultés/Besoins/Objectifs + eventuelles
+  // listes personnalisees) ─────────────────────────────────────────────────
   // Remplace la saisie manuelle par rapport : on prend tout ce qui est
   // encore ouvert (peu importe depuis quand) + ce qui a été résolu pendant
   // cette période précise, pour que le rapport montre à la fois ce qui reste
-  // en cours et ce qui a été accompli ce mois-ci.
+  // en cours et ce qui a été accompli ce mois-ci. Seules les 3 listes par
+  // defaut alimentent les colonnes du rapport (difficultes/besoins/objectifs) ;
+  // une liste personnalisee supplementaire reste visible sur /suivi mais
+  // n'a pas encore de section dediee dans le document genere.
+  const { data: listesSuivi } = await supabase
+    .from("listes_suivi")
+    .select("id, nom")
+    .eq("departement_id", departementId);
+
   const { data: pointsSuivi } = await supabase
     .from("points_suivi")
-    .select("id, type, contenu, resolu, date_creation, date_resolution")
+    .select("id, liste_id, contenu, resolu, date_creation, date_resolution")
     .eq("departement_id", departementId)
     .order("date_creation", { ascending: true });
 
-  function texteSuivi(type: TypeSuivi): string | null {
-    const items = (pointsSuivi ?? []).filter((p) => p.type === type).filter((p) => {
+  function texteSuivi(nomListe: string): string | null {
+    const listeId = (listesSuivi ?? []).find((l) => l.nom === nomListe)?.id;
+    if (!listeId) return null;
+    const items = (pointsSuivi ?? []).filter((p) => p.liste_id === listeId).filter((p) => {
       if (!p.resolu) return true;
       return !!p.date_resolution && p.date_resolution >= debutMois && p.date_resolution <= finMois;
     });
@@ -186,9 +196,10 @@ export async function getDonneesRapport(
     soldeFin: (soldeFinData as number) ?? 0,
     mouvementsPeriode,
     peutVoirDetailCaisse: options.peutVoirDetailCaisse,
+    listesSuivi: listesSuivi ?? [],
     pointsSuivi: pointsSuivi ?? [],
-    difficultesTexte: texteSuivi("difficulte"),
-    besoinsTexte: texteSuivi("besoin"),
-    objectifsTexte: texteSuivi("objectif"),
+    difficultesTexte: texteSuivi("Difficultés"),
+    besoinsTexte: texteSuivi("Besoins"),
+    objectifsTexte: texteSuivi("Objectifs"),
   };
 }

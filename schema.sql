@@ -242,19 +242,39 @@ create table mouvements_caisse (
 create index idx_caisse_departement on mouvements_caisse(departement_id);
 
 -- ----------------------------------------------------------------------------
--- POINTS DE SUIVI (difficultes / besoins / objectifs)
--- Remplace la saisie en texte libre par rapport : un point de suivi vit
--- independamment du cycle mensuel, peut rester ouvert plusieurs mois, et se
--- coche comme resolu par le responsable du departement (president,
--- vice-president, secretaire, ou pasteur/assistant). Visible en permanence
--- sur la page du departement, pas seulement dans un rapport genere.
+-- LISTES DE SUIVI + POINTS DE SUIVI
+-- Inspire d'un outil de gestion de projet (colonnes/listes type Trello),
+-- plutot que d'un type fige. Un departement demarre avec 3 listes par defaut
+-- (Difficultes, Besoins, Objectifs -- seedees automatiquement a la creation
+-- du departement, cf. fn_seed_listes_suivi plus bas), mais le responsable
+-- peut en ajouter d'autres a l'avenir (ex. "Risques", "Projets"...).
+-- Un point de suivi vit independamment du cycle mensuel du rapport, peut
+-- rester ouvert plusieurs mois, et se coche comme resolu par le responsable
+-- du departement (president, vice-president, secretaire, ou pasteur/
+-- assistant). Visible en permanence sur la page du departement, pas
+-- seulement dans un rapport genere.
 -- ----------------------------------------------------------------------------
-create type type_suivi_enum as enum ('difficulte', 'besoin', 'objectif');
+create table listes_suivi (
+  id             uuid primary key default gen_random_uuid(),
+  departement_id uuid not null references departements(id) on delete cascade,
+  nom            text not null,
+  ordre          int not null default 0,
+  cree_par       uuid references ouvriers(id),
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  unique (departement_id, nom)
+);
+
+create trigger trg_listes_suivi_updated_at
+  before update on listes_suivi
+  for each row execute function fn_set_updated_at();
+
+create index idx_listes_suivi_departement on listes_suivi(departement_id);
 
 create table points_suivi (
   id              uuid primary key default gen_random_uuid(),
   departement_id  uuid not null references departements(id) on delete cascade,
-  type            type_suivi_enum not null,
+  liste_id        uuid not null references listes_suivi(id) on delete cascade,
   contenu         text not null,
   resolu          boolean not null default false,
   date_creation   date not null default current_date,
@@ -270,6 +290,28 @@ create trigger trg_points_suivi_updated_at
   for each row execute function fn_set_updated_at();
 
 create index idx_points_suivi_departement on points_suivi(departement_id);
+create index idx_points_suivi_liste on points_suivi(liste_id);
+
+-- Nouveau departement : seed automatique des 3 listes par defaut.
+create or replace function fn_seed_listes_suivi()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into listes_suivi (departement_id, nom, ordre) values
+    (new.id, 'Difficultés', 0),
+    (new.id, 'Besoins', 1),
+    (new.id, 'Objectifs', 2);
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_seed_listes_suivi on departements;
+create trigger trg_seed_listes_suivi
+  after insert on departements
+  for each row execute function fn_seed_listes_suivi();
 
 -- ----------------------------------------------------------------------------
 -- RAPPORTS

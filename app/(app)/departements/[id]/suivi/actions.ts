@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { pointSuiviSchema } from "@/lib/validations/suivi";
+import { pointSuiviSchema, listeSuiviSchema } from "@/lib/validations/suivi";
 
 async function getContexte(departementId: string) {
   const supabase = await createClient();
@@ -36,16 +36,60 @@ async function getContexte(departementId: string) {
   return { supabase, moi, peutGerer };
 }
 
+export async function ajouterListe(departementId: string, formData: FormData) {
+  const { supabase, moi, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const parsed = listeSuiviSchema.safeParse({ nom: formData.get("nom") });
+  if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Données invalides." };
+
+  const { count } = await supabase
+    .from("listes_suivi")
+    .select("id", { count: "exact", head: true })
+    .eq("departement_id", departementId);
+
+  const { error } = await supabase.from("listes_suivi").insert({
+    departement_id: departementId,
+    nom: parsed.data.nom,
+    ordre: count ?? 0,
+    cree_par: moi.id,
+  });
+
+  if (error) {
+    if (error.code === "23505") return { error: "Une liste porte déjà ce nom." };
+    return { error: "Erreur lors de l'ajout." };
+  }
+
+  revalidatePath(`/departements/${departementId}/suivi`);
+  return { success: true };
+}
+
+export async function supprimerListe(departementId: string, listeId: string) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const { error } = await supabase
+    .from("listes_suivi")
+    .delete()
+    .eq("id", listeId)
+    .eq("departement_id", departementId);
+
+  if (error) return { error: "Erreur lors de la suppression." };
+
+  revalidatePath(`/departements/${departementId}/suivi`);
+  return { success: true };
+}
+
 export async function ajouterPointSuivi(
   departementId: string,
-  type: "difficulte" | "besoin" | "objectif",
+  listeId: string,
   formData: FormData
 ) {
   const { supabase, moi, peutGerer } = await getContexte(departementId);
   if (!peutGerer) return { error: "Accès refusé." };
 
   const parsed = pointSuiviSchema.safeParse({
-    type,
+    liste_id: listeId,
     contenu: formData.get("contenu"),
   });
 
@@ -55,7 +99,7 @@ export async function ajouterPointSuivi(
 
   const { error } = await supabase.from("points_suivi").insert({
     departement_id: departementId,
-    type: parsed.data.type,
+    liste_id: parsed.data.liste_id,
     contenu: parsed.data.contenu,
     cree_par: moi.id,
   });
@@ -97,6 +141,22 @@ export async function rouvrirPointSuivi(departementId: string, pointId: string) 
     .eq("departement_id", departementId);
 
   if (error) return { error: "Erreur." };
+
+  revalidatePath(`/departements/${departementId}/suivi`);
+  return { success: true };
+}
+
+export async function supprimerPointSuivi(departementId: string, pointId: string) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const { error } = await supabase
+    .from("points_suivi")
+    .delete()
+    .eq("id", pointId)
+    .eq("departement_id", departementId);
+
+  if (error) return { error: "Erreur lors de la suppression." };
 
   revalidatePath(`/departements/${departementId}/suivi`);
   return { success: true };

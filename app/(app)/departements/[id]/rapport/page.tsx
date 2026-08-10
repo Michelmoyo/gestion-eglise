@@ -83,11 +83,12 @@ export default async function RapportPage({
     soldeDebut,
     soldeFin,
     mouvementsPeriode,
+    listesSuivi,
     pointsSuivi,
   } = await getDonneesRapport(supabase, id, periodeCourante, { peutVoirDetailCaisse });
 
-  const suiviOuvert = (type: "difficulte" | "besoin" | "objectif") =>
-    pointsSuivi.filter((p) => p.type === type && !p.resolu);
+  const suiviOuvert = (listeId: string) =>
+    pointsSuivi.filter((p) => p.liste_id === listeId && !p.resolu);
 
   const action = soumettrerapport.bind(null, id);
   const moisLabel = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
@@ -284,34 +285,36 @@ export default async function RapportPage({
           </CardContent>
         </Card>
 
-        {/* Difficultés / besoins / objectifs — gérés depuis /suivi, prévisualisés ici */}
+        {/* Suivi du département — géré depuis /suivi, prévisualisé ici */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center justify-between">
-              <span>Difficultés, besoins & objectifs</span>
+              <span>Suivi du département</span>
               <Link href={`/departements/${id}/suivi`} className="text-xs text-primary font-normal">
                 Gérer →
               </Link>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {(["difficulte", "besoin", "objectif"] as const).map((type) => {
-              const items = suiviOuvert(type);
-              const label =
-                type === "difficulte" ? "Difficultés" : type === "besoin" ? "Besoins" : "Objectifs";
-              return (
-                <div key={type}>
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">
-                    {label} ({items.length})
-                  </p>
-                  {!items.length ? (
-                    <p className="text-sm text-muted-foreground">Aucun élément ouvert.</p>
-                  ) : (
-                    items.map((p) => <p key={p.id} className="text-sm">{p.contenu}</p>)
-                  )}
-                </div>
-              );
-            })}
+            {!listesSuivi.length ? (
+              <p className="text-sm text-muted-foreground">Aucune liste de suivi.</p>
+            ) : (
+              listesSuivi.map((liste) => {
+                const items = suiviOuvert(liste.id);
+                return (
+                  <div key={liste.id}>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">
+                      {liste.nom} ({items.length})
+                    </p>
+                    {!items.length ? (
+                      <p className="text-sm text-muted-foreground">Aucun élément ouvert.</p>
+                    ) : (
+                      items.map((p) => <p key={p.id} className="text-sm">{p.contenu}</p>)
+                    )}
+                  </div>
+                );
+              })
+            )}
           </CardContent>
         </Card>
 

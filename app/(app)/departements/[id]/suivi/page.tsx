@@ -4,7 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { ChevronLeft } from "lucide-react";
 import { SuiviSection } from "@/components/departements/suivi-section";
-import { ajouterPointSuivi, resoudrePointSuivi, rouvrirPointSuivi } from "./actions";
+import { NouvelleListeForm } from "@/components/departements/nouvelle-liste-form";
+import {
+  ajouterPointSuivi,
+  resoudrePointSuivi,
+  rouvrirPointSuivi,
+  supprimerPointSuivi,
+  ajouterListe,
+  supprimerListe,
+} from "./actions";
 
 export default async function SuiviPage({
   params,
@@ -48,24 +56,27 @@ export default async function SuiviPage({
     peutGerer = ["president", "vice_president", "secretaire"].includes(aff.role);
   }
 
+  const { data: listes } = await supabase
+    .from("listes_suivi")
+    .select("id, nom, ordre")
+    .eq("departement_id", id)
+    .order("ordre", { ascending: true });
+
   const { data: points } = await supabase
     .from("points_suivi")
-    .select("id, type, contenu, resolu, date_creation, date_resolution")
+    .select("id, liste_id, contenu, resolu, date_creation, date_resolution")
     .eq("departement_id", id)
     .order("date_creation", { ascending: false });
 
-  const parType = (t: "difficulte" | "besoin" | "objectif") =>
-    (points ?? []).filter((p) => p.type === t);
-
-  const ajouterDifficulte = ajouterPointSuivi.bind(null, id, "difficulte");
-  const ajouterBesoin = ajouterPointSuivi.bind(null, id, "besoin");
-  const ajouterObjectif = ajouterPointSuivi.bind(null, id, "objectif");
   const resoudre = resoudrePointSuivi.bind(null, id);
   const rouvrir = rouvrirPointSuivi.bind(null, id);
+  const supprimerPoint = supprimerPointSuivi.bind(null, id);
+  const supprimerListeAction = supprimerListe.bind(null, id);
+  const ajouterListeAction = ajouterListe.bind(null, id);
 
   return (
     <>
-      <TopBar title="Difficultés, besoins & objectifs" />
+      <TopBar title="Suivi du département" />
 
       <div className="p-4 space-y-4">
         <Link
@@ -76,35 +87,28 @@ export default async function SuiviPage({
           {dept.nom}
         </Link>
 
-        <SuiviSection
-          titre="Difficultés"
-          placeholder="Décrire une difficulté…"
-          items={parType("difficulte")}
-          peutGerer={peutGerer}
-          ajouterAction={ajouterDifficulte}
-          resoudreAction={resoudre}
-          rouvrirAction={rouvrir}
-        />
+        {!listes?.length ? (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            Aucune liste de suivi pour ce département.
+          </p>
+        ) : (
+          listes.map((liste) => (
+            <SuiviSection
+              key={liste.id}
+              listeId={liste.id}
+              nom={liste.nom}
+              items={(points ?? []).filter((p) => p.liste_id === liste.id)}
+              peutGerer={peutGerer}
+              ajouterAction={ajouterPointSuivi.bind(null, id, liste.id)}
+              resoudreAction={resoudre}
+              rouvrirAction={rouvrir}
+              supprimerAction={supprimerPoint}
+              supprimerListeAction={supprimerListeAction}
+            />
+          ))
+        )}
 
-        <SuiviSection
-          titre="Besoins"
-          placeholder="Décrire un besoin…"
-          items={parType("besoin")}
-          peutGerer={peutGerer}
-          ajouterAction={ajouterBesoin}
-          resoudreAction={resoudre}
-          rouvrirAction={rouvrir}
-        />
-
-        <SuiviSection
-          titre="Objectifs"
-          placeholder="Décrire un objectif…"
-          items={parType("objectif")}
-          peutGerer={peutGerer}
-          ajouterAction={ajouterObjectif}
-          resoudreAction={resoudre}
-          rouvrirAction={rouvrir}
-        />
+        {peutGerer && <NouvelleListeForm action={ajouterListeAction} />}
       </div>
     </>
   );

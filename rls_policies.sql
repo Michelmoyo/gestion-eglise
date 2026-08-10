@@ -328,10 +328,24 @@ create policy caisse_insert on mouvements_caisse for insert with check (
 );
 
 -- ----------------------------------------------------------------------------
--- POINTS DE SUIVI
--- Meme visibilite que les rapports (toute personne affectee) ; creation et
--- resolution reservees aux gestionnaires du departement.
+-- LISTES DE SUIVI + POINTS DE SUIVI
+-- Meme visibilite que les rapports (toute personne affectee) ; creation,
+-- resolution et suppression reservees aux gestionnaires du departement.
 -- ----------------------------------------------------------------------------
+alter table listes_suivi enable row level security;
+
+create policy listes_suivi_select on listes_suivi for select using (
+  fn_is_pasteur_ou_assistant() or fn_est_affecte(departement_id)
+);
+
+create policy listes_suivi_insert on listes_suivi for insert with check (
+  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
+);
+
+create policy listes_suivi_delete on listes_suivi for delete using (
+  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
+);
+
 alter table points_suivi enable row level security;
 
 create policy points_suivi_select on points_suivi for select using (
@@ -345,6 +359,10 @@ create policy points_suivi_insert on points_suivi for insert with check (
 create policy points_suivi_update on points_suivi for update using (
   fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
 ) with check (
+  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
+);
+
+create policy points_suivi_delete on points_suivi for delete using (
   fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
 );
 
