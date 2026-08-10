@@ -47,7 +47,7 @@ export function BottomNav({ roleGlobal, departementIds }: BottomNavProps) {
   ].filter((l) => l.show);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border print:hidden">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
         {links.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);

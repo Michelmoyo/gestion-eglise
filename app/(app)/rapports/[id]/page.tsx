@@ -168,7 +168,13 @@ export default async function RapportDocumentPage({
   const contactLigne2 = [parametres?.telephone, parametres?.email].filter(Boolean).join(" · ");
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 px-4">
+    // Le layout partage (app)/layout.tsx centre tout dans un conteneur
+    // max-w-lg (~512px) pense pour les ecrans "app mobile" — beaucoup trop
+    // etroit pour ce document (860px). On en sort volontairement ici.
+    <div
+      className="min-h-screen bg-gray-50 py-6 px-4"
+      style={{ width: "100vw", marginLeft: "calc(50% - 50vw)" }}
+    >
       <div className="max-w-[860px] mx-auto flex items-center justify-between mb-4 print:hidden">
         <Link
           href="/rapports"

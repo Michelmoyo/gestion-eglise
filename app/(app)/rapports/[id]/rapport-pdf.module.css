@@ -358,4 +358,13 @@
   .document { max-width: none; }
   .page { box-shadow: none; }
   .matrixWrap { overflow-x: visible; border: none; }
+
+  /* Sans ça, la plupart des navigateurs suppriment les couleurs de fond
+     (lettrine, bandes de tableau, badges) a l'impression/export PDF tant
+     que "Graphiques d'arriere-plan" n'est pas coche manuellement. */
+  .document * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
 }
