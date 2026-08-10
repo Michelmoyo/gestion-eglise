@@ -396,6 +396,27 @@ create policy pieces_jointes_delete on storage.objects for delete using (
 );
 
 -- ----------------------------------------------------------------------------
+-- COMMENTAIRES SUR UN POINT DE SUIVI
+-- Ouvert a tout membre affecte (pas seulement aux gestionnaires) ; suppression
+-- reservee a l'auteur ou aux gestionnaires du departement.
+-- ----------------------------------------------------------------------------
+alter table commentaires_suivi enable row level security;
+
+create policy commentaires_suivi_select on commentaires_suivi for select using (
+  fn_is_pasteur_ou_assistant() or fn_est_affecte(departement_id)
+);
+
+create policy commentaires_suivi_insert on commentaires_suivi for insert with check (
+  fn_is_pasteur_ou_assistant() or fn_est_affecte(departement_id)
+);
+
+create policy commentaires_suivi_delete on commentaires_suivi for delete using (
+  fn_is_pasteur_ou_assistant()
+  or auteur_id = fn_ouvrier_id_courant()
+  or fn_gere_departement(departement_id)
+);
+
+-- ----------------------------------------------------------------------------
 -- RAPPORTS
 -- Visible par toute personne affectee au departement (faible sensibilite,
 -- utile a toute l'equipe) ; soumission reservee aux gestionnaires.

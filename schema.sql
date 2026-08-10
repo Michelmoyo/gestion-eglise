@@ -293,6 +293,7 @@ create trigger trg_points_suivi_updated_at
   for each row execute function fn_set_updated_at();
 
 create index idx_points_suivi_departement on points_suivi(departement_id);
+create index idx_points_suivi_liste on points_suivi(liste_id);
 
 -- ----------------------------------------------------------------------------
 -- STOCKAGE DES PIECES JOINTES (fiche detail d'un point de suivi)
@@ -303,7 +304,24 @@ create index idx_points_suivi_departement on points_suivi(departement_id);
 insert into storage.buckets (id, name, public)
 values ('pieces-jointes', 'pieces-jointes', false)
 on conflict (id) do nothing;
-create index idx_points_suivi_liste on points_suivi(liste_id);
+
+-- ----------------------------------------------------------------------------
+-- COMMENTAIRES SUR UN POINT DE SUIVI
+-- Fil de discussion sur la fiche detail. Ouvert a tout membre affecte, pas
+-- seulement aux gestionnaires -- un commentaire est collaboratif, pas une
+-- action de gestion. Immuable une fois poste (pas de policy UPDATE) ;
+-- suppression reservee a l'auteur ou aux gestionnaires (rls_policies.sql).
+-- ----------------------------------------------------------------------------
+create table commentaires_suivi (
+  id             uuid primary key default gen_random_uuid(),
+  point_suivi_id uuid not null references points_suivi(id) on delete cascade,
+  departement_id uuid not null references departements(id) on delete cascade,
+  auteur_id      uuid not null references ouvriers(id),
+  contenu        text not null,
+  created_at     timestamptz not null default now()
+);
+
+create index idx_commentaires_suivi_point on commentaires_suivi(point_suivi_id);
 
 -- Nouveau departement : seed automatique des 3 listes par defaut.
 create or replace function fn_seed_listes_suivi()

@@ -372,6 +372,31 @@ export interface Database {
         };
         Relationships: [];
       };
+      commentaires_suivi: {
+        Row: {
+          id: string;
+          point_suivi_id: string;
+          departement_id: string;
+          auteur_id: string;
+          contenu: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          point_suivi_id: string;
+          departement_id: string;
+          auteur_id: string;
+          contenu: string;
+        };
+        Update: {
+          id?: string;
+          point_suivi_id?: string;
+          departement_id?: string;
+          auteur_id?: string;
+          contenu?: string;
+        };
+        Relationships: [];
+      };
       rapports: {
         Row: {
           id: string;

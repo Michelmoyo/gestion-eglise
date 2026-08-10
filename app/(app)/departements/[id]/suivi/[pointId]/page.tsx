@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { ChevronLeft } from "lucide-react";
 import { PointSuiviDetail } from "@/components/departements/point-suivi-detail";
+import { CommentairesSuivi } from "@/components/departements/commentaires-suivi";
 import {
   modifierPointSuivi,
   resoudrePointSuivi,
@@ -11,6 +12,8 @@ import {
   supprimerPointSuivi,
   uploaderPieceJointe,
   supprimerPieceJointe,
+  ajouterCommentaire,
+  supprimerCommentaire,
 } from "../actions";
 
 export default async function PointSuiviDetailPage({
@@ -72,6 +75,23 @@ export default async function PointSuiviDetailPage({
     pieceJointeUrl = signed?.signedUrl ?? null;
   }
 
+  const { data: commentairesData } = await supabase
+    .from("commentaires_suivi")
+    .select("id, contenu, created_at, auteur_id")
+    .eq("point_suivi_id", pointId)
+    .order("created_at", { ascending: true });
+
+  const auteurIds = [...new Set((commentairesData ?? []).map((c) => c.auteur_id))];
+  const { data: auteurs } = auteurIds.length
+    ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", auteurIds)
+    : { data: [] };
+  const auteurNomById = Object.fromEntries((auteurs ?? []).map((a) => [a.id, `${a.prenom} ${a.nom}`]));
+
+  const commentaires = (commentairesData ?? []).map((c) => ({
+    ...c,
+    auteurNom: auteurNomById[c.auteur_id] ?? "—",
+  }));
+
   return (
     <>
       <TopBar title={liste?.nom ?? "Suivi"} />
@@ -96,6 +116,14 @@ export default async function PointSuiviDetailPage({
           supprimerAction={supprimerPointSuivi.bind(null, id, pointId)}
           uploaderAction={uploaderPieceJointe.bind(null, id, pointId)}
           supprimerPieceJointeAction={supprimerPieceJointe.bind(null, id, pointId)}
+        />
+
+        <CommentairesSuivi
+          commentaires={commentaires}
+          moiId={moi.id}
+          peutSupprimerTout={peutGerer}
+          ajouterAction={ajouterCommentaire.bind(null, id, pointId)}
+          supprimerAction={supprimerCommentaire.bind(null, id, pointId)}
         />
       </div>
     </>

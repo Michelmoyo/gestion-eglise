@@ -7,6 +7,7 @@ import {
   pointSuiviSchema,
   detailPointSuiviSchema,
   listeSuiviSchema,
+  commentaireSuiviSchema,
   MAX_TAILLE_PIECE_JOINTE,
 } from "@/lib/validations/suivi";
 
@@ -27,8 +28,9 @@ async function getContexte(departementId: string) {
 
   const isPilotage = !!moi.role_global;
   let peutGerer = isPilotage;
+  let peutVoir = isPilotage;
 
-  if (!peutGerer) {
+  if (!isPilotage) {
     const { data: aff } = await supabase
       .from("affectations")
       .select("role")
@@ -37,10 +39,11 @@ async function getContexte(departementId: string) {
       .eq("statut", "actif")
       .single();
 
+    peutVoir = !!aff;
     peutGerer = ["president", "vice_president", "secretaire"].includes(aff?.role ?? "");
   }
 
-  return { supabase, moi, peutGerer };
+  return { supabase, moi, peutGerer, peutVoir };
 }
 
 export async function ajouterListe(departementId: string, formData: FormData) {
@@ -282,6 +285,50 @@ export async function supprimerPieceJointe(departementId: string, pointId: strin
     .eq("departement_id", departementId);
 
   if (error) return { error: "Erreur." };
+
+  revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
+  return { success: true };
+}
+
+export async function ajouterCommentaire(
+  departementId: string,
+  pointId: string,
+  formData: FormData
+) {
+  const { supabase, moi, peutVoir } = await getContexte(departementId);
+  if (!peutVoir) return { error: "Accès refusé." };
+
+  const parsed = commentaireSuiviSchema.safeParse({ contenu: formData.get("contenu") });
+  if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Commentaire invalide." };
+
+  const { error } = await supabase.from("commentaires_suivi").insert({
+    point_suivi_id: pointId,
+    departement_id: departementId,
+    auteur_id: moi.id,
+    contenu: parsed.data.contenu,
+  });
+
+  if (error) return { error: "Erreur lors de l'envoi." };
+
+  revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
+  return { success: true };
+}
+
+export async function supprimerCommentaire(
+  departementId: string,
+  pointId: string,
+  commentaireId: string
+) {
+  const { supabase, peutVoir } = await getContexte(departementId);
+  if (!peutVoir) return { error: "Accès refusé." };
+
+  const { error } = await supabase
+    .from("commentaires_suivi")
+    .delete()
+    .eq("id", commentaireId)
+    .eq("point_suivi_id", pointId);
+
+  if (error) return { error: "Erreur lors de la suppression (peut-être pas votre commentaire)." };
 
   revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
   return { success: true };
