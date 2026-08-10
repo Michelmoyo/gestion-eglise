@@ -367,6 +367,35 @@ create policy points_suivi_delete on points_suivi for delete using (
 );
 
 -- ----------------------------------------------------------------------------
+-- STOCKAGE : PIECES JOINTES (fiche detail d'un point de suivi)
+-- Bucket prive "pieces-jointes" ; chemin "<departement_id>/...", le premier
+-- segment sert de departement_id pour verifier l'acces.
+-- ----------------------------------------------------------------------------
+create policy pieces_jointes_select on storage.objects for select using (
+  bucket_id = 'pieces-jointes'
+  and (
+    fn_is_pasteur_ou_assistant()
+    or fn_est_affecte(((storage.foldername(name))[1])::uuid)
+  )
+);
+
+create policy pieces_jointes_insert on storage.objects for insert with check (
+  bucket_id = 'pieces-jointes'
+  and (
+    fn_is_pasteur_ou_assistant()
+    or fn_gere_departement(((storage.foldername(name))[1])::uuid)
+  )
+);
+
+create policy pieces_jointes_delete on storage.objects for delete using (
+  bucket_id = 'pieces-jointes'
+  and (
+    fn_is_pasteur_ou_assistant()
+    or fn_gere_departement(((storage.foldername(name))[1])::uuid)
+  )
+);
+
+-- ----------------------------------------------------------------------------
 -- RAPPORTS
 -- Visible par toute personne affectee au departement (faible sensibilite,
 -- utile a toute l'equipe) ; soumission reservee aux gestionnaires.

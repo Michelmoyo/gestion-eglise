@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Check, Trash2, ChevronDown } from "lucide-react";
+import { Plus, Check, Trash2, ChevronDown, ChevronRight, Paperclip } from "lucide-react";
 import { format } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -14,11 +15,13 @@ export interface PointSuivi {
   resolu: boolean;
   date_creation: string;
   date_resolution: string | null;
+  piece_jointe_nom?: string | null;
 }
 
 type Filtre = "ouverts" | "resolus" | "tous";
 
 interface Props {
+  departementId: string;
   listeId: string;
   nom: string;
   items: PointSuivi[];
@@ -37,6 +40,7 @@ const FILTRES: { value: Filtre; label: string }[] = [
 ];
 
 export function SuiviSection({
+  departementId,
   listeId,
   nom,
   items,
@@ -174,15 +178,24 @@ export function SuiviSection({
                       {item.resolu && <Check size={13} />}
                     </span>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className={cn("text-sm", item.resolu && "text-muted-foreground line-through")}>
-                      {item.contenu}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Émis le {format.date(item.date_creation)}
-                      {item.resolu && item.date_resolution ? ` · résolu le ${format.date(item.date_resolution)}` : ""}
-                    </p>
-                  </div>
+                  <Link
+                    href={`/departements/${departementId}/suivi/${item.id}`}
+                    className="flex-1 min-w-0 flex items-start justify-between gap-1 group/link"
+                  >
+                    <div className="min-w-0">
+                      <p className={cn("text-sm group-hover/link:underline", item.resolu && "text-muted-foreground line-through")}>
+                        {item.contenu}
+                        {item.piece_jointe_nom && (
+                          <Paperclip size={11} className="inline-block ml-1.5 text-muted-foreground align-middle" />
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Émis le {format.date(item.date_creation)}
+                        {item.resolu && item.date_resolution ? ` · résolu le ${format.date(item.date_resolution)}` : ""}
+                      </p>
+                    </div>
+                    <ChevronRight size={14} className="text-muted-foreground flex-shrink-0 mt-0.5" />
+                  </Link>
                   {peutGerer && (
                     <button
                       type="button"

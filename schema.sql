@@ -272,17 +272,20 @@ create trigger trg_listes_suivi_updated_at
 create index idx_listes_suivi_departement on listes_suivi(departement_id);
 
 create table points_suivi (
-  id              uuid primary key default gen_random_uuid(),
-  departement_id  uuid not null references departements(id) on delete cascade,
-  liste_id        uuid not null references listes_suivi(id) on delete cascade,
-  contenu         text not null,
-  resolu          boolean not null default false,
-  date_creation   date not null default current_date,
-  date_resolution date,
-  cree_par        uuid not null references ouvriers(id),
-  resolu_par      uuid references ouvriers(id),
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now()
+  id                 uuid primary key default gen_random_uuid(),
+  departement_id     uuid not null references departements(id) on delete cascade,
+  liste_id           uuid not null references listes_suivi(id) on delete cascade,
+  contenu            text not null, -- titre court, affiche dans la liste
+  description        text,          -- description longue, fiche detail uniquement
+  piece_jointe_path  text,          -- chemin dans le bucket storage "pieces-jointes"
+  piece_jointe_nom   text,          -- nom de fichier original, pour l'affichage
+  resolu             boolean not null default false,
+  date_creation      date not null default current_date,
+  date_resolution    date,
+  cree_par           uuid not null references ouvriers(id),
+  resolu_par         uuid references ouvriers(id),
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now()
 );
 
 create trigger trg_points_suivi_updated_at
@@ -290,6 +293,16 @@ create trigger trg_points_suivi_updated_at
   for each row execute function fn_set_updated_at();
 
 create index idx_points_suivi_departement on points_suivi(departement_id);
+
+-- ----------------------------------------------------------------------------
+-- STOCKAGE DES PIECES JOINTES (fiche detail d'un point de suivi)
+-- Bucket prive : fichiers accessibles uniquement via URL signee generee cote
+-- serveur. Chemin "<departement_id>/<point_suivi_id>-<nom_fichier>" -- le
+-- premier segment sert de departement_id pour les policies RLS.
+-- ----------------------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('pieces-jointes', 'pieces-jointes', false)
+on conflict (id) do nothing;
 create index idx_points_suivi_liste on points_suivi(liste_id);
 
 -- Nouveau departement : seed automatique des 3 listes par defaut.

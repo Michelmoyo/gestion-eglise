@@ -331,6 +331,9 @@ export interface Database {
           departement_id: string;
           liste_id: string;
           contenu: string;
+          description: string | null;
+          piece_jointe_path: string | null;
+          piece_jointe_nom: string | null;
           resolu: boolean;
           date_creation: string;
           date_resolution: string | null;
@@ -344,6 +347,9 @@ export interface Database {
           departement_id: string;
           liste_id: string;
           contenu: string;
+          description?: string | null;
+          piece_jointe_path?: string | null;
+          piece_jointe_nom?: string | null;
           resolu?: boolean;
           date_creation?: string;
           date_resolution?: string | null;
@@ -355,6 +361,9 @@ export interface Database {
           departement_id?: string;
           liste_id?: string;
           contenu?: string;
+          description?: string | null;
+          piece_jointe_path?: string | null;
+          piece_jointe_nom?: string | null;
           resolu?: boolean;
           date_creation?: string;
           date_resolution?: string | null;

@@ -64,7 +64,7 @@ export default async function SuiviPage({
 
   const { data: points } = await supabase
     .from("points_suivi")
-    .select("id, liste_id, contenu, resolu, date_creation, date_resolution")
+    .select("id, liste_id, contenu, resolu, date_creation, date_resolution, piece_jointe_nom")
     .eq("departement_id", id)
     .order("date_creation", { ascending: false });
 
@@ -95,6 +95,7 @@ export default async function SuiviPage({
           listes.map((liste) => (
             <SuiviSection
               key={liste.id}
+              departementId={id}
               listeId={liste.id}
               nom={liste.nom}
               items={(points ?? []).filter((p) => p.liste_id === liste.id)}

@@ -3,7 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { pointSuiviSchema, listeSuiviSchema } from "@/lib/validations/suivi";
+import {
+  pointSuiviSchema,
+  detailPointSuiviSchema,
+  listeSuiviSchema,
+  MAX_TAILLE_PIECE_JOINTE,
+} from "@/lib/validations/suivi";
+
+const BUCKET_PIECES_JOINTES = "pieces-jointes";
 
 async function getContexte(departementId: string) {
   const supabase = await createClient();
@@ -150,6 +157,13 @@ export async function supprimerPointSuivi(departementId: string, pointId: string
   const { supabase, peutGerer } = await getContexte(departementId);
   if (!peutGerer) return { error: "Accès refusé." };
 
+  const { data: point } = await supabase
+    .from("points_suivi")
+    .select("piece_jointe_path")
+    .eq("id", pointId)
+    .eq("departement_id", departementId)
+    .single();
+
   const { error } = await supabase
     .from("points_suivi")
     .delete()
@@ -158,6 +172,117 @@ export async function supprimerPointSuivi(departementId: string, pointId: string
 
   if (error) return { error: "Erreur lors de la suppression." };
 
+  if (point?.piece_jointe_path) {
+    await supabase.storage.from(BUCKET_PIECES_JOINTES).remove([point.piece_jointe_path]);
+  }
+
   revalidatePath(`/departements/${departementId}/suivi`);
+  return { success: true };
+}
+
+export async function modifierPointSuivi(
+  departementId: string,
+  pointId: string,
+  formData: FormData
+) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const parsed = detailPointSuiviSchema.safeParse({
+    contenu: formData.get("contenu"),
+    description: formData.get("description") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? "Données invalides." };
+  }
+
+  const { error } = await supabase
+    .from("points_suivi")
+    .update({
+      contenu: parsed.data.contenu,
+      description: parsed.data.description || null,
+    })
+    .eq("id", pointId)
+    .eq("departement_id", departementId);
+
+  if (error) return { error: "Erreur lors de l'enregistrement." };
+
+  revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
+  return { success: true };
+}
+
+export async function uploaderPieceJointe(
+  departementId: string,
+  pointId: string,
+  formData: FormData
+) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const fichier = formData.get("fichier");
+  if (!(fichier instanceof File) || fichier.size === 0) {
+    return { error: "Aucun fichier sélectionné." };
+  }
+  if (fichier.size > MAX_TAILLE_PIECE_JOINTE) {
+    return { error: "Fichier trop volumineux (max 10 Mo)." };
+  }
+
+  const { data: point } = await supabase
+    .from("points_suivi")
+    .select("piece_jointe_path")
+    .eq("id", pointId)
+    .eq("departement_id", departementId)
+    .single();
+
+  const cheminSafe = fichier.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  const chemin = `${departementId}/${pointId}-${Date.now()}-${cheminSafe}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(BUCKET_PIECES_JOINTES)
+    .upload(chemin, fichier);
+
+  if (uploadError) return { error: "Échec du téléversement." };
+
+  const { error } = await supabase
+    .from("points_suivi")
+    .update({ piece_jointe_path: chemin, piece_jointe_nom: fichier.name })
+    .eq("id", pointId)
+    .eq("departement_id", departementId);
+
+  if (error) return { error: "Erreur lors de l'enregistrement." };
+
+  if (point?.piece_jointe_path) {
+    await supabase.storage.from(BUCKET_PIECES_JOINTES).remove([point.piece_jointe_path]);
+  }
+
+  revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
+  return { success: true };
+}
+
+export async function supprimerPieceJointe(departementId: string, pointId: string) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const { data: point } = await supabase
+    .from("points_suivi")
+    .select("piece_jointe_path")
+    .eq("id", pointId)
+    .eq("departement_id", departementId)
+    .single();
+
+  if (!point?.piece_jointe_path) return { success: true };
+
+  await supabase.storage.from(BUCKET_PIECES_JOINTES).remove([point.piece_jointe_path]);
+
+  const { error } = await supabase
+    .from("points_suivi")
+    .update({ piece_jointe_path: null, piece_jointe_nom: null })
+    .eq("id", pointId)
+    .eq("departement_id", departementId);
+
+  if (error) return { error: "Erreur." };
+
+  revalidatePath(`/departements/${departementId}/suivi/${pointId}`);
   return { success: true };
 }
