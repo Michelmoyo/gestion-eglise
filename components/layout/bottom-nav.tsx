@@ -26,7 +26,7 @@ export function BottomNav({ roleGlobal, departementIds }: BottomNavProps) {
     },
     {
       href: departementIds.length === 1
-        ? `/departements/${departementIds[0]}/aujourd-hui`
+        ? `/departements/${departementIds[0]}`
         : "/departements",
       label: "Département",
       icon: Building2,
