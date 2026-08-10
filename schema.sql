@@ -83,6 +83,29 @@ create trigger trg_ouvriers_updated_at
   before update on ouvriers
   for each row execute function fn_set_updated_at();
 
+-- Lien automatique avec le compte Auth cree par l'invitation
+-- (admin.auth.admin.inviteUserByEmail) : le compte Auth existe des l'envoi
+-- de l'invitation, avant meme que l'ouvrier ait defini son mot de passe.
+create or replace function fn_lier_auth_user_id()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update ouvriers
+  set auth_user_id = new.id
+  where email = new.email
+    and auth_user_id is null;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function fn_lier_auth_user_id();
+
 -- ----------------------------------------------------------------------------
 -- DEPARTEMENTS
 -- Le president et le vice-president ne sont PAS des colonnes ici :
