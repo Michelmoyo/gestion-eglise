@@ -42,6 +42,8 @@ $$;
 -- ----------------------------------------------------------------------------
 create table parametres_eglise (
   id          uuid primary key default gen_random_uuid(),
+  nom_eglise  text,
+  reseau      text,
   adresse     text,
   telephone   text,
   email       text,

@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 interface Props {
   action: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
   initialData: {
+    nomEglise: string;
+    reseau: string;
     adresse: string;
     telephone: string;
     email: string;
@@ -27,6 +29,26 @@ export function ParametresForm({ action, initialData }: Props) {
 
   return (
     <form action={formAction} className="space-y-4">
+      <div className="space-y-1">
+        <Label htmlFor="nomEglise">Nom de l&apos;église</Label>
+        <Input
+          id="nomEglise"
+          name="nomEglise"
+          defaultValue={initialData.nomEglise}
+          placeholder="Église La Compassion Masina"
+        />
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="reseau">Réseau / mouvement (optionnel)</Label>
+        <Input
+          id="reseau"
+          name="reseau"
+          defaultValue={initialData.reseau}
+          placeholder="Centre de Réveil d'Évangélisation…"
+        />
+      </div>
+
       <div className="space-y-1">
         <Label htmlFor="adresse">Adresse</Label>
         <Input

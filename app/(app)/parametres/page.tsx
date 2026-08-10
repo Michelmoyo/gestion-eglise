@@ -22,7 +22,7 @@ export default async function ParametresPage() {
 
   const { data: parametres } = await supabase
     .from("parametres_eglise")
-    .select("adresse, telephone, email")
+    .select("nom_eglise, reseau, adresse, telephone, email")
     .limit(1)
     .single();
 
@@ -50,6 +50,8 @@ export default async function ParametresPage() {
             <ParametresForm
               action={enregistrerParametresEglise}
               initialData={{
+                nomEglise: parametres?.nom_eglise ?? "",
+                reseau: parametres?.reseau ?? "",
                 adresse: parametres?.adresse ?? "",
                 telephone: parametres?.telephone ?? "",
                 email: parametres?.email ?? "",

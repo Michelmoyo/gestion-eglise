@@ -19,6 +19,8 @@ export async function enregistrerParametresEglise(formData: FormData) {
   if (moi?.role_global !== "pasteur") return { error: "Réservé au pasteur." };
 
   const parsed = parametresEgliseSchema.safeParse({
+    nomEglise: formData.get("nomEglise") || undefined,
+    reseau: formData.get("reseau") || undefined,
     adresse: formData.get("adresse") || undefined,
     telephone: formData.get("telephone") || undefined,
     email: formData.get("email") || undefined,
@@ -39,6 +41,8 @@ export async function enregistrerParametresEglise(formData: FormData) {
   const { error } = await supabase
     .from("parametres_eglise")
     .update({
+      nom_eglise: parsed.data.nomEglise || null,
+      reseau: parsed.data.reseau || null,
       adresse: parsed.data.adresse || null,
       telephone: parsed.data.telephone || null,
       email: parsed.data.email || null,

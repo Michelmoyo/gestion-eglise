@@ -7,6 +7,25 @@ interface OptionsRapport {
   peutVoirDetailCaisse: boolean;
 }
 
+const RANG_ROLE: Record<string, number> = {
+  president: 0,
+  vice_president: 1,
+  secretaire: 2,
+  tresorier: 3,
+  membre: 4,
+};
+
+// "juil. 2026" pour un ouvrier arrivé pendant la période couverte (plus
+// parlant qu'une seule année), sinon juste l'année d'arrivée.
+function labelDepuis(dateAffectation: string, debutMois: string, finMois: string): string {
+  if (dateAffectation >= debutMois && dateAffectation <= finMois) {
+    return new Intl.DateTimeFormat("fr-FR", { month: "short", year: "numeric" }).format(
+      new Date(dateAffectation)
+    );
+  }
+  return new Date(dateAffectation).getFullYear().toString();
+}
+
 export async function getDonneesRapport(
   supabase: SupabaseServerClient,
   departementId: string,
@@ -31,7 +50,7 @@ export async function getDonneesRapport(
   const { data: presencesMois } = activiteIds.length
     ? await supabase
         .from("presences")
-        .select("activite_id, statut")
+        .select("activite_id, ouvrier_id, statut")
         .in("activite_id", activiteIds)
     : { data: [] };
 
@@ -56,7 +75,7 @@ export async function getDonneesRapport(
 
   const { data: membresActifs } = await supabase
     .from("affectations")
-    .select("ouvrier_id")
+    .select("ouvrier_id, role, date_affectation")
     .eq("departement_id", departementId)
     .eq("statut", "actif");
   const membresActifsIds = (membresActifs ?? []).map((a) => a.ouvrier_id);
@@ -68,16 +87,43 @@ export async function getDonneesRapport(
     .gte("date_affectation", debutMois)
     .lte("date_affectation", finMois);
 
-  const nouveauxIds = (nouveauxMois ?? []).map((a) => a.ouvrier_id);
-  const { data: nouveauxOuvriers } = nouveauxIds.length
-    ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", nouveauxIds)
+  const nouveauxIds = new Set((nouveauxMois ?? []).map((a) => a.ouvrier_id));
+  const { data: nouveauxOuvriers } = nouveauxIds.size
+    ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", [...nouveauxIds])
     : { data: [] };
+
+  // Effectif actif complet, trié hiérarchie (président → membre) puis nom —
+  // c'est la liste affichée dans le rapport et l'ordre des lignes des
+  // tableaux croisés ouvrier × événement.
+  const { data: rosterOuvriers } = membresActifsIds.length
+    ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", membresActifsIds)
+    : { data: [] };
+  const nomById = Object.fromEntries((rosterOuvriers ?? []).map((o) => [o.id, o]));
+
+  const roster = (membresActifs ?? [])
+    .map((a) => {
+      const o = nomById[a.ouvrier_id];
+      if (!o) return null;
+      return {
+        id: o.id,
+        prenom: o.prenom,
+        nom: o.nom,
+        role: a.role,
+        estNouveau: nouveauxIds.has(a.ouvrier_id),
+        depuis: labelDepuis(a.date_affectation, debutMois, finMois),
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null)
+    .sort((a, b) => {
+      const rang = (RANG_ROLE[a.role] ?? 9) - (RANG_ROLE[b.role] ?? 9);
+      return rang !== 0 ? rang : a.nom.localeCompare(b.nom, "fr");
+    });
 
   // Tous les suspendus actuels du departement, quelle que soit la date de
   // suspension (une suspension ancienne reste pertinente pour le rapport).
   const { data: suspendusAffectations } = await supabase
     .from("affectations")
-    .select("ouvrier_id, date_changement_statut")
+    .select("ouvrier_id, role, date_changement_statut")
     .eq("departement_id", departementId)
     .eq("statut", "suspendu");
 
@@ -86,13 +132,20 @@ export async function getDonneesRapport(
     ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", suspendusIds)
     : { data: [] };
 
-  const dateChangementById = Object.fromEntries(
-    (suspendusAffectations ?? []).map((a) => [a.ouvrier_id, a.date_changement_statut])
+  const affectationSuspendueById = Object.fromEntries(
+    (suspendusAffectations ?? []).map((a) => [a.ouvrier_id, a])
   );
   const suspendusOuvriers = (suspendusOuvriersData ?? []).map((o) => ({
     ...o,
-    date_changement_statut: dateChangementById[o.id] ?? null,
+    role: affectationSuspendueById[o.id]?.role ?? "membre",
+    date_changement_statut: affectationSuspendueById[o.id]?.date_changement_statut ?? null,
   }));
+
+  // ── Grilles de présence ouvrier × activité et ouvrier × culte ───────────
+  const presenceActiviteParOuvrier: Record<string, Record<string, string>> = {};
+  for (const p of presencesMois ?? []) {
+    (presenceActiviteParOuvrier[p.ouvrier_id] ??= {})[p.activite_id] = p.statut;
+  }
 
   // ── Présence des membres du département aux cultes de la période ───────
   const { data: cultesPeriode } = await supabase
@@ -123,6 +176,11 @@ export async function getDonneesRapport(
       taux: nbTotal > 0 ? Math.round((nbPresent / nbTotal) * 100) : null,
     };
   });
+
+  const presenceCulteParOuvrier: Record<string, Record<string, string>> = {};
+  for (const p of presencesCultePeriode ?? []) {
+    (presenceCulteParOuvrier[p.ouvrier_id] ??= {})[p.culte_id] = p.statut;
+  }
 
   // ── Caisse : bilan début/fin de période, détail si autorisé ─────────────
   const { data: soldeDebutData } = await supabase.rpc("fn_solde_departement_a_date", {
@@ -187,11 +245,14 @@ export async function getDonneesRapport(
   }
 
   return {
+    roster,
     statsByActivite,
+    presenceActiviteParOuvrier,
     nbActifs: nbActifs ?? 0,
     nouveauxOuvriers: nouveauxOuvriers ?? [],
     suspendusOuvriers: suspendusOuvriers ?? [],
     statsCultes,
+    presenceCulteParOuvrier,
     soldeDebut: (soldeDebutData as number) ?? 0,
     soldeFin: (soldeFinData as number) ?? 0,
     mouvementsPeriode,

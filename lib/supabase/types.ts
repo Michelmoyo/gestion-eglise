@@ -30,6 +30,8 @@ export interface Database {
       parametres_eglise: {
         Row: {
           id: string;
+          nom_eglise: string | null;
+          reseau: string | null;
           adresse: string | null;
           telephone: string | null;
           email: string | null;
@@ -37,12 +39,16 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          nom_eglise?: string | null;
+          reseau?: string | null;
           adresse?: string | null;
           telephone?: string | null;
           email?: string | null;
         };
         Update: {
           id?: string;
+          nom_eglise?: string | null;
+          reseau?: string | null;
           adresse?: string | null;
           telephone?: string | null;
           email?: string | null;

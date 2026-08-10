@@ -1,15 +1,68 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import { format } from "@/lib/format";
 import { getDonneesRapport } from "@/lib/rapport";
+import { titillium } from "@/lib/fonts";
 import { BoutonTelecharger } from "@/components/rapports/bouton-telecharger";
+import styles from "./rapport-pdf.module.css";
+
+const STATUT_LABEL: Record<string, string> = { present: "P", absent: "A", excuse: "E" };
+const STATUT_STYLE: Record<string, string> = {
+  present: styles.present,
+  absent: styles.absent,
+  excuse: styles.excused,
+};
 
 function listeDepuisTexte(texte: string | null): string[] {
   if (!texte) return [];
   return texte.split("\n").map((l) => l.trim()).filter(Boolean);
+}
+
+function chunk<T>(items: T[], taille: number): T[][] {
+  const groupes: T[][] = [];
+  for (let i = 0; i < items.length; i += taille) groupes.push(items.slice(i, i + taille));
+  return groupes;
+}
+
+function normaliserReference(nom: string): string {
+  return nom
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "");
+}
+
+function dateCourte(dateStr: string): string {
+  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(new Date(dateStr));
+}
+
+function dateNumerique(dateStr: string): string {
+  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(
+    new Date(dateStr)
+  );
+}
+
+function SectionHead({ num, titre }: { num: string; titre: string }) {
+  return (
+    <div className={styles.sectionHead}>
+      <span className={styles.sectionNum}>{num}</span>
+      <h2>{titre}</h2>
+      <span className={styles.rule}></span>
+    </div>
+  );
+}
+
+function Legende() {
+  return (
+    <div className={styles.legend}>
+      <span className={styles.item}><span className={`${styles.xmark} ${styles.present}`}>P</span> Présent</span>
+      <span className={styles.item}><span className={`${styles.xmark} ${styles.absent}`}>A</span> Absent</span>
+      <span className={styles.item}><span className={`${styles.xmark} ${styles.excused}`}>E</span> Excusé</span>
+      <span className={styles.item}><span className={`${styles.xmark} ${styles.none}`}>–</span> Non renseigné</span>
+    </div>
+  );
 }
 
 export default async function RapportDocumentPage({
@@ -36,9 +89,11 @@ export default async function RapportDocumentPage({
     .eq("id", rapport.departement_id)
     .single();
 
+  if (!dept) notFound();
+
   const { data: auteur } = await supabase
     .from("ouvriers")
-    .select("prenom, nom")
+    .select("prenom, nom, role_global")
     .eq("id", rapport.auteur_id)
     .single();
 
@@ -60,12 +115,37 @@ export default async function RapportDocumentPage({
     peutVoirDetailCaisse = ["president", "vice_president", "tresorier"].includes(monAff?.role ?? "");
   }
 
+  // Fonction du rédacteur : son rôle global s'il est pilotage, sinon son
+  // rôle actuel dans ce département.
+  let fonctionAuteur = "—";
+  if (auteur?.role_global) {
+    fonctionAuteur = format.roleGlobal(auteur.role_global);
+  } else {
+    const { data: affAuteur } = await supabase
+      .from("affectations")
+      .select("role")
+      .eq("ouvrier_id", rapport.auteur_id)
+      .eq("departement_id", rapport.departement_id)
+      .eq("statut", "actif")
+      .single();
+    fonctionAuteur = affAuteur ? format.roleDepartement(affAuteur.role) : "Ouvrier";
+  }
+
+  const { data: parametres } = await supabase
+    .from("parametres_eglise")
+    .select("nom_eglise, reseau, adresse, telephone, email")
+    .limit(1)
+    .single();
+
   const {
+    roster,
     statsByActivite,
+    presenceActiviteParOuvrier,
     nbActifs,
     nouveauxOuvriers,
     suspendusOuvriers,
     statsCultes,
+    presenceCulteParOuvrier,
     soldeDebut,
     soldeFin,
     mouvementsPeriode,
@@ -73,17 +153,23 @@ export default async function RapportDocumentPage({
     peutVoirDetailCaisse,
   });
 
+  const [anneeNum, moisNum] = rapport.periode.split("-").map(Number);
+  const dernierJour = new Date(anneeNum, moisNum, 0).getDate();
   const moisLabel = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
-    new Date(rapport.periode)
+    new Date(anneeNum, moisNum - 1, 1)
   );
+  const reference = `RAP-${anneeNum}-${String(moisNum).padStart(2, "0")}-${normaliserReference(dept.nom)}`;
 
   const difficultes = listeDepuisTexte(rapport.difficultes);
   const besoins = listeDepuisTexte(rapport.besoins);
   const objectifs = listeDepuisTexte(rapport.objectifs);
 
+  const nomEglise = parametres?.nom_eglise || "Église";
+  const contactLigne2 = [parametres?.telephone, parametres?.email].filter(Boolean).join(" · ");
+
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-4">
-      <div className="flex items-center justify-between print:hidden">
+    <div className="min-h-screen bg-gray-50 py-6 px-4">
+      <div className="max-w-[860px] mx-auto flex items-center justify-between mb-4 print:hidden">
         <Link
           href="/rapports"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -94,182 +180,340 @@ export default async function RapportDocumentPage({
         <BoutonTelecharger />
       </div>
 
-      <div className="text-center space-y-1">
-        <h1 className="font-bold text-xl">{dept?.nom ?? "Département"}</h1>
-        <p className="text-sm text-muted-foreground">Rapport mensuel — <span className="capitalize">{moisLabel}</span></p>
-        <p className="text-xs text-muted-foreground">
-          Soumis le {format.date(rapport.date_soumission)} par {auteur ? `${auteur.prenom} ${auteur.nom}` : "—"}
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">État des ouvriers</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm">
-            <span className="font-semibold text-lg">{nbActifs}</span>{" "}
-            <span className="text-muted-foreground">actif{nbActifs > 1 ? "s" : ""} actuellement</span>
-          </p>
-          <div>
-            <p className="text-xs font-semibold text-green-700 mb-1">
-              Adhérents ce mois {nouveauxOuvriers.length ? `(${nouveauxOuvriers.length})` : ""}
-            </p>
-            {!nouveauxOuvriers.length ? (
-              <p className="text-sm text-muted-foreground">Aucun.</p>
-            ) : (
-              nouveauxOuvriers.map((o) => <p key={o.id} className="text-sm">{o.prenom} {o.nom}</p>)
+      <div className={`${styles.document} ${titillium.variable}`}>
+        <article className={styles.page}>
+          <header className={styles.letterhead}>
+            <div className={styles.letterheadOrg}>
+              {parametres?.reseau && <div className={styles.network}>{parametres.reseau}</div>}
+              <div className={styles.church}>{nomEglise}</div>
+            </div>
+            {(parametres?.adresse || contactLigne2) && (
+              <div className={styles.letterheadContact}>
+                {parametres?.adresse}
+                {parametres?.adresse && contactLigne2 && <br />}
+                {contactLigne2}
+              </div>
             )}
+          </header>
+          <div className={styles.brandRule}>
+            <span className={styles.r1}></span>
+            <span className={styles.r2}></span>
+            <span className={styles.r3}></span>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-orange-600 mb-1">
-              Ouvriers suspendus {suspendusOuvriers.length ? `(${suspendusOuvriers.length})` : ""}
-            </p>
+
+          <div className={styles.titleblock}>
+            <h1>Rapport d&apos;activités du département</h1>
+            <div className={styles.sub}>
+              Département <strong>{dept.nom}</strong> — période de <strong>{moisLabel}</strong>
+            </div>
+
+            <div className={styles.idgrid}>
+              <div className={styles.idcell}>
+                <p className={styles.k}>Référence</p>
+                <p className={styles.v}>{reference}</p>
+              </div>
+              <div className={styles.idcell}>
+                <p className={styles.k}>Période couverte</p>
+                <p className={styles.v}>01 – {dernierJour} {moisLabel}</p>
+              </div>
+              <div className={styles.idcell}>
+                <p className={styles.k}>Statut</p>
+                <p className={styles.v}><span className={styles.statusChip}>Soumis</span></p>
+              </div>
+              <div className={styles.idcell}>
+                <p className={styles.k}>Rédigé par</p>
+                <p className={styles.v}>{auteur ? `${auteur.prenom} ${auteur.nom}` : "—"}</p>
+              </div>
+              <div className={styles.idcell}>
+                <p className={styles.k}>Fonction</p>
+                <p className={styles.v}>{fonctionAuteur}</p>
+              </div>
+              <div className={styles.idcell}>
+                <p className={styles.k}>Date de soumission</p>
+                <p className={styles.v}>{format.date(rapport.date_soumission)}</p>
+              </div>
+            </div>
+          </div>
+
+          <section className={styles.section}>
+            <SectionHead num="I." titre="État des ouvriers" />
+
+            <div className={styles.statRow}>
+              <div className={styles.stat}><span className={styles.n}>{nbActifs}</span><span className={styles.l}>Actifs</span></div>
+              <div className={styles.stat}><span className={styles.n}>{nouveauxOuvriers.length}</span><span className={styles.l}>Adhérents ce mois</span></div>
+              <div className={styles.stat}><span className={styles.n}>{suspendusOuvriers.length}</span><span className={styles.l}>Suspendus</span></div>
+            </div>
+
+            <p className={styles.subhead}>Effectif actif</p>
+            {!roster.length ? (
+              <p className={styles.empty}>Aucun membre actif.</p>
+            ) : (
+              <div className={styles.tableWrap}>
+                <table className={styles.roster}>
+                  <thead>
+                    <tr>
+                      <th className={styles.numhead}>№</th>
+                      <th>Nom</th>
+                      <th>Rôle</th>
+                      <th>Membre depuis</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roster.map((r, i) => (
+                      <tr key={r.id}>
+                        <td className={styles.numcell}>{i + 1}</td>
+                        <td>
+                          {r.prenom} {r.nom}
+                          {r.estNouveau && <span className={styles.newChip}>Nouveau</span>}
+                        </td>
+                        <td>{format.roleDepartement(r.role)}</td>
+                        <td className={styles.date}>{r.depuis}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <p className={styles.subhead}>Ouvriers suspendus</p>
             {!suspendusOuvriers.length ? (
-              <p className="text-sm text-muted-foreground">Aucun.</p>
+              <p className={styles.empty}>Aucun.</p>
             ) : (
-              suspendusOuvriers.map((o) => (
-                <p key={o.id} className="text-sm">
-                  {o.prenom} {o.nom}
-                  {o.date_changement_statut && (
-                    <span className="text-xs text-muted-foreground"> · depuis le {format.date(o.date_changement_statut)}</span>
-                  )}
-                </p>
-              ))
+              <div className={styles.tableWrap}>
+                <table className={styles.roster}>
+                  <thead>
+                    <tr>
+                      <th className={styles.numhead}>№</th>
+                      <th>Nom</th>
+                      <th>Rôle</th>
+                      <th>Suspendu depuis</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {suspendusOuvriers.map((o, i) => (
+                      <tr key={o.id}>
+                        <td className={styles.numcell}>{i + 1}</td>
+                        <td>{o.prenom} {o.nom}</td>
+                        <td>{format.roleDepartement(o.role)}</td>
+                        <td className={`${styles.date} ${styles.suspNote}`}>
+                          {o.date_changement_statut ? dateNumerique(o.date_changement_statut) : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </section>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Activités ({statsByActivite.length})</CardTitle>
-        </CardHeader>
-        <CardContent className="divide-y divide-border">
-          {!statsByActivite.length ? (
-            <p className="text-sm text-muted-foreground py-2">Aucune activité ce mois.</p>
-          ) : (
-            statsByActivite.map((a) => (
-              <div key={a.id} className="py-2 flex justify-between items-center text-sm">
-                <div>
-                  <p className="font-medium">{a.titre}</p>
-                  <p className="text-xs text-muted-foreground">{format.date(a.date_activite)}</p>
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {a.taux !== null ? `${a.nbPresent}/${a.nbTotal} (${a.taux}%)` : "—"}
-                </span>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Présence au culte ({statsCultes.length})</CardTitle>
-        </CardHeader>
-        <CardContent className="divide-y divide-border">
-          {!statsCultes.length ? (
-            <p className="text-sm text-muted-foreground py-2">Aucun culte ce mois.</p>
-          ) : (
-            statsCultes.map((c) => (
-              <div key={c.id} className="py-2 flex justify-between items-center text-sm">
-                <div>
-                  <p className="font-medium">{c.type}</p>
-                  <p className="text-xs text-muted-foreground">{format.date(c.date_culte)}</p>
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {c.taux !== null ? `${c.nbPresent}/${c.nbTotal} (${c.taux}%)` : "—"}
-                </span>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Caisse</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Solde en début de période</span>
-            <span className="font-medium">{format.montant(soldeDebut)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Solde en fin de période</span>
-            <span className="font-medium">{format.montant(soldeFin)}</span>
-          </div>
-          {peutVoirDetailCaisse ? (
-            <div className="pt-2 border-t border-border divide-y divide-border">
-              {!mouvementsPeriode.length ? (
-                <p className="text-sm text-muted-foreground py-2">Aucun mouvement ce mois.</p>
-              ) : (
-                mouvementsPeriode.map((m) => (
-                  <div key={m.id} className="py-2 flex items-start justify-between gap-2 text-sm">
-                    <div className="flex-1 min-w-0">
-                      <p>{m.motif || (m.type === "entree" ? "Entrée" : "Sortie")}</p>
-                      <p className="text-xs text-muted-foreground">{format.date(m.date_mouvement)}</p>
+          <section className={styles.section}>
+            <SectionHead num="II." titre="Activités du département" />
+            {!statsByActivite.length ? (
+              <p className={styles.empty}>Aucune activité ce mois.</p>
+            ) : (
+              <>
+                <Legende />
+                {chunk(statsByActivite, 4).map((groupe, gi) => (
+                  <div key={gi}>
+                    {gi > 0 && <p className={styles.matrixCont}>Activités du département (suite)</p>}
+                    <div className={styles.matrixWrap}>
+                      <table className={styles.matrix}>
+                        <thead>
+                          <tr>
+                            <th className={styles.numhead}>№</th>
+                            <th className={styles.rowhead}>Ouvrier</th>
+                            {groupe.map((a) => (
+                              <th key={a.id}>
+                                <span className={styles.evtTitle} title={a.titre}>{a.titre}</span>
+                                <span className={styles.evtDate}>{dateCourte(a.date_activite)}</span>
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {roster.map((r, ri) => (
+                            <tr key={r.id}>
+                              <td className={styles.numcell}>{ri + 1}</td>
+                              <td className={styles.rowhead}>{r.prenom} {r.nom}</td>
+                              {groupe.map((a) => {
+                                const statut = presenceActiviteParOuvrier[r.id]?.[a.id];
+                                return (
+                                  <td key={a.id}>
+                                    <span className={`${styles.xmark} ${statut ? STATUT_STYLE[statut] : styles.none}`}>
+                                      {statut ? STATUT_LABEL[statut] : "–"}
+                                    </span>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td className={styles.numcell}></td>
+                            <td className={styles.rowhead}>Présents</td>
+                            {groupe.map((a) => (
+                              <td key={a.id}>{a.nbTotal > 0 ? `${a.nbPresent}/${a.nbTotal}` : "—"}</td>
+                            ))}
+                          </tr>
+                        </tfoot>
+                      </table>
                     </div>
-                    <span className={m.type === "entree" ? "text-green-600" : "text-destructive"}>
-                      {m.type === "entree" ? "+" : "-"}{format.montant(m.montant)}
-                    </span>
                   </div>
-                ))
+                ))}
+              </>
+            )}
+          </section>
+
+          <section className={styles.section}>
+            <SectionHead num="III." titre="Présence au culte" />
+            {!statsCultes.length ? (
+              <p className={styles.empty}>Aucun culte ce mois.</p>
+            ) : (
+              <>
+                <Legende />
+                {chunk(statsCultes, 4).map((groupe, gi) => (
+                  <div key={gi}>
+                    {gi > 0 && <p className={styles.matrixCont}>Présence au culte (suite)</p>}
+                    <div className={styles.matrixWrap}>
+                      <table className={styles.matrix}>
+                        <thead>
+                          <tr>
+                            <th className={styles.numhead}>№</th>
+                            <th className={styles.rowhead}>Ouvrier</th>
+                            {groupe.map((c) => (
+                              <th key={c.id}>
+                                <span className={styles.evtTitle} title={c.type}>{c.type}</span>
+                                <span className={styles.evtDate}>{dateCourte(c.date_culte)}</span>
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {roster.map((r, ri) => (
+                            <tr key={r.id}>
+                              <td className={styles.numcell}>{ri + 1}</td>
+                              <td className={styles.rowhead}>{r.prenom} {r.nom}</td>
+                              {groupe.map((c) => {
+                                const statut = presenceCulteParOuvrier[r.id]?.[c.id];
+                                return (
+                                  <td key={c.id}>
+                                    <span className={`${styles.xmark} ${statut ? STATUT_STYLE[statut] : styles.none}`}>
+                                      {statut ? STATUT_LABEL[statut] : "–"}
+                                    </span>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td className={styles.numcell}></td>
+                            <td className={styles.rowhead}>Présents</td>
+                            {groupe.map((c) => (
+                              <td key={c.id}>{c.nbTotal > 0 ? `${c.nbPresent}/${c.nbTotal}` : "—"}</td>
+                            ))}
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </section>
+
+          <section className={styles.section}>
+            <SectionHead num="IV." titre="Caisse du département" />
+            <div className={styles.balanceRow}>
+              <span>Solde en début de période</span>
+              <span className={styles.amt}>{format.montant(soldeDebut)}</span>
+            </div>
+            <div className={`${styles.balanceRow} ${styles.total}`}>
+              <span>Solde en fin de période</span>
+              <span className={styles.amt}>{format.montant(soldeFin)}</span>
+            </div>
+
+            {peutVoirDetailCaisse ? (
+              <>
+                <p className={styles.subhead} style={{ marginTop: 16 }}>Mouvements de la période</p>
+                {!mouvementsPeriode.length ? (
+                  <p className={styles.empty}>Aucun mouvement ce mois.</p>
+                ) : (
+                  <div className={styles.tableWrap}>
+                    <table className={styles.formal}>
+                      <thead>
+                        <tr>
+                          <th>Motif</th>
+                          <th>Date</th>
+                          <th className={styles.num}>Montant</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mouvementsPeriode.map((m) => (
+                          <tr key={m.id}>
+                            <td>{m.motif || (m.type === "entree" ? "Entrée" : "Sortie")}</td>
+                            <td>{format.date(m.date_mouvement)}</td>
+                            <td className={styles.num}>
+                              <span className={`${styles.amt} ${m.type === "entree" ? styles.pos : styles.neg}`}>
+                                {m.type === "entree" ? "+" : "−"}{format.montant(m.montant)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className={styles.empty} style={{ marginTop: 16 }}>
+                Détail des mouvements réservé au président, vice-président ou trésorier.
+              </p>
+            )}
+          </section>
+
+          <section className={styles.section}>
+            <SectionHead num="V." titre="Difficultés, besoins & objectifs" />
+            <div className={styles.qualBlock}>
+              <h3>Difficultés rencontrées</h3>
+              {difficultes.length ? (
+                <ul>{difficultes.map((d, i) => <li key={i}>{d}</li>)}</ul>
+              ) : (
+                <p className={styles.empty}>Aucune.</p>
               )}
             </div>
-          ) : (
-            <p className="text-xs text-muted-foreground pt-2 border-t border-border">
-              Détail des mouvements réservé au président, vice-président ou trésorier.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            <div className={styles.qualBlock}>
+              <h3>Besoins</h3>
+              {besoins.length ? (
+                <ul>{besoins.map((b, i) => <li key={i}>{b}</li>)}</ul>
+              ) : (
+                <p className={styles.empty}>Aucun.</p>
+              )}
+            </div>
+            <div className={styles.qualBlock}>
+              <h3>Objectifs — mois prochain</h3>
+              {objectifs.length ? (
+                <ul>{objectifs.map((o, i) => <li key={i}>{o}</li>)}</ul>
+              ) : (
+                <p className={styles.empty}>Aucun.</p>
+              )}
+            </div>
+          </section>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Difficultés rencontrées</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!difficultes.length ? (
-            <p className="text-sm text-muted-foreground">Aucune.</p>
-          ) : (
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              {difficultes.map((d, i) => <li key={i}>{d}</li>)}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Besoins</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!besoins.length ? (
-            <p className="text-sm text-muted-foreground">Aucun.</p>
-          ) : (
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              {besoins.map((b, i) => <li key={i}>{b}</li>)}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Objectifs du mois prochain</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!objectifs.length ? (
-            <p className="text-sm text-muted-foreground">Aucun.</p>
-          ) : (
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              {objectifs.map((o, i) => <li key={i}>{o}</li>)}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+          <footer className={styles.footer}>
+            <div className={styles.sigrow}>
+              <div className={styles.sigline}>Signature du président de département</div>
+              <div className={styles.sigline}>Visa du pasteur / assistant</div>
+            </div>
+            <div className={styles.footerMeta}>
+              <span>Document généré le {format.date(new Date().toISOString())} — {nomEglise}, Gestion des Départements</span>
+              <span>Page 1 / 1</span>
+            </div>
+          </footer>
+        </article>
+      </div>
     </div>
   );
 }
