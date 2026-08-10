@@ -10,6 +10,6 @@ alter table points_suivi
   add column statut statut_point_suivi_enum not null default 'a_faire';
 
 update points_suivi
-  set statut = case when resolu then 'termine' else 'a_faire' end;
+  set statut = (case when resolu then 'termine' else 'a_faire' end)::statut_point_suivi_enum;
 
 alter table points_suivi drop column resolu;
