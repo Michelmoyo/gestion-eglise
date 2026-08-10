@@ -43,7 +43,7 @@ export default async function SuiviPage({
   const isPilotage = !!moi.role_global;
   let peutGerer = isPilotage;
 
-  if (!peutGerer) {
+  if (!isPilotage) {
     const { data: aff } = await supabase
       .from("affectations")
       .select("id, role")
@@ -52,9 +52,12 @@ export default async function SuiviPage({
       .eq("statut", "actif")
       .single();
 
-    if (!aff) redirect("/departements");
-    peutGerer = ["president", "vice_president", "secretaire"].includes(aff.role);
+    peutGerer = ["president", "vice_president", "secretaire"].includes(aff?.role ?? "");
   }
+
+  // Information sensible : un simple ouvrier (membre, tresorier) n'a pas
+  // acces a cette page du tout, pas meme en lecture seule.
+  if (!peutGerer) redirect(`/departements/${id}`);
 
   const { data: listes } = await supabase
     .from("listes_suivi")

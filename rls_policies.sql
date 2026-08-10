@@ -329,13 +329,15 @@ create policy caisse_insert on mouvements_caisse for insert with check (
 
 -- ----------------------------------------------------------------------------
 -- LISTES DE SUIVI + POINTS DE SUIVI
--- Meme visibilite que les rapports (toute personne affectee) ; creation,
--- resolution et suppression reservees aux gestionnaires du departement.
+-- Information sensible : visible et gerable UNIQUEMENT par les responsables
+-- du departement (president/vice-president/secretaire) et le pilotage
+-- (pasteur/assistant) -- un simple ouvrier (membre, tresorier) n'y a pas
+-- acces du tout, contrairement aux rapports.
 -- ----------------------------------------------------------------------------
 alter table listes_suivi enable row level security;
 
 create policy listes_suivi_select on listes_suivi for select using (
-  fn_is_pasteur_ou_assistant() or fn_est_affecte(departement_id)
+  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
 );
 
 create policy listes_suivi_insert on listes_suivi for insert with check (
@@ -349,7 +351,7 @@ create policy listes_suivi_delete on listes_suivi for delete using (
 alter table points_suivi enable row level security;
 
 create policy points_suivi_select on points_suivi for select using (
-  fn_is_pasteur_ou_assistant() or fn_est_affecte(departement_id)
+  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
 );
 
 create policy points_suivi_insert on points_suivi for insert with check (
@@ -397,17 +399,18 @@ create policy pieces_jointes_delete on storage.objects for delete using (
 
 -- ----------------------------------------------------------------------------
 -- COMMENTAIRES SUR UN POINT DE SUIVI
--- Ouvert a tout membre affecte (pas seulement aux gestionnaires) ; suppression
--- reservee a l'auteur ou aux gestionnaires du departement.
+-- Meme regle de sensibilite que les points de suivi : reserve aux
+-- responsables du departement et au pilotage, pas aux simples ouvriers.
+-- Suppression : l'auteur (deja un responsable) ou tout gestionnaire.
 -- ----------------------------------------------------------------------------
 alter table commentaires_suivi enable row level security;
 
 create policy commentaires_suivi_select on commentaires_suivi for select using (
-  fn_is_pasteur_ou_assistant() or fn_est_affecte(departement_id)
+  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
 );
 
 create policy commentaires_suivi_insert on commentaires_suivi for insert with check (
-  fn_is_pasteur_ou_assistant() or fn_est_affecte(departement_id)
+  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
 );
 
 create policy commentaires_suivi_delete on commentaires_suivi for delete using (

@@ -251,8 +251,9 @@ create index idx_caisse_departement on mouvements_caisse(departement_id);
 -- Un point de suivi vit independamment du cycle mensuel du rapport, peut
 -- rester ouvert plusieurs mois, et se coche comme resolu par le responsable
 -- du departement (president, vice-president, secretaire, ou pasteur/
--- assistant). Visible en permanence sur la page du departement, pas
--- seulement dans un rapport genere.
+-- assistant). Visible en permanence sur la page du departement -- mais
+-- information sensible : reservee aux responsables et au pilotage, un
+-- simple ouvrier n'y a pas acces (cf. rls_policies.sql).
 -- ----------------------------------------------------------------------------
 create table listes_suivi (
   id             uuid primary key default gen_random_uuid(),
@@ -307,10 +308,10 @@ on conflict (id) do nothing;
 
 -- ----------------------------------------------------------------------------
 -- COMMENTAIRES SUR UN POINT DE SUIVI
--- Fil de discussion sur la fiche detail. Ouvert a tout membre affecte, pas
--- seulement aux gestionnaires -- un commentaire est collaboratif, pas une
--- action de gestion. Immuable une fois poste (pas de policy UPDATE) ;
--- suppression reservee a l'auteur ou aux gestionnaires (rls_policies.sql).
+-- Fil de discussion sur la fiche detail, reserve aux responsables du
+-- departement et au pilotage (meme sensibilite que points_suivi). Immuable
+-- une fois poste (pas de policy UPDATE) ; suppression reservee a l'auteur
+-- ou aux gestionnaires (rls_policies.sql).
 -- ----------------------------------------------------------------------------
 create table commentaires_suivi (
   id             uuid primary key default gen_random_uuid(),
@@ -483,6 +484,91 @@ drop trigger if exists trg_notifier_rapport_soumis on rapports;
 create trigger trg_notifier_rapport_soumis
   after insert or update on rapports
   for each row execute function fn_notifier_rapport_soumis();
+
+-- "Personnes concernees" = pasteur/assistant + les autres responsables
+-- (president/vice-president/secretaire) de CE departement, jamais l'auteur
+-- de l'action lui-meme. Coherent avec le resserrement d'acces au suivi
+-- (rls_policies.sql) : on ne notifie que des gens qui ont de toute facon
+-- le droit de voir.
+create or replace function fn_notifier_nouveau_point_suivi()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_nom_departement text;
+  v_nom_liste text;
+begin
+  select nom into v_nom_departement from departements where id = new.departement_id;
+  select nom into v_nom_liste from listes_suivi where id = new.liste_id;
+
+  insert into notifications (destinataire_id, type, contenu)
+  select distinct o.id,
+    'nouveau_point_suivi',
+    'Nouvel élément « ' || coalesce(v_nom_liste, '') || ' » ajouté pour '
+      || coalesce(v_nom_departement, '') || ' : ' || new.contenu
+  from ouvriers o
+  where o.id <> new.cree_par
+    and (
+      o.role_global in ('pasteur', 'assistant')
+      or exists (
+        select 1 from affectations a
+        where a.ouvrier_id = o.id
+          and a.departement_id = new.departement_id
+          and a.statut = 'actif'
+          and a.role in ('president', 'vice_president', 'secretaire')
+      )
+    );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notifier_nouveau_point_suivi on points_suivi;
+create trigger trg_notifier_nouveau_point_suivi
+  after insert on points_suivi
+  for each row execute function fn_notifier_nouveau_point_suivi();
+
+create or replace function fn_notifier_nouveau_commentaire_suivi()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_nom_departement text;
+  v_titre_point text;
+begin
+  select nom into v_nom_departement from departements where id = new.departement_id;
+  select contenu into v_titre_point from points_suivi where id = new.point_suivi_id;
+
+  insert into notifications (destinataire_id, type, contenu)
+  select distinct o.id,
+    'nouveau_commentaire_suivi',
+    'Nouveau commentaire sur « ' || coalesce(v_titre_point, '') || ' » ('
+      || coalesce(v_nom_departement, '') || ')'
+  from ouvriers o
+  where o.id <> new.auteur_id
+    and (
+      o.role_global in ('pasteur', 'assistant')
+      or exists (
+        select 1 from affectations a
+        where a.ouvrier_id = o.id
+          and a.departement_id = new.departement_id
+          and a.statut = 'actif'
+          and a.role in ('president', 'vice_president', 'secretaire')
+      )
+    );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_notifier_nouveau_commentaire_suivi on commentaires_suivi;
+create trigger trg_notifier_nouveau_commentaire_suivi
+  after insert on commentaires_suivi
+  for each row execute function fn_notifier_nouveau_commentaire_suivi();
 
 -- ============================================================================
 -- VUES DE CALCUL

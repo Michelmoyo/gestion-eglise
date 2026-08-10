@@ -28,7 +28,6 @@ async function getContexte(departementId: string) {
 
   const isPilotage = !!moi.role_global;
   let peutGerer = isPilotage;
-  let peutVoir = isPilotage;
 
   if (!isPilotage) {
     const { data: aff } = await supabase
@@ -39,11 +38,13 @@ async function getContexte(departementId: string) {
       .eq("statut", "actif")
       .single();
 
-    peutVoir = !!aff;
     peutGerer = ["president", "vice_president", "secretaire"].includes(aff?.role ?? "");
   }
 
-  return { supabase, moi, peutGerer, peutVoir };
+  // Le suivi est une information sensible : seuls les responsables du
+  // departement et le pilotage y ont acces, meme en lecture (pas de notion
+  // de "peutVoir" plus large pour un simple ouvrier -- cf. rls_policies.sql).
+  return { supabase, moi, peutGerer };
 }
 
 export async function ajouterListe(departementId: string, formData: FormData) {
@@ -295,8 +296,8 @@ export async function ajouterCommentaire(
   pointId: string,
   formData: FormData
 ) {
-  const { supabase, moi, peutVoir } = await getContexte(departementId);
-  if (!peutVoir) return { error: "Accès refusé." };
+  const { supabase, moi, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
 
   const parsed = commentaireSuiviSchema.safeParse({ contenu: formData.get("contenu") });
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? "Commentaire invalide." };
@@ -319,8 +320,8 @@ export async function supprimerCommentaire(
   pointId: string,
   commentaireId: string
 ) {
-  const { supabase, peutVoir } = await getContexte(departementId);
-  if (!peutVoir) return { error: "Accès refusé." };
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
 
   const { error } = await supabase
     .from("commentaires_suivi")

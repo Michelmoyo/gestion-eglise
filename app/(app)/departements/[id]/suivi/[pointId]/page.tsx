@@ -54,7 +54,7 @@ export default async function PointSuiviDetailPage({
   const isPilotage = !!moi.role_global;
   let peutGerer = isPilotage;
 
-  if (!peutGerer) {
+  if (!isPilotage) {
     const { data: aff } = await supabase
       .from("affectations")
       .select("id, role")
@@ -63,9 +63,12 @@ export default async function PointSuiviDetailPage({
       .eq("statut", "actif")
       .single();
 
-    if (!aff) redirect("/departements");
-    peutGerer = ["president", "vice_president", "secretaire"].includes(aff.role);
+    peutGerer = ["president", "vice_president", "secretaire"].includes(aff?.role ?? "");
   }
+
+  // Information sensible : un simple ouvrier n'a pas acces a cette fiche,
+  // pas meme en lecture seule.
+  if (!peutGerer) redirect(`/departements/${id}`);
 
   let pieceJointeUrl: string | null = null;
   if (point.piece_jointe_path) {
