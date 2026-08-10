@@ -424,6 +424,31 @@ as $$
   )
 $$;
 
+-- Qui peut etre AJOUTE comme membre d'une liste/tache d'un departement
+-- donne : un ouvrier deja affecte (actif) a ce departement, ou le pasteur
+-- (role global, jamais rattache a un departement precis via affectations).
+-- Volontairement PAS les assistants : ils ont deja acces a tout via
+-- fn_is_pasteur_ou_assistant(), les lister comme "candidats" preterait a
+-- confusion.
+create or replace function fn_eligible_membre_suivi(p_ouvrier_id uuid, p_departement_id uuid)
+returns boolean language sql stable security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from ouvriers o
+    where o.id = p_ouvrier_id
+      and (
+        o.role_global = 'pasteur'
+        or exists (
+          select 1 from affectations a
+          where a.ouvrier_id = o.id
+            and a.departement_id = p_departement_id
+            and a.statut = 'actif'
+        )
+      )
+  )
+$$;
+
 -- Changer le statut d'une tache : les managers ET les membres ajoutes
 -- peuvent le faire, mais la policy UPDATE de points_suivi (rls_policies.sql)
 -- reste reservee aux managers -- elle couvre aussi contenu/description,

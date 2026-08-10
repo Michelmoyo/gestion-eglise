@@ -77,6 +77,31 @@ as $$
   )
 $$;
 
+-- Qui peut etre AJOUTE comme membre d'une liste/tache d'un departement
+-- donne : un ouvrier deja affecte (actif) a ce departement, ou le pasteur
+-- (role global, jamais rattache a un departement precis via affectations).
+-- Volontairement PAS les assistants : ils ont deja acces a tout via
+-- fn_is_pasteur_ou_assistant(), les lister comme "candidats" preterait a
+-- confusion.
+create or replace function fn_eligible_membre_suivi(p_ouvrier_id uuid, p_departement_id uuid)
+returns boolean language sql stable security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from ouvriers o
+    where o.id = p_ouvrier_id
+      and (
+        o.role_global = 'pasteur'
+        or exists (
+          select 1 from affectations a
+          where a.ouvrier_id = o.id
+            and a.departement_id = p_departement_id
+            and a.statut = 'actif'
+        )
+      )
+  )
+$$;
+
 -- ----------------------------------------------------------------------------
 -- RLS : liste_suivi_membres / point_suivi_membres
 -- Gestion (ajout/retrait) reservee aux responsables du departement concerne.
@@ -99,6 +124,7 @@ create policy liste_suivi_membres_insert on liste_suivi_membres for insert with 
     select 1 from listes_suivi l
     where l.id = liste_id
       and (fn_is_pasteur_ou_assistant() or fn_gere_departement(l.departement_id))
+      and fn_eligible_membre_suivi(ouvrier_id, l.departement_id)
   )
 );
 
@@ -126,6 +152,7 @@ create policy point_suivi_membres_insert on point_suivi_membres for insert with 
     select 1 from points_suivi p
     where p.id = point_id
       and (fn_is_pasteur_ou_assistant() or fn_gere_departement(p.departement_id))
+      and fn_eligible_membre_suivi(ouvrier_id, p.departement_id)
   )
 );
 
@@ -195,7 +222,11 @@ grant execute on function rpc_changer_statut_point_suivi(uuid, statut_point_suiv
 -- Personnes "taguables" dans un commentaire : desormais calcule pour UNE
 -- tache precise (et non plus tout le departement), pour inclure les membres
 -- de liste/tache sans jamais depasser ce qu'ils ont le droit de voir.
+-- DROP necessaire : Postgres refuse de renommer un parametre via
+-- CREATE OR REPLACE (p_departement_id -> p_point_id), meme a type egal.
 -- ----------------------------------------------------------------------------
+drop function if exists fn_personnes_taguables_suivi(uuid);
+
 create or replace function fn_personnes_taguables_suivi(p_point_id uuid)
 returns table(id uuid, prenom text, nom text)
 language plpgsql

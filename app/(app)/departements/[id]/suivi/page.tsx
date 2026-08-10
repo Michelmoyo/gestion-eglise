@@ -75,7 +75,8 @@ export default async function SuiviPage({
     .order("date_creation", { ascending: false });
 
   // Candidats a l'ajout : ouvriers actifs du departement qui n'ont pas deja
-  // acces via un role de gestion (ils l'ont deja, inutile de les "ajouter").
+  // acces via un role de gestion (ils l'ont deja, inutile de les "ajouter"),
+  // plus le pasteur (role global, pas rattache a un departement precis).
   const { data: affectationsRoster } = await supabase
     .from("affectations")
     .select("ouvrier_id, role")
@@ -85,9 +86,17 @@ export default async function SuiviPage({
 
   const rosterIds = (affectationsRoster ?? []).map((a) => a.ouvrier_id);
   const { data: rosterOuvriers } = rosterIds.length
-    ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", rosterIds).order("nom")
+    ? await supabase.from("ouvriers").select("id, prenom, nom, email").in("id", rosterIds).order("nom")
     : { data: [] };
-  const candidatsDepartement = rosterOuvriers ?? [];
+
+  const { data: pasteurs } = await supabase
+    .from("ouvriers")
+    .select("id, prenom, nom, email")
+    .eq("role_global", "pasteur");
+
+  const candidatsDepartement = [...(rosterOuvriers ?? []), ...(pasteurs ?? [])].filter(
+    (o, i, arr) => arr.findIndex((x) => x.id === o.id) === i
+  );
 
   const listeIds = (listes ?? []).map((l) => l.id);
   const { data: membresListesLiens } = listeIds.length

@@ -393,6 +393,7 @@ create policy liste_suivi_membres_insert on liste_suivi_membres for insert with 
     select 1 from listes_suivi l
     where l.id = liste_id
       and (fn_is_pasteur_ou_assistant() or fn_gere_departement(l.departement_id))
+      and fn_eligible_membre_suivi(ouvrier_id, l.departement_id)
   )
 );
 
@@ -420,6 +421,7 @@ create policy point_suivi_membres_insert on point_suivi_membres for insert with 
     select 1 from points_suivi p
     where p.id = point_id
       and (fn_is_pasteur_ou_assistant() or fn_gere_departement(p.departement_id))
+      and fn_eligible_membre_suivi(ouvrier_id, p.departement_id)
   )
 );
 

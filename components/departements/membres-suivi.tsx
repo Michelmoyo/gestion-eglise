@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { Share2, X } from "lucide-react";
 
 export interface OuvrierSuivi {
   id: string;
   prenom: string;
   nom: string;
+  email?: string;
 }
 
 interface Props {
@@ -24,15 +24,14 @@ interface Props {
 export function MembresSuivi({ label, membres, candidats, ajouterAction, retirerAction }: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [choix, setChoix] = useState("");
+  const [ouvert, setOuvert] = useState(false);
 
-  function ajouter() {
-    if (!choix) return;
+  function ajouter(ouvrierId: string) {
     startTransition(async () => {
       setError(null);
-      const res = await ajouterAction(choix);
+      const res = await ajouterAction(ouvrierId);
       if (res.error) setError(res.error);
-      else setChoix("");
+      else setOuvert(false);
     });
   }
 
@@ -46,7 +45,21 @@ export function MembresSuivi({ label, membres, candidats, ajouterAction, retirer
 
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <div className="flex items-center gap-1.5">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        {candidats.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setOuvert((o) => !o)}
+            disabled={isPending}
+            className="text-muted-foreground hover:text-primary transition-colors"
+            aria-label="Ajouter une personne"
+            title="Ajouter une personne"
+          >
+            <Share2 size={14} />
+          </button>
+        )}
+      </div>
 
       {!membres.length ? (
         <p className="text-xs text-muted-foreground">Personne d&apos;ajouté.</p>
@@ -72,22 +85,22 @@ export function MembresSuivi({ label, membres, candidats, ajouterAction, retirer
         </div>
       )}
 
-      {candidats.length > 0 && (
-        <div className="flex gap-1.5">
-          <select
-            value={choix}
-            onChange={(e) => setChoix(e.target.value)}
-            disabled={isPending}
-            className="text-xs border border-input rounded-md px-2 py-1.5 flex-1 min-w-0 bg-background"
-          >
-            <option value="">Ajouter un ouvrier…</option>
-            {candidats.map((c) => (
-              <option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>
-            ))}
-          </select>
-          <Button type="button" size="sm" variant="outline" onClick={ajouter} disabled={isPending || !choix}>
-            Ajouter
-          </Button>
+      {ouvert && (
+        <div className="border border-border rounded-md divide-y divide-border overflow-hidden">
+          {candidats.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => ajouter(c.id)}
+              disabled={isPending}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center justify-between gap-2"
+            >
+              <span className="truncate">{c.prenom} {c.nom}</span>
+              {c.email && (
+                <span className="text-xs text-muted-foreground flex-shrink-0">({c.email})</span>
+              )}
+            </button>
+          ))}
         </div>
       )}
 

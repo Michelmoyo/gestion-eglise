@@ -124,7 +124,7 @@ export default async function PointSuiviDetailPage({
   // Membres de la tache : uniquement utile (et visible) pour les managers,
   // qui sont seuls a pouvoir gerer cette liste.
   let membresTache: { id: string; prenom: string; nom: string }[] = [];
-  let candidatsTache: { id: string; prenom: string; nom: string }[] = [];
+  let candidatsTache: { id: string; prenom: string; nom: string; email?: string }[] = [];
   if (peutGerer) {
     const { data: membresLiens } = await supabase
       .from("point_suivi_membres")
@@ -136,6 +136,8 @@ export default async function PointSuiviDetailPage({
       : { data: [] };
     membresTache = membresOuvriers ?? [];
 
+    // Candidats : ouvriers actifs du departement (hors managers, qui ont
+    // deja acces) + le pasteur (role global, pas rattache a un departement).
     const { data: affectationsRoster } = await supabase
       .from("affectations")
       .select("ouvrier_id, role")
@@ -144,11 +146,18 @@ export default async function PointSuiviDetailPage({
       .not("role", "in", "(president,vice_president,secretaire)");
     const rosterIds = (affectationsRoster ?? []).map((a) => a.ouvrier_id);
     const { data: rosterOuvriers } = rosterIds.length
-      ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", rosterIds).order("nom")
+      ? await supabase.from("ouvriers").select("id, prenom, nom, email").in("id", rosterIds).order("nom")
       : { data: [] };
-    candidatsTache = (rosterOuvriers ?? []).filter(
-      (o) => !membresTache.some((m) => m.id === o.id)
+
+    const { data: pasteurs } = await supabase
+      .from("ouvriers")
+      .select("id, prenom, nom, email")
+      .eq("role_global", "pasteur");
+
+    const tousCandidats = [...(rosterOuvriers ?? []), ...(pasteurs ?? [])].filter(
+      (o, i, arr) => arr.findIndex((x) => x.id === o.id) === i
     );
+    candidatsTache = tousCandidats.filter((o) => !membresTache.some((m) => m.id === o.id));
   }
 
   // Un ouvrier ajoute a une seule tache (pas la liste) n'a pas acces a la
