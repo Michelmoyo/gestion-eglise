@@ -94,15 +94,39 @@ export default async function ActiviteDetailPage({
 
         {/* Infos activité */}
         <Card>
-          <CardContent className="pt-4 space-y-1 text-sm">
-            <p className="font-semibold text-base">{activite.titre}</p>
-            <p className="text-muted-foreground">
-              {format.date(activite.date_activite)}
-              {activite.heure ? ` · ${activite.heure.slice(0, 5)}` : ""}
-            </p>
-            {activite.lieu && <p className="text-muted-foreground">📍 {activite.lieu}</p>}
-            {responsableNom && <p className="text-muted-foreground">Responsable : {responsableNom}</p>}
-            {activite.description && <p className="mt-2">{activite.description}</p>}
+          <CardContent className="pt-4 space-y-3 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Titre</p>
+              <p className="font-semibold text-base">{activite.titre}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Date</p>
+              <p>{format.date(activite.date_activite)}</p>
+            </div>
+            {activite.heure && (
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Heure</p>
+                <p>{activite.heure.slice(0, 5)}</p>
+              </div>
+            )}
+            {activite.lieu && (
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Lieu</p>
+                <p>{activite.lieu}</p>
+              </div>
+            )}
+            {activite.description && (
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Description</p>
+                <p className="whitespace-pre-wrap">{activite.description}</p>
+              </div>
+            )}
+            {responsableNom && (
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Responsable</p>
+                <p>{responsableNom}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
