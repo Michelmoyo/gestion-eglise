@@ -92,7 +92,12 @@ export async function renvoyerInvitation(id: string) {
     redirectTo: `${origin}/reinitialiser-mot-de-passe`,
   });
 
-  if (error) return { error: "Erreur lors de l'envoi de l'invitation." };
+  if (error) {
+    if (error.status === 429 || /rate limit|only request this/i.test(error.message)) {
+      return { error: "Trop de tentatives rapprochées pour cet email. Patientez une minute avant de réessayer." };
+    }
+    return { error: `Erreur lors de l'envoi de l'invitation : ${error.message}` };
+  }
 
   return { success: true };
 }
