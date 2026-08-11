@@ -101,17 +101,15 @@ export default async function OuvrierDetailPage({
           </CardContent>
         </Card>
 
-        {!ouvrier.auth_user_id && (
-          <Card className="border-primary/30 bg-primary/5">
-            <CardContent className="pt-4 space-y-2">
-              <p className="text-xs text-muted-foreground">
-                Cet ouvrier n&apos;a pas encore activé son compte. Si le lien reçu par
-                email est expiré ou invalide, renvoyez-en un nouveau.
-              </p>
-              <RenvoyerInvitationButton ouvrierId={id} />
-            </CardContent>
-          </Card>
-        )}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="pt-4 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Si cet ouvrier n&apos;arrive pas à se connecter (lien d&apos;invitation
+              expiré ou invalide), renvoyez-lui une invitation.
+            </p>
+            <RenvoyerInvitationButton ouvrierId={id} />
+          </CardContent>
+        </Card>
 
         {/* Infos */}
         <Card>

@@ -71,19 +71,22 @@ export async function creerOuvrier(formData: FormData) {
 // consomme prematurement par un scanneur de liens cote messagerie) -- cette
 // action permet de renvoyer une invitation fraiche sur la meme fiche, sans
 // recreer l'ouvrier (email deja pris par la fiche existante de toute facon).
+//
+// Note : ouvriers.auth_user_id est lie des l'envoi de la toute premiere
+// invitation (trigger on_auth_user_created), pas au moment ou le mot de passe
+// est defini -- il ne permet donc PAS de savoir si le compte est reellement
+// actif. On laisse Supabase trancher : inviteUserByEmail echoue de lui-meme
+// si le compte a deja ete confirme.
 export async function renvoyerInvitation(id: string) {
   const { supabase } = await assertPilotage();
 
   const { data: ouvrier } = await supabase
     .from("ouvriers")
-    .select("email, auth_user_id")
+    .select("email")
     .eq("id", id)
     .single();
 
   if (!ouvrier) return { error: "Ouvrier introuvable." };
-  if (ouvrier.auth_user_id) {
-    return { error: "Ce compte est déjà activé, l'invitation ne peut plus être renvoyée." };
-  }
 
   const admin = createAdminClient();
   const origin = await getOrigin();
@@ -91,7 +94,12 @@ export async function renvoyerInvitation(id: string) {
     redirectTo: `${origin}/reinitialiser-mot-de-passe`,
   });
 
-  if (error) return { error: "Erreur lors de l'envoi de l'invitation." };
+  if (error) {
+    if (/already|existe|registered|confirmed/i.test(error.message)) {
+      return { error: "Ce compte a déjà été activé : l'ouvrier peut se connecter normalement ou utiliser « Mot de passe oublié »." };
+    }
+    return { error: "Erreur lors de l'envoi de l'invitation." };
+  }
 
   return { success: true };
 }
