@@ -44,7 +44,9 @@ export async function TopBar({ title, prenom }: TopBarProps) {
           <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
             <Bell size={18} />
             {nbNonLues > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
+              <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-4 text-center">
+                {nbNonLues > 9 ? "9+" : nbNonLues}
+              </span>
             )}
           </Button>
         </Link>
