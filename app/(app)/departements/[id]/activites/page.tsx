@@ -78,7 +78,7 @@ export default async function ActivitesPage({
           )}
         </div>
 
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           {!activites?.length && (
             <EmptyState icon={CalendarDays} message="Aucune activité enregistrée." />
           )}

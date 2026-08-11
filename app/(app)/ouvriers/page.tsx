@@ -74,7 +74,7 @@ export default async function OuvriersPage({
         </Link>
 
         {/* Liste */}
-        <div className="flex flex-col gap-8 pt-2">
+        <div className="flex flex-col gap-6 pt-2">
           {!ouvriers?.length && (
             <EmptyState
               icon={Users}

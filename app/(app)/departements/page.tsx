@@ -72,7 +72,7 @@ export default async function DepartementsPage() {
           </Link>
         )}
 
-        <div className="flex flex-col gap-8 pt-2">
+        <div className="flex flex-col gap-6 pt-2">
           {!departements?.length && (
             <EmptyState icon={Building2} message="Aucun département." />
           )}
