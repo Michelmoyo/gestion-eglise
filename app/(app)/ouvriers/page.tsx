@@ -66,7 +66,7 @@ export default async function OuvriersPage({
         </form>
 
         {/* Bouton créer */}
-        <Link href="/ouvriers/nouveau">
+        <Link href="/ouvriers/nouveau" className="block pt-2">
           <Button className="w-full gap-2">
             <Plus size={16} />
             Ajouter un ouvrier
@@ -74,7 +74,7 @@ export default async function OuvriersPage({
         </Link>
 
         {/* Liste */}
-        <div className="space-y-8">
+        <div className="space-y-10 pt-2">
           {!ouvriers?.length && (
             <EmptyState
               icon={Users}

@@ -42,7 +42,7 @@ export default async function CultesPage() {
           </Link>
         )}
 
-        <div className="space-y-8">
+        <div className="space-y-10">
           {!cultes?.length && (
             <EmptyState icon={Church} message="Aucun culte enregistré." />
           )}

@@ -64,7 +64,7 @@ export default async function DepartementsPage() {
 
       <div className="p-4 space-y-4">
         {isPilotage && (
-          <Link href="/departements/nouveau">
+          <Link href="/departements/nouveau" className="block pb-2">
             <Button className="w-full gap-2">
               <Plus size={16} />
               Nouveau département
@@ -72,7 +72,7 @@ export default async function DepartementsPage() {
           </Link>
         )}
 
-        <div className="space-y-8">
+        <div className="space-y-10 pt-2">
           {!departements?.length && (
             <EmptyState icon={Building2} message="Aucun département." />
           )}

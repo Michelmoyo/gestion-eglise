@@ -55,7 +55,7 @@ export default async function MesActivitesPage() {
           Mon espace
         </Link>
 
-        <div className="space-y-8">
+        <div className="space-y-10">
           {!activites?.length ? (
             <EmptyState icon={CalendarDays} message="Aucune activité planifiée." />
           ) : (
