@@ -74,7 +74,7 @@ export default async function OuvriersPage({
         </Link>
 
         {/* Liste */}
-        <div className="space-y-2">
+        <div className="space-y-6">
           {!ouvriers?.length && (
             <EmptyState
               icon={Users}

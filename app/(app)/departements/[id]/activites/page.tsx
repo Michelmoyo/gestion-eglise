@@ -78,7 +78,7 @@ export default async function ActivitesPage({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-6">
           {!activites?.length && (
             <EmptyState icon={CalendarDays} message="Aucune activité enregistrée." />
           )}

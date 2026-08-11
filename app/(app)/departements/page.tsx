@@ -72,7 +72,7 @@ export default async function DepartementsPage() {
           </Link>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-6">
           {!departements?.length && (
             <EmptyState icon={Building2} message="Aucun département." />
           )}
