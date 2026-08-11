@@ -24,7 +24,7 @@ export function ListeRapports({
   }
 
   return (
-    <div className="flex flex-col gap-16">
+    <div className="flex flex-col gap-8">
       {rapports.map((r) => (
         <Link key={r.id} href={`/rapports/${r.id}`}>
           <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
