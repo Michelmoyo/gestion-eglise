@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Building2, UserPlus, Plus, Church, FileText, Settings } from "lucide-react";
+import { Users, Building2, UserPlus, Plus, Church, FileText, Settings, TriangleAlert } from "lucide-react";
 import { calculerSante, type Sante } from "@/lib/sante";
 
 const PASTILLE: Record<Sante, { bg: string; label: string }> = {
@@ -154,14 +154,14 @@ export default async function PilotagePage() {
         <div className="grid grid-cols-2 gap-3">
           <Link href="/ouvriers/nouveau">
             <Button className="w-full h-auto py-3 flex-col gap-1 text-xs">
-              <UserPlus size={20} />
-              Nouvel ouvrier
+              <UserPlus size={22} />
+              <span className="truncate max-w-full">Nouvel ouvrier</span>
             </Button>
           </Link>
           <Link href="/departements/nouveau">
             <Button variant="outline" className="w-full h-auto py-3 flex-col gap-1 text-xs">
-              <Plus size={20} />
-              Nouveau département
+              <Plus size={22} />
+              <span className="truncate max-w-full">Nouveau département</span>
             </Button>
           </Link>
         </div>
@@ -192,8 +192,9 @@ export default async function PilotagePage() {
         {(nbRouge > 0 || nbOrange > 0) && (
           <div className="flex gap-2">
             {nbRouge > 0 && (
-              <span className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full font-medium">
-                🔴 {nbRouge} en difficulté
+              <span className="text-xs bg-gold/15 text-gold px-3 py-1 rounded-full font-medium flex items-center gap-1">
+                <TriangleAlert size={14} />
+                {nbRouge} en difficulté
               </span>
             )}
             {nbOrange > 0 && (
@@ -250,10 +251,10 @@ export default async function PilotagePage() {
           <Link href="/ouvriers">
             <Card className="hover:shadow-md transition-shadow">
               <CardContent className="pt-4 flex items-center gap-3">
-                <Users size={24} className="text-primary" />
-                <div>
-                  <p className="text-sm font-semibold">Ouvriers</p>
-                  <p className="text-xs text-muted-foreground">Gérer l&apos;équipe</p>
+                <Users size={22} className="text-primary flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">Ouvriers</p>
+                  <p className="text-xs text-muted-foreground truncate">Gérer l&apos;équipe</p>
                 </div>
               </CardContent>
             </Card>
@@ -261,10 +262,10 @@ export default async function PilotagePage() {
           <Link href="/departements">
             <Card className="hover:shadow-md transition-shadow">
               <CardContent className="pt-4 flex items-center gap-3">
-                <Building2 size={24} className="text-primary" />
-                <div>
-                  <p className="text-sm font-semibold">Départements</p>
-                  <p className="text-xs text-muted-foreground">Vue d&apos;ensemble</p>
+                <Building2 size={22} className="text-primary flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">Départements</p>
+                  <p className="text-xs text-muted-foreground truncate">Vue d&apos;ensemble</p>
                 </div>
               </CardContent>
             </Card>
@@ -272,10 +273,10 @@ export default async function PilotagePage() {
           <Link href="/cultes">
             <Card className="hover:shadow-md transition-shadow">
               <CardContent className="pt-4 flex items-center gap-3">
-                <Church size={24} className="text-primary" />
-                <div>
-                  <p className="text-sm font-semibold">Cultes</p>
-                  <p className="text-xs text-muted-foreground">Présence à l&apos;église</p>
+                <Church size={22} className="text-primary flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">Cultes</p>
+                  <p className="text-xs text-muted-foreground truncate">Présence à l&apos;église</p>
                 </div>
               </CardContent>
             </Card>
@@ -283,10 +284,10 @@ export default async function PilotagePage() {
           <Link href="/rapports">
             <Card className="hover:shadow-md transition-shadow">
               <CardContent className="pt-4 flex items-center gap-3">
-                <FileText size={24} className="text-primary" />
-                <div>
-                  <p className="text-sm font-semibold">Rapports</p>
-                  <p className="text-xs text-muted-foreground">Tous les départements</p>
+                <FileText size={22} className="text-primary flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">Rapports</p>
+                  <p className="text-xs text-muted-foreground truncate">Tous les départements</p>
                 </div>
               </CardContent>
             </Card>
@@ -295,10 +296,10 @@ export default async function PilotagePage() {
             <Link href="/parametres">
               <Card className="hover:shadow-md transition-shadow">
                 <CardContent className="pt-4 flex items-center gap-3">
-                  <Settings size={24} className="text-primary" />
-                  <div>
-                    <p className="text-sm font-semibold">Paramètres</p>
-                    <p className="text-xs text-muted-foreground">Coordonnées de l&apos;église</p>
+                  <Settings size={22} className="text-primary flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate">Paramètres</p>
+                    <p className="text-xs text-muted-foreground truncate">Coordonnées de l&apos;église</p>
                   </div>
                 </CardContent>
               </Card>
