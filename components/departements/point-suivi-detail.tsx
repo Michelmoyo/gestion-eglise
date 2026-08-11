@@ -20,6 +20,8 @@ interface Props {
     contenu: string;
     description: string | null;
     statut: StatutPointSuiviEnum;
+    date_debut: string | null;
+    date_fin: string | null;
     date_creation: string;
     date_resolution: string | null;
     piece_jointe_nom: string | null;
@@ -64,12 +66,16 @@ export function PointSuiviDetail({
   const [saved, setSaved] = useState(false);
   const [contenu, setContenu] = useState(point.contenu);
   const [description, setDescription] = useState(point.description ?? "");
+  const [dateDebut, setDateDebut] = useState(point.date_debut ?? "");
+  const [dateFin, setDateFin] = useState(point.date_fin ?? "");
 
   function enregistrer(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData();
     fd.set("contenu", contenu);
     fd.set("description", description);
+    fd.set("date_debut", dateDebut);
+    fd.set("date_fin", dateFin);
     startTransition(async () => {
       setError(null);
       setSaved(false);
@@ -184,6 +190,28 @@ export function PointSuiviDetail({
             rows={6}
             placeholder="Détailler ici…"
           />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="date_debut">Date de début</Label>
+            <Input
+              id="date_debut"
+              type="date"
+              value={dateDebut}
+              onChange={(e) => { setDateDebut(e.target.value); setSaved(false); }}
+              disabled={!peutGerer || isPending}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="date_fin">Date de fin</Label>
+            <Input
+              id="date_fin"
+              type="date"
+              value={dateFin}
+              onChange={(e) => { setDateFin(e.target.value); setSaved(false); }}
+              disabled={!peutGerer || isPending}
+            />
+          </div>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}

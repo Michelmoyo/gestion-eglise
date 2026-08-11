@@ -311,6 +311,7 @@ export interface Database {
           id: string;
           departement_id: string;
           nom: string;
+          description: string | null;
           ordre: number;
           inclure_rapport: boolean;
           cree_par: string | null;
@@ -321,6 +322,7 @@ export interface Database {
           id?: string;
           departement_id: string;
           nom: string;
+          description?: string | null;
           ordre?: number;
           inclure_rapport?: boolean;
           cree_par?: string | null;
@@ -329,6 +331,7 @@ export interface Database {
           id?: string;
           departement_id?: string;
           nom?: string;
+          description?: string | null;
           ordre?: number;
           inclure_rapport?: boolean;
           cree_par?: string | null;
@@ -345,6 +348,8 @@ export interface Database {
           piece_jointe_path: string | null;
           piece_jointe_nom: string | null;
           statut: StatutPointSuiviEnum;
+          date_debut: string | null;
+          date_fin: string | null;
           date_creation: string;
           date_resolution: string | null;
           cree_par: string;
@@ -361,6 +366,8 @@ export interface Database {
           piece_jointe_path?: string | null;
           piece_jointe_nom?: string | null;
           statut?: StatutPointSuiviEnum;
+          date_debut?: string | null;
+          date_fin?: string | null;
           date_creation?: string;
           date_resolution?: string | null;
           cree_par: string;
@@ -375,6 +382,8 @@ export interface Database {
           piece_jointe_path?: string | null;
           piece_jointe_nom?: string | null;
           statut?: StatutPointSuiviEnum;
+          date_debut?: string | null;
+          date_fin?: string | null;
           date_creation?: string;
           date_resolution?: string | null;
           cree_par?: string;

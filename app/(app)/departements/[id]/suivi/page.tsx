@@ -2,19 +2,10 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
-import { ChevronLeft } from "lucide-react";
-import { SuiviSection } from "@/components/departements/suivi-section";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { NouvelleListeForm } from "@/components/departements/nouvelle-liste-form";
-import {
-  ajouterPointSuivi,
-  changerStatutPointSuivi,
-  supprimerPointSuivi,
-  ajouterListe,
-  supprimerListe,
-  changerInclureRapport,
-  ajouterMembreListe,
-  retirerMembreListe,
-} from "./actions";
+import { ajouterListe } from "./actions";
 
 export default async function SuiviPage({
   params,
@@ -64,59 +55,16 @@ export default async function SuiviPage({
 
   const { data: listes } = await supabase
     .from("listes_suivi")
-    .select("id, nom, ordre, inclure_rapport")
+    .select("id, nom, description, ordre")
     .eq("departement_id", id)
     .order("ordre", { ascending: true });
 
   const { data: points } = await supabase
     .from("points_suivi")
-    .select("id, liste_id, contenu, statut, date_creation, date_resolution, piece_jointe_nom")
-    .eq("departement_id", id)
-    .order("date_creation", { ascending: false });
+    .select("id, liste_id, statut")
+    .eq("departement_id", id);
 
-  // Candidats a l'ajout : ouvriers actifs du departement qui n'ont pas deja
-  // acces via un role de gestion (ils l'ont deja, inutile de les "ajouter"),
-  // plus le pasteur (role global, pas rattache a un departement precis).
-  const { data: affectationsRoster } = await supabase
-    .from("affectations")
-    .select("ouvrier_id, role")
-    .eq("departement_id", id)
-    .eq("statut", "actif")
-    .not("role", "in", "(president,vice_president,secretaire)");
-
-  const rosterIds = (affectationsRoster ?? []).map((a) => a.ouvrier_id);
-  const { data: rosterOuvriers } = rosterIds.length
-    ? await supabase.from("ouvriers").select("id, prenom, nom, email").in("id", rosterIds).order("nom")
-    : { data: [] };
-
-  const { data: pasteurs } = await supabase
-    .from("ouvriers")
-    .select("id, prenom, nom, email")
-    .eq("role_global", "pasteur");
-
-  const candidatsDepartement = [...(rosterOuvriers ?? []), ...(pasteurs ?? [])].filter(
-    (o, i, arr) => arr.findIndex((x) => x.id === o.id) === i
-  );
-
-  const listeIds = (listes ?? []).map((l) => l.id);
-  const { data: membresListesLiens } = listeIds.length
-    ? await supabase
-        .from("liste_suivi_membres")
-        .select("liste_id, ouvrier_id")
-        .in("liste_id", listeIds)
-    : { data: [] };
-
-  const membresListesOuvrierIds = [...new Set((membresListesLiens ?? []).map((m) => m.ouvrier_id))];
-  const { data: membresListesOuvriersData } = membresListesOuvrierIds.length
-    ? await supabase.from("ouvriers").select("id, prenom, nom").in("id", membresListesOuvrierIds)
-    : { data: [] };
-  const ouvrierParId = Object.fromEntries((membresListesOuvriersData ?? []).map((o) => [o.id, o]));
-
-  const changerStatut = changerStatutPointSuivi.bind(null, id);
-  const supprimerPoint = supprimerPointSuivi.bind(null, id);
-  const supprimerListeAction = supprimerListe.bind(null, id);
   const ajouterListeAction = ajouterListe.bind(null, id);
-  const changerInclureRapportAction = changerInclureRapport.bind(null, id);
 
   return (
     <>
@@ -136,40 +84,37 @@ export default async function SuiviPage({
             Aucune liste de suivi pour ce département.
           </p>
         ) : (
-          listes.map((liste) => {
-            const membresListe = (membresListesLiens ?? [])
-              .filter((m) => m.liste_id === liste.id)
-              .map((m) => ouvrierParId[m.ouvrier_id])
-              .filter((o): o is { id: string; prenom: string; nom: string } => !!o);
-            const candidatsListe = candidatsDepartement.filter(
-              (c) => !membresListe.some((m) => m.id === c.id)
-            );
+          <div className="space-y-2">
+            {listes.map((liste) => {
+              const nbActifs = (points ?? []).filter(
+                (p) => p.liste_id === liste.id && p.statut !== "termine"
+              ).length;
 
-            return (
-              <SuiviSection
-                key={liste.id}
-                departementId={id}
-                listeId={liste.id}
-                nom={liste.nom}
-                inclureRapport={liste.inclure_rapport}
-                items={(points ?? []).filter((p) => p.liste_id === liste.id)}
-                peutGerer={peutGerer}
-                peutAgir={peutGerer}
-                ajouterAction={ajouterPointSuivi.bind(null, id, liste.id)}
-                changerStatutAction={changerStatut}
-                supprimerAction={supprimerPoint}
-                supprimerListeAction={supprimerListeAction}
-                changerInclureRapportAction={changerInclureRapportAction}
-                membresListe={membresListe}
-                candidatsListe={candidatsListe}
-                ajouterMembreListeAction={ajouterMembreListe.bind(null, id, liste.id)}
-                retirerMembreListeAction={retirerMembreListe.bind(null, id, liste.id)}
-              />
-            );
-          })
+              return (
+                <Link key={liste.id} href={`/departements/${id}/suivi/liste/${liste.id}`}>
+                  <Card className="hover:bg-accent transition-colors">
+                    <CardContent className="p-4 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold">
+                          {liste.nom}
+                          {nbActifs > 0 && (
+                            <span className="text-muted-foreground font-normal"> ({nbActifs})</span>
+                          )}
+                        </p>
+                        {liste.description && (
+                          <p className="text-xs text-muted-foreground truncate">{liste.description}</p>
+                        )}
+                      </div>
+                      <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
         )}
 
-        {peutGerer && <NouvelleListeForm action={ajouterListeAction} />}
+        <NouvelleListeForm action={ajouterListeAction} />
       </div>
     </>
   );

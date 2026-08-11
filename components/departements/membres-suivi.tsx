@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Share2, X } from "lucide-react";
+import { Users, X } from "lucide-react";
 
 export interface OuvrierSuivi {
   id: string;
@@ -56,7 +56,7 @@ export function MembresSuivi({ label, membres, candidats, ajouterAction, retirer
             aria-label="Ajouter une personne"
             title="Ajouter une personne"
           >
-            <Share2 size={14} />
+            <Users size={14} />
           </button>
         )}
       </div>

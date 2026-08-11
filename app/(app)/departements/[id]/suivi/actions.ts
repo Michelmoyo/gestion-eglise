@@ -7,6 +7,7 @@ import {
   pointSuiviSchema,
   detailPointSuiviSchema,
   listeSuiviSchema,
+  modifierListeSchema,
   commentaireSuiviSchema,
   MAX_TAILLE_PIECE_JOINTE,
 } from "@/lib/validations/suivi";
@@ -94,6 +95,38 @@ export async function ajouterListe(departementId: string, formData: FormData) {
   return { success: true };
 }
 
+export async function modifierListe(departementId: string, listeId: string, formData: FormData) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const parsed = modifierListeSchema.safeParse({
+    nom: formData.get("nom"),
+    description: formData.get("description") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? "Données invalides." };
+  }
+
+  const { error } = await supabase
+    .from("listes_suivi")
+    .update({
+      nom: parsed.data.nom,
+      description: parsed.data.description || null,
+    })
+    .eq("id", listeId)
+    .eq("departement_id", departementId);
+
+  if (error) {
+    if (error.code === "23505") return { error: "Une liste porte déjà ce nom." };
+    return { error: "Erreur lors de l'enregistrement." };
+  }
+
+  revalidatePath(`/departements/${departementId}/suivi`);
+  revalidatePath(`/departements/${departementId}/suivi/liste/${listeId}`);
+  return { success: true };
+}
+
 export async function changerInclureRapport(
   departementId: string,
   listeId: string,
@@ -111,6 +144,7 @@ export async function changerInclureRapport(
   if (error) return { error: "Erreur." };
 
   revalidatePath(`/departements/${departementId}/suivi`);
+  revalidatePath(`/departements/${departementId}/suivi/liste/${listeId}`);
   return { success: true };
 }
 
@@ -150,6 +184,8 @@ export async function ajouterMembreListe(
   }
 
   revalidatePath(`/departements/${departementId}/suivi`);
+  revalidatePath(`/departements/${departementId}/suivi/liste/${listeId}`);
+  revalidatePath("/mon-espace/mes-taches");
   return { success: true };
 }
 
@@ -170,6 +206,8 @@ export async function retirerMembreListe(
   if (error) return { error: "Erreur." };
 
   revalidatePath(`/departements/${departementId}/suivi`);
+  revalidatePath(`/departements/${departementId}/suivi/liste/${listeId}`);
+  revalidatePath("/mon-espace/mes-taches");
   return { success: true };
 }
 
@@ -200,6 +238,7 @@ export async function ajouterPointSuivi(
   if (error) return { error: "Erreur lors de l'ajout." };
 
   revalidatePath(`/departements/${departementId}/suivi`);
+  revalidatePath(`/departements/${departementId}/suivi/liste/${listeId}`);
   return { success: true };
 }
 
@@ -266,6 +305,8 @@ export async function modifierPointSuivi(
   const parsed = detailPointSuiviSchema.safeParse({
     contenu: formData.get("contenu"),
     description: formData.get("description") || undefined,
+    date_debut: formData.get("date_debut") || undefined,
+    date_fin: formData.get("date_fin") || undefined,
   });
 
   if (!parsed.success) {
@@ -277,6 +318,8 @@ export async function modifierPointSuivi(
     .update({
       contenu: parsed.data.contenu,
       description: parsed.data.description || null,
+      date_debut: parsed.data.date_debut || null,
+      date_fin: parsed.data.date_fin || null,
     })
     .eq("id", pointId)
     .eq("departement_id", departementId);

@@ -2,10 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
-import { ChevronLeft } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SuiviSection } from "@/components/departements/suivi-section";
-import { changerStatutPointSuivi } from "@/app/(app)/departements/[id]/suivi/actions";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 // Pour un ouvrier ajoute a une liste ou une tache de suivi sans etre
 // responsable de departement : le seul endroit ou il retrouve ce qui lui a
@@ -24,7 +22,8 @@ export default async function MesTachesPage() {
 
   if (!moi) redirect("/connexion");
 
-  // Listes entieres dont on est membre.
+  // Listes entieres dont on est membre -> chacune a maintenant sa propre
+  // page, on se contente de renvoyer dessus.
   const { data: membresListe } = await supabase
     .from("liste_suivi_membres")
     .select("liste_id")
@@ -34,7 +33,7 @@ export default async function MesTachesPage() {
   const { data: listes } = listeIds.length
     ? await supabase
         .from("listes_suivi")
-        .select("id, nom, departement_id, inclure_rapport")
+        .select("id, nom, departement_id")
         .in("id", listeIds)
     : { data: [] };
 
@@ -43,13 +42,6 @@ export default async function MesTachesPage() {
     ? await supabase.from("departements").select("id, nom").in("id", deptIdsListes)
     : { data: [] };
   const deptNomById = Object.fromEntries((deptsListes ?? []).map((d) => [d.id, d.nom]));
-
-  const { data: pointsListes } = listeIds.length
-    ? await supabase
-        .from("points_suivi")
-        .select("id, liste_id, contenu, statut, date_creation, date_resolution, piece_jointe_nom")
-        .in("liste_id", listeIds)
-    : { data: [] };
 
   // Taches individuelles -- seulement celles dont la liste n'est pas deja
   // couverte ci-dessus (sinon la tache apparaitrait deux fois).
@@ -95,27 +87,23 @@ export default async function MesTachesPage() {
         ) : (
           <>
             {(listes ?? []).map((liste) => (
-              <div key={liste.id} className="space-y-1">
-                <p className="text-xs text-muted-foreground px-1">{deptNomById[liste.departement_id] ?? "—"}</p>
-                <SuiviSection
-                  departementId={liste.departement_id}
-                  listeId={liste.id}
-                  nom={liste.nom}
-                  inclureRapport={liste.inclure_rapport}
-                  items={(pointsListes ?? []).filter((p) => p.liste_id === liste.id)}
-                  peutGerer={false}
-                  peutAgir={true}
-                  changerStatutAction={changerStatutPointSuivi.bind(null, liste.departement_id)}
-                />
-              </div>
+              <Link key={liste.id} href={`/departements/${liste.departement_id}/suivi/liste/${liste.id}`}>
+                <Card className="hover:bg-accent transition-colors">
+                  <CardContent className="p-4 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">{liste.nom}</p>
+                      <p className="text-xs text-muted-foreground">{deptNomById[liste.departement_id] ?? "—"}</p>
+                    </div>
+                    <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
 
             {tachesSeules.length > 0 && (
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">Tâches individuelles</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="p-4 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground">Tâches individuelles</p>
                   {tachesSeules.map((t) => (
                     <Link
                       key={t.id}

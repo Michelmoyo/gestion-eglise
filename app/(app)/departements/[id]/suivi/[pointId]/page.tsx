@@ -32,7 +32,7 @@ export default async function PointSuiviDetailPage({
   const { data: point } = await supabase
     .from("points_suivi")
     .select(
-      "id, contenu, description, statut, date_creation, date_resolution, piece_jointe_path, piece_jointe_nom, liste_id"
+      "id, contenu, description, statut, date_debut, date_fin, date_creation, date_resolution, piece_jointe_path, piece_jointe_nom, liste_id"
     )
     .eq("id", pointId)
     .eq("departement_id", id)
@@ -162,8 +162,10 @@ export default async function PointSuiviDetailPage({
 
   // Un ouvrier ajoute a une seule tache (pas la liste) n'a pas acces a la
   // page de la liste -- le "retour" doit alors pointer vers "Mes tâches".
-  const retourHref = peutGerer ? `/departements/${id}/suivi` : "/mon-espace/mes-taches";
-  const retourLabel = peutGerer ? (liste?.nom ?? "Suivi") : "Mes tâches";
+  const retourHref = liste
+    ? `/departements/${id}/suivi/liste/${point.liste_id}`
+    : "/mon-espace/mes-taches";
+  const retourLabel = liste ? liste.nom : "Mes tâches";
 
   return (
     <>

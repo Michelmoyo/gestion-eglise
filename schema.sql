@@ -286,6 +286,7 @@ create table listes_suivi (
   id                uuid primary key default gen_random_uuid(),
   departement_id    uuid not null references departements(id) on delete cascade,
   nom               text not null,
+  description       text,             -- affichee sur la page dediee de la liste
   ordre             int not null default 0,
   inclure_rapport   boolean not null default true, -- apparait dans le rapport mensuel genere
   cree_par          uuid references ouvriers(id),
@@ -309,6 +310,8 @@ create table points_suivi (
   piece_jointe_path  text,          -- chemin dans le bucket storage "pieces-jointes"
   piece_jointe_nom   text,          -- nom de fichier original, pour l'affichage
   statut             statut_point_suivi_enum not null default 'a_faire',
+  date_debut         date,          -- planification (style Asana), optionnelle
+  date_fin           date,          -- planification (style Asana), optionnelle
   date_creation      date not null default current_date,
   date_resolution    date,
   cree_par           uuid not null references ouvriers(id),
