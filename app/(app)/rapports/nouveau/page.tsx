@@ -68,7 +68,7 @@ export default async function NouveauRapportPage() {
           ) : (
             departements.map((d) => (
               <Link key={d.id} href={`/departements/${d.id}/rapport`}>
-                <Card className="hover:shadow-md transition-shadow">
+                <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                   <CardContent className="p-4 flex items-center justify-between">
                     <p className="font-medium text-sm">{d.nom}</p>
                     <ChevronRight size={16} className="text-muted-foreground" />

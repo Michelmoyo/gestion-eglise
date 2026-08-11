@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Plus, Search, Users } from "lucide-react";
 import { format } from "@/lib/format";
 
 export default async function OuvriersPage({
@@ -75,16 +76,17 @@ export default async function OuvriersPage({
         {/* Liste */}
         <div className="space-y-2">
           {!ouvriers?.length && (
-            <p className="text-center text-sm text-muted-foreground py-8">
-              {q ? "Aucun résultat." : "Aucun ouvrier enregistré."}
-            </p>
+            <EmptyState
+              icon={Users}
+              message={q ? "Aucun résultat." : "Aucun ouvrier enregistré."}
+            />
           )}
           {ouvriers?.map((o) => {
             const statutAffiche =
               o.statut === "actif" && suspendusIds.has(o.id) ? "suspendu" : o.statut;
             return (
               <Link key={o.id} href={`/ouvriers/${o.id}`}>
-                <Card className="hover:shadow-md transition-shadow">
+                <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
                       {o.prenom[0]}{o.nom[0]}
@@ -95,7 +97,15 @@ export default async function OuvriersPage({
                       </p>
                       <p className="text-xs text-muted-foreground truncate">{o.email}</p>
                       {o.role_global && (
-                        <p className="text-xs text-primary">{format.roleGlobal(o.role_global)}</p>
+                        <span
+                          className={`inline-block mt-0.5 text-[11px] px-1.5 py-0.5 rounded-full font-medium ${
+                            o.role_global === "pasteur"
+                              ? "bg-gold/15 text-gold"
+                              : "bg-primary/10 text-primary"
+                          }`}
+                        >
+                          {format.roleGlobal(o.role_global)}
+                        </span>
                       )}
                     </div>
                     <span

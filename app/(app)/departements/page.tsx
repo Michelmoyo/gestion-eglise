@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Plus, Users, Building2 } from "lucide-react";
 
 export default async function DepartementsPage() {
   const supabase = await createClient();
@@ -73,14 +74,12 @@ export default async function DepartementsPage() {
 
         <div className="space-y-2">
           {!departements?.length && (
-            <p className="text-center text-sm text-muted-foreground py-8">
-              Aucun département.
-            </p>
+            <EmptyState icon={Building2} message="Aucun département." />
           )}
           {(departements ?? []).map((dept) => {
             return (
               <Link key={dept.id} href={`/departements/${dept.id}`}>
-                <Card className="hover:shadow-md transition-shadow">
+                <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                   <CardContent className="p-4 flex items-center justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm">{dept.nom}</p>

@@ -168,19 +168,19 @@ export default async function PilotagePage() {
 
         {/* Chiffres clés */}
         <div className="grid grid-cols-3 gap-3">
-          <Card>
+          <Card className="bg-primary/5">
             <CardContent className="pt-4 text-center">
               <p className="text-3xl font-bold text-primary">{nbOuvriers ?? 0}</p>
               <p className="text-xs text-muted-foreground mt-1">Ouvriers</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-primary/5">
             <CardContent className="pt-4 text-center">
               <p className="text-3xl font-bold text-primary">{nbDepts}</p>
               <p className="text-xs text-muted-foreground mt-1">Départements</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-primary/5">
             <CardContent className="pt-4 text-center">
               <p className="text-3xl font-bold text-primary">{nbActivitesMois ?? 0}</p>
               <p className="text-xs text-muted-foreground mt-1">Activités</p>
@@ -225,7 +225,7 @@ export default async function PilotagePage() {
                 const p = PASTILLE[dept.sante.statut];
                 return (
                   <Link key={dept.id} href={`/departements/${dept.id}`}>
-                    <div className="flex items-center justify-between py-3 hover:bg-accent/40 -mx-1 px-1 rounded transition-colors">
+                    <div className="flex items-center justify-between py-3 hover:bg-primary/5 -mx-1 px-1 rounded transition-colors">
                       <div className="flex items-center gap-2">
                         <span
                           className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${p.bg}`}
@@ -249,9 +249,11 @@ export default async function PilotagePage() {
         {/* Liens rapides */}
         <div className="grid grid-cols-2 gap-3">
           <Link href="/ouvriers">
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
               <CardContent className="pt-4 flex items-center gap-3">
-                <Users size={22} className="text-primary flex-shrink-0" />
+                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Users size={18} className="text-primary" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">Ouvriers</p>
                   <p className="text-xs text-muted-foreground truncate">Gérer l&apos;équipe</p>
@@ -260,9 +262,11 @@ export default async function PilotagePage() {
             </Card>
           </Link>
           <Link href="/departements">
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
               <CardContent className="pt-4 flex items-center gap-3">
-                <Building2 size={22} className="text-primary flex-shrink-0" />
+                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Building2 size={18} className="text-primary" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">Départements</p>
                   <p className="text-xs text-muted-foreground truncate">Vue d&apos;ensemble</p>
@@ -271,9 +275,11 @@ export default async function PilotagePage() {
             </Card>
           </Link>
           <Link href="/cultes">
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
               <CardContent className="pt-4 flex items-center gap-3">
-                <Church size={22} className="text-primary flex-shrink-0" />
+                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Church size={18} className="text-primary" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">Cultes</p>
                   <p className="text-xs text-muted-foreground truncate">Présence à l&apos;église</p>
@@ -282,9 +288,11 @@ export default async function PilotagePage() {
             </Card>
           </Link>
           <Link href="/rapports">
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
               <CardContent className="pt-4 flex items-center gap-3">
-                <FileText size={22} className="text-primary flex-shrink-0" />
+                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <FileText size={18} className="text-primary" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">Rapports</p>
                   <p className="text-xs text-muted-foreground truncate">Tous les départements</p>
@@ -294,9 +302,11 @@ export default async function PilotagePage() {
           </Link>
           {moi.role_global === "pasteur" && (
             <Link href="/parametres">
-              <Card className="hover:shadow-md transition-shadow">
+              <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <CardContent className="pt-4 flex items-center gap-3">
-                  <Settings size={22} className="text-primary flex-shrink-0" />
+                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Settings size={18} className="text-primary" />
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold truncate">Paramètres</p>
                     <p className="text-xs text-muted-foreground truncate">Coordonnées de l&apos;église</p>

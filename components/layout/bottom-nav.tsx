@@ -58,8 +58,8 @@ export function BottomNav({ roleGlobal, departementIds }: BottomNavProps) {
               className={cn(
                 "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
                 active
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
               )}
             >
               <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />

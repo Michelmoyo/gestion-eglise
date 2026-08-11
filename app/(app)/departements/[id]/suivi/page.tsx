@@ -3,7 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ChevronLeft, ChevronRight, ListChecks } from "lucide-react";
 import { NouvelleListeForm } from "@/components/departements/nouvelle-liste-form";
 import { ajouterListe } from "./actions";
 
@@ -80,9 +81,7 @@ export default async function SuiviPage({
         </Link>
 
         {!listes?.length ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            Aucune liste de suivi pour ce département.
-          </p>
+          <EmptyState icon={ListChecks} message="Aucune liste de suivi pour ce département." />
         ) : (
           <div className="space-y-2">
             {listes.map((liste) => {
@@ -92,7 +91,7 @@ export default async function SuiviPage({
 
               return (
                 <Link key={liste.id} href={`/departements/${id}/suivi/liste/${liste.id}`}>
-                  <Card className="hover:bg-accent transition-colors">
+                  <Card className="hover:bg-primary/5 hover:border-primary/30 transition-colors">
                     <CardContent className="p-4 flex items-center justify-between gap-2">
                       <div className="min-w-0">
                         <p className="text-sm font-semibold">

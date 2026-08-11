@@ -116,7 +116,7 @@ export default async function MonEspacePage() {
                   {departementIds.map((id) => (
                     <span
                       key={id}
-                      className="text-xs bg-secondary px-2 py-0.5 rounded-full"
+                      className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"
                     >
                       {deptMap[id] ?? "—"}
                     </span>
@@ -130,7 +130,7 @@ export default async function MonEspacePage() {
         {/* Mes tâches (visible seulement si des listes/taches ont ete partagées) */}
         {aDesTachesPartagees && (
           <Link href="/mon-espace/mes-taches">
-            <Card className="hover:bg-accent transition-colors">
+            <Card className="hover:bg-primary/5 transition-colors">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between gap-2">
                   <span className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export default async function MonEspacePage() {
 
         {/* Présences ce mois */}
         <Link href="/mon-espace/presences">
-          <Card className="hover:bg-accent transition-colors">
+          <Card className="hover:bg-primary/5 transition-colors">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export default async function MonEspacePage() {
         {/* Prochains cultes */}
         <Card>
           <Link href="/cultes">
-            <CardHeader className="pb-2 hover:bg-accent transition-colors rounded-t-xl">
+            <CardHeader className="pb-2 hover:bg-primary/5 transition-colors rounded-t-xl">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
                   <Church size={16} />
@@ -208,7 +208,7 @@ export default async function MonEspacePage() {
         {/* Prochaines activités */}
         <Card>
           <Link href="/mon-espace/activites">
-            <CardHeader className="pb-2 hover:bg-accent transition-colors rounded-t-xl">
+            <CardHeader className="pb-2 hover:bg-primary/5 transition-colors rounded-t-xl">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
                   <CalendarDays size={16} />

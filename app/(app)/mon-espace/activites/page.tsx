@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ChevronLeft, CalendarDays, Clock, MapPin } from "lucide-react";
 import { format } from "@/lib/format";
 
@@ -56,13 +57,11 @@ export default async function MesActivitesPage() {
 
         <div className="space-y-2">
           {!activites?.length ? (
-            <p className="text-center text-sm text-muted-foreground py-8">
-              Aucune activité planifiée.
-            </p>
+            <EmptyState icon={CalendarDays} message="Aucune activité planifiée." />
           ) : (
             activites.map((act) => (
               <Link key={act.id} href={`/departements/${act.departement_id}/activites/${act.id}`}>
-                <Card className="hover:shadow-md transition-shadow">
+                <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                   <CardContent className="p-4">
                     <p className="font-semibold text-sm">{act.titre}</p>
                     <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">

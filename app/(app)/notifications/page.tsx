@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Bell, UserPlus, CalendarDays, FileText, Pin, MessageCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { format } from "@/lib/format";
@@ -53,9 +54,7 @@ export default async function NotificationsPage() {
         )}
 
         {!notifications?.length ? (
-          <p className="text-center text-sm text-muted-foreground py-8">
-            Aucune notification.
-          </p>
+          <EmptyState icon={Bell} message="Aucune notification." />
         ) : (
           notifications.map((n) => {
             const Icone = ICONES[n.type] ?? Bell;

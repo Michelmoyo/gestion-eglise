@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ListChecks } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // Pour un ouvrier ajoute a une liste ou une tache de suivi sans etre
 // responsable de departement : le seul endroit ou il retrouve ce qui lui a
@@ -81,14 +82,12 @@ export default async function MesTachesPage() {
         </Link>
 
         {aucunAcces ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            Aucune tâche partagée avec vous pour l&apos;instant.
-          </p>
+          <EmptyState icon={ListChecks} message="Aucune tâche partagée avec vous pour l'instant." />
         ) : (
           <>
             {(listes ?? []).map((liste) => (
               <Link key={liste.id} href={`/departements/${liste.departement_id}/suivi/liste/${liste.id}`}>
-                <Card className="hover:bg-accent transition-colors">
+                <Card className="hover:bg-primary/5 hover:border-primary/30 transition-colors">
                   <CardContent className="p-4 flex items-center justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold">{liste.nom}</p>

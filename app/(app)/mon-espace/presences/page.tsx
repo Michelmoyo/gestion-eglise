@@ -57,7 +57,7 @@ export default async function MesPresencesPage() {
 
               return (
                 <Link key={`${p.type}-${p.id}`} href={href}>
-                  <div className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:bg-accent transition-colors">
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
                       {p.type === "culte" ? (
                         <Church size={16} className="text-muted-foreground flex-shrink-0" />

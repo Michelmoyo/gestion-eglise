@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, CalendarDays, Clock, MapPin } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Plus, CalendarDays, Clock, MapPin, Church } from "lucide-react";
 import { format } from "@/lib/format";
 
 export default async function CultesPage() {
@@ -43,13 +44,11 @@ export default async function CultesPage() {
 
         <div className="space-y-2">
           {!cultes?.length && (
-            <p className="text-center text-sm text-muted-foreground py-8">
-              Aucun culte enregistré.
-            </p>
+            <EmptyState icon={Church} message="Aucun culte enregistré." />
           )}
           {(cultes ?? []).map((c) => (
             <Link key={c.id} href={`/cultes/${c.id}`}>
-              <Card className="hover:shadow-md transition-shadow">
+              <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <CardContent className="p-4">
                   <p className="font-semibold text-sm">{c.type}</p>
                   <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
