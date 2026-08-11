@@ -271,7 +271,7 @@ export function ListeSuiviDetail({
         {!visibles.length ? (
           <p className="text-sm text-muted-foreground">Rien à afficher.</p>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {visibles.map((item) => (
               <div
                 key={item.id}

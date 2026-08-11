@@ -84,7 +84,7 @@ export default async function MesTachesPage() {
         {aucunAcces ? (
           <EmptyState icon={ListChecks} message="Aucune tâche partagée avec vous pour l'instant." />
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {(listes ?? []).map((liste) => (
               <Link key={liste.id} href={`/departements/${liste.departement_id}/suivi/liste/${liste.id}`}>
                 <Card className="hover:bg-primary/5 hover:border-primary/30 transition-colors">
@@ -103,7 +103,7 @@ export default async function MesTachesPage() {
             ))}
 
             {tachesSeules.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <p className="text-xs font-semibold text-muted-foreground px-1">Tâches individuelles</p>
                 {tachesSeules.map((t) => (
                   <Link
