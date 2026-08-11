@@ -70,6 +70,9 @@ export function MembresSuivi({ membres, candidats, ajouterAction, retirerAction 
 
       {ouvert && (
         <div className="absolute z-20 right-0 top-full mt-1 w-64 bg-popover border border-border rounded-md shadow-md overflow-hidden">
+          <p className="px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border">
+            Qui peut voir cette rubrique ?
+          </p>
           <div className="max-h-64 overflow-y-auto divide-y divide-border">
             {tous.map((p) => {
               const estMembre = membres.some((m) => m.id === p.id);
