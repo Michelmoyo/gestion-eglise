@@ -72,7 +72,7 @@ export default async function DepartementsPage() {
           </Link>
         )}
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {!departements?.length && (
             <EmptyState icon={Building2} message="Aucun département." />
           )}
@@ -80,9 +80,12 @@ export default async function DepartementsPage() {
             return (
               <Link key={dept.id} href={`/departements/${dept.id}`}>
                 <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                  <CardContent className="p-4 flex items-center justify-between gap-3">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Building2 size={18} className="text-primary" />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm">{dept.nom}</p>
+                      <p className="font-semibold text-sm truncate">{dept.nom}</p>
                       {dept.description && (
                         <p className="text-xs text-muted-foreground truncate">
                           {dept.description}

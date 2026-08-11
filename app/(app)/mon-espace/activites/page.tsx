@@ -55,33 +55,38 @@ export default async function MesActivitesPage() {
           Mon espace
         </Link>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {!activites?.length ? (
             <EmptyState icon={CalendarDays} message="Aucune activité planifiée." />
           ) : (
             activites.map((act) => (
               <Link key={act.id} href={`/departements/${act.departement_id}/activites/${act.id}`}>
                 <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                  <CardContent className="p-4">
-                    <p className="font-semibold text-sm">{act.titre}</p>
-                    <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <CalendarDays size={12} />
-                        {format.date(act.date_activite)}
-                      </span>
-                      {act.heure && (
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <CalendarDays size={18} className="text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm truncate">{act.titre}</p>
+                      <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <Clock size={12} />
-                          {act.heure.slice(0, 5)}
+                          <CalendarDays size={12} />
+                          {format.date(act.date_activite)}
                         </span>
-                      )}
-                      {act.lieu && (
-                        <span className="flex items-center gap-1">
-                          <MapPin size={12} />
-                          {act.lieu}
-                        </span>
-                      )}
-                      <span>{deptMap[act.departement_id] ?? ""}</span>
+                        {act.heure && (
+                          <span className="flex items-center gap-1">
+                            <Clock size={12} />
+                            {act.heure.slice(0, 5)}
+                          </span>
+                        )}
+                        {act.lieu && (
+                          <span className="flex items-center gap-1">
+                            <MapPin size={12} />
+                            {act.lieu}
+                          </span>
+                        )}
+                        <span>{deptMap[act.departement_id] ?? ""}</span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

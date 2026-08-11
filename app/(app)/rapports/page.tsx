@@ -37,16 +37,19 @@ export default async function RapportsPage() {
             Choisissez un département pour voir ses rapports.
           </p>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             {!departements?.length ? (
               <EmptyState icon={Building2} message="Aucun département créé." />
             ) : (
               departements.map((d) => (
                 <Link key={d.id} href={`/departements/${d.id}/rapports`}>
                   <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <p className="font-medium text-sm">{d.nom}</p>
-                      <ChevronRight size={16} className="text-muted-foreground" />
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Building2 size={18} className="text-primary" />
+                      </div>
+                      <p className="font-medium text-sm flex-1 truncate">{d.nom}</p>
+                      <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
                     </CardContent>
                   </Card>
                 </Link>

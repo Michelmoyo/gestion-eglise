@@ -42,32 +42,37 @@ export default async function CultesPage() {
           </Link>
         )}
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {!cultes?.length && (
             <EmptyState icon={Church} message="Aucun culte enregistré." />
           )}
           {(cultes ?? []).map((c) => (
             <Link key={c.id} href={`/cultes/${c.id}`}>
               <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                <CardContent className="p-4">
-                  <p className="font-semibold text-sm">{c.type}</p>
-                  <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <CalendarDays size={12} />
-                      {format.date(c.date_culte)}
-                    </span>
-                    {c.heure && (
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Church size={18} className="text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm truncate">{c.type}</p>
+                    <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Clock size={12} />
-                        {c.heure.slice(0, 5)}
+                        <CalendarDays size={12} />
+                        {format.date(c.date_culte)}
                       </span>
-                    )}
-                    {c.lieu && (
-                      <span className="flex items-center gap-1">
-                        <MapPin size={12} />
-                        {c.lieu}
-                      </span>
-                    )}
+                      {c.heure && (
+                        <span className="flex items-center gap-1">
+                          <Clock size={12} />
+                          {c.heure.slice(0, 5)}
+                        </span>
+                      )}
+                      {c.lieu && (
+                        <span className="flex items-center gap-1">
+                          <MapPin size={12} />
+                          {c.lieu}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

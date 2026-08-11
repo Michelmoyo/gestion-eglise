@@ -24,28 +24,33 @@ export function ListeRapports({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {rapports.map((r) => (
         <Link key={r.id} href={`/rapports/${r.id}`}>
           <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-            <CardContent className="p-4">
-              {afficherDepartement && (
-                <p className="font-semibold text-sm">{r.departementNom ?? "—"}</p>
-              )}
-              <p
-                className={
-                  afficherDepartement
-                    ? "text-xs text-muted-foreground mt-0.5 capitalize"
-                    : "font-semibold text-sm capitalize"
-                }
-              >
-                {new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
-                  new Date(r.periode)
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <FileText size={18} className="text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                {afficherDepartement && (
+                  <p className="font-semibold text-sm truncate">{r.departementNom ?? "—"}</p>
                 )}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Soumis le {format.date(r.date_soumission)} par {r.auteurNom}
-              </p>
+                <p
+                  className={
+                    afficherDepartement
+                      ? "text-xs text-muted-foreground mt-0.5 capitalize"
+                      : "font-semibold text-sm capitalize"
+                  }
+                >
+                  {new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
+                    new Date(r.periode)
+                  )}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Soumis le {format.date(r.date_soumission)} par {r.auteurNom}
+                </p>
+              </div>
             </CardContent>
           </Card>
         </Link>
