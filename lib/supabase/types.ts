@@ -485,6 +485,7 @@ export interface Database {
           destinataire_id: string;
           type: string;
           contenu: string;
+          lien: string | null;
           lue: boolean;
           created_at: string;
           updated_at: string;
@@ -494,6 +495,7 @@ export interface Database {
           destinataire_id: string;
           type: string;
           contenu: string;
+          lien?: string | null;
           lue?: boolean;
         };
         Update: {
@@ -501,6 +503,7 @@ export interface Database {
           destinataire_id?: string;
           type?: string;
           contenu?: string;
+          lien?: string | null;
           lue?: boolean;
         };
         Relationships: [];

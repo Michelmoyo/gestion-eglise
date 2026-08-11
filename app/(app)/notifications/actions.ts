@@ -4,13 +4,15 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export async function marquerLue(notificationId: string) {
+export async function marquerLue(notificationId: string, lien: string | null) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/connexion");
 
   await supabase.from("notifications").update({ lue: true }).eq("id", notificationId);
   revalidatePath("/notifications");
+
+  if (lien) redirect(lien);
 }
 
 export async function marquerToutesLues() {

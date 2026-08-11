@@ -589,6 +589,7 @@ create table notifications (
   destinataire_id uuid not null references ouvriers(id) on delete cascade,
   type           text not null,
   contenu        text not null,
+  lien           text,
   lue            boolean not null default false,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
@@ -620,11 +621,12 @@ declare
 begin
   select nom into v_nom_departement from departements where id = new.departement_id;
 
-  insert into notifications (destinataire_id, type, contenu)
+  insert into notifications (destinataire_id, type, contenu, lien)
   values (
     new.ouvrier_id,
     'nouvelle_affectation',
-    'Vous avez été affecté au département ' || coalesce(v_nom_departement, '')
+    'Vous avez été affecté au département ' || coalesce(v_nom_departement, ''),
+    '/departements/' || new.departement_id
   );
 
   return new;
@@ -647,12 +649,13 @@ declare
 begin
   select nom into v_nom_departement from departements where id = new.departement_id;
 
-  insert into notifications (destinataire_id, type, contenu)
+  insert into notifications (destinataire_id, type, contenu, lien)
   select
     a.ouvrier_id,
     'nouvelle_activite',
     'Nouvelle activité "' || new.titre || '" le ' || to_char(new.date_activite, 'DD/MM/YYYY')
-      || ' — ' || coalesce(v_nom_departement, '')
+      || ' — ' || coalesce(v_nom_departement, ''),
+    '/departements/' || new.departement_id || '/activites/' || new.id
   from affectations a
   where a.departement_id = new.departement_id
     and a.statut = 'actif';
@@ -680,12 +683,13 @@ declare
 begin
   select nom into v_nom_departement from departements where id = new.departement_id;
 
-  insert into notifications (destinataire_id, type, contenu)
+  insert into notifications (destinataire_id, type, contenu, lien)
   select
     o.id,
     'rapport_soumis',
     'Rapport soumis pour ' || coalesce(v_nom_departement, '')
-      || ' (période du ' || to_char(new.periode, 'DD/MM/YYYY') || ')'
+      || ' (période du ' || to_char(new.periode, 'DD/MM/YYYY') || ')',
+    '/rapports/' || new.id
   from ouvriers o
   where o.role_global in ('pasteur', 'assistant');
 
@@ -716,11 +720,12 @@ begin
   select nom into v_nom_departement from departements where id = new.departement_id;
   select nom into v_nom_liste from listes_suivi where id = new.liste_id;
 
-  insert into notifications (destinataire_id, type, contenu)
+  insert into notifications (destinataire_id, type, contenu, lien)
   select distinct o.id,
     'nouveau_point_suivi',
     'Nouvel élément « ' || coalesce(v_nom_liste, '') || ' » ajouté pour '
-      || coalesce(v_nom_departement, '') || ' : ' || new.contenu
+      || coalesce(v_nom_departement, '') || ' : ' || new.contenu,
+    '/departements/' || new.departement_id || '/suivi/' || new.id
   from ouvriers o
   where o.id <> new.cree_par
     and (
@@ -761,25 +766,29 @@ declare
   v_titre_point text;
   v_nom_auteur text;
   v_liste_id uuid;
+  v_lien text;
 begin
   select nom into v_nom_departement from departements where id = new.departement_id;
   select contenu, liste_id into v_titre_point, v_liste_id from points_suivi where id = new.point_suivi_id;
   select prenom || ' ' || nom into v_nom_auteur from ouvriers where id = new.auteur_id;
+  v_lien := '/departements/' || new.departement_id || '/suivi/' || new.point_suivi_id;
 
-  insert into notifications (destinataire_id, type, contenu)
+  insert into notifications (destinataire_id, type, contenu, lien)
   select o.id,
     'mention_commentaire_suivi',
     coalesce(v_nom_auteur, 'Quelqu''un') || ' vous a mentionné dans un commentaire sur « '
-      || coalesce(v_titre_point, '') || ' » (' || coalesce(v_nom_departement, '') || ')'
+      || coalesce(v_titre_point, '') || ' » (' || coalesce(v_nom_departement, '') || ')',
+    v_lien
   from ouvriers o
   where o.id = any(new.mentions)
     and o.id <> new.auteur_id;
 
-  insert into notifications (destinataire_id, type, contenu)
+  insert into notifications (destinataire_id, type, contenu, lien)
   select distinct o.id,
     'nouveau_commentaire_suivi',
     'Nouveau commentaire sur « ' || coalesce(v_titre_point, '') || ' » ('
-      || coalesce(v_nom_departement, '') || ')'
+      || coalesce(v_nom_departement, '') || ')',
+    v_lien
   from ouvriers o
   where o.id <> new.auteur_id
     and not (o.id = any(new.mentions))
@@ -821,17 +830,19 @@ as $$
 declare
   v_nom_departement text;
   v_nom_liste text;
+  v_departement_id uuid;
 begin
-  select d.nom, l.nom into v_nom_departement, v_nom_liste
+  select d.id, d.nom, l.nom into v_departement_id, v_nom_departement, v_nom_liste
     from listes_suivi l join departements d on d.id = l.departement_id
     where l.id = new.liste_id;
 
-  insert into notifications (destinataire_id, type, contenu)
+  insert into notifications (destinataire_id, type, contenu, lien)
   values (
     new.ouvrier_id,
     'ajout_membre_suivi',
     'Vous avez été ajouté à la liste « ' || coalesce(v_nom_liste, '') || ' » ('
-      || coalesce(v_nom_departement, '') || ')'
+      || coalesce(v_nom_departement, '') || ')',
+    '/departements/' || v_departement_id || '/suivi/liste/' || new.liste_id
   );
 
   return new;
@@ -852,17 +863,19 @@ as $$
 declare
   v_nom_departement text;
   v_titre_point text;
+  v_departement_id uuid;
 begin
-  select d.nom, p.contenu into v_nom_departement, v_titre_point
+  select d.id, d.nom, p.contenu into v_departement_id, v_nom_departement, v_titre_point
     from points_suivi p join departements d on d.id = p.departement_id
     where p.id = new.point_id;
 
-  insert into notifications (destinataire_id, type, contenu)
+  insert into notifications (destinataire_id, type, contenu, lien)
   values (
     new.ouvrier_id,
     'ajout_membre_suivi',
     'Vous avez été ajouté à la tâche « ' || coalesce(v_titre_point, '') || ' » ('
-      || coalesce(v_nom_departement, '') || ')'
+      || coalesce(v_nom_departement, '') || ')',
+    '/departements/' || v_departement_id || '/suivi/' || new.point_id
   );
 
   return new;

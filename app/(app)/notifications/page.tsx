@@ -33,7 +33,7 @@ export default async function NotificationsPage() {
 
   const { data: notifications } = await supabase
     .from("notifications")
-    .select("id, type, contenu, lue, created_at")
+    .select("id, type, contenu, lien, lue, created_at")
     .eq("destinataire_id", moi.id)
     .order("created_at", { ascending: false })
     .limit(100);
@@ -59,8 +59,8 @@ export default async function NotificationsPage() {
           notifications.map((n) => {
             const Icone = ICONES[n.type] ?? Bell;
             return (
-              <form key={n.id} action={marquerLue.bind(null, n.id)}>
-                <button type="submit" disabled={n.lue} className="w-full text-left">
+              <form key={n.id} action={marquerLue.bind(null, n.id, n.lien)}>
+                <button type="submit" className="w-full text-left">
                   <Card className={n.lue ? "" : "border-primary/40 bg-primary/5"}>
                     <CardContent className="p-3 flex items-start gap-3">
                       <Icone size={18} className="text-primary mt-0.5 flex-shrink-0" />
