@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Users, X } from "lucide-react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { Users, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface OuvrierSuivi {
   id: string;
@@ -11,100 +12,87 @@ export interface OuvrierSuivi {
 }
 
 interface Props {
-  label: string;
   membres: OuvrierSuivi[];
   candidats: OuvrierSuivi[];
   ajouterAction: (ouvrierId: string) => Promise<{ error?: string; success?: boolean }>;
   retirerAction: (ouvrierId: string) => Promise<{ error?: string; success?: boolean }>;
 }
 
-// Reutilise pour ajouter des membres a une liste entiere ou a une seule
-// tache -- ne fait qu'ajouter/retirer une ligne d'appartenance, la portee
-// (liste vs tache) vient uniquement des actions passees en props.
-export function MembresSuivi({ label, membres, candidats, ajouterAction, retirerAction }: Props) {
+// Icone seule ("people") : clic -> menu contextuel listant tout le monde
+// (deja ajoute ou non), coche = a acces, clic sur un nom bascule
+// ajout/retrait. Pas de texte visible tant qu'on n'a pas ouvert le menu.
+export function MembresSuivi({ membres, candidats, ajouterAction, retirerAction }: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [ouvert, setOuvert] = useState(false);
+  const conteneurRef = useRef<HTMLDivElement>(null);
 
-  function ajouter(ouvrierId: string) {
+  useEffect(() => {
+    if (!ouvert) return;
+    function surClicExterieur(e: MouseEvent) {
+      if (conteneurRef.current && !conteneurRef.current.contains(e.target as Node)) {
+        setOuvert(false);
+      }
+    }
+    document.addEventListener("mousedown", surClicExterieur);
+    return () => document.removeEventListener("mousedown", surClicExterieur);
+  }, [ouvert]);
+
+  const tous = [...membres, ...candidats].sort((a, b) =>
+    `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`, "fr")
+  );
+
+  if (!tous.length) return null;
+
+  function basculer(personne: OuvrierSuivi, estMembre: boolean) {
     startTransition(async () => {
       setError(null);
-      const res = await ajouterAction(ouvrierId);
-      if (res.error) setError(res.error);
-      else setOuvert(false);
-    });
-  }
-
-  function retirer(ouvrierId: string) {
-    startTransition(async () => {
-      setError(null);
-      const res = await retirerAction(ouvrierId);
+      const res = estMembre ? await retirerAction(personne.id) : await ajouterAction(personne.id);
       if (res.error) setError(res.error);
     });
   }
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        {candidats.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setOuvert((o) => !o)}
-            disabled={isPending}
-            className="text-muted-foreground hover:text-primary transition-colors"
-            aria-label="Ajouter une personne"
-            title="Ajouter une personne"
-          >
-            <Users size={14} />
-          </button>
+    <div className="relative" ref={conteneurRef}>
+      <button
+        type="button"
+        onClick={() => setOuvert((o) => !o)}
+        disabled={isPending}
+        className={cn(
+          "transition-colors",
+          membres.length > 0 ? "text-primary" : "text-muted-foreground hover:text-primary"
         )}
-      </div>
-
-      {!membres.length ? (
-        <p className="text-xs text-muted-foreground">Personne d&apos;ajouté.</p>
-      ) : (
-        <div className="flex flex-wrap gap-1.5">
-          {membres.map((m) => (
-            <span
-              key={m.id}
-              className="inline-flex items-center gap-1 text-xs bg-secondary rounded-full pl-2 pr-1 py-1"
-            >
-              {m.prenom} {m.nom}
-              <button
-                type="button"
-                onClick={() => retirer(m.id)}
-                disabled={isPending}
-                className="text-muted-foreground hover:text-destructive transition-colors"
-                aria-label={`Retirer ${m.prenom} ${m.nom}`}
-              >
-                <X size={11} />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
+        aria-label="Gérer les personnes ajoutées"
+        title="Gérer les personnes ajoutées"
+      >
+        <Users size={16} />
+      </button>
 
       {ouvert && (
-        <div className="border border-border rounded-md divide-y divide-border overflow-hidden">
-          {candidats.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => ajouter(c.id)}
-              disabled={isPending}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center justify-between gap-2"
-            >
-              <span className="truncate">{c.prenom} {c.nom}</span>
-              {c.email && (
-                <span className="text-xs text-muted-foreground flex-shrink-0">({c.email})</span>
-              )}
-            </button>
-          ))}
+        <div className="absolute z-20 right-0 top-full mt-1 w-64 bg-popover border border-border rounded-md shadow-md overflow-hidden">
+          <div className="max-h-64 overflow-y-auto divide-y divide-border">
+            {tous.map((p) => {
+              const estMembre = membres.some((m) => m.id === p.id);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => basculer(p, estMembre)}
+                  disabled={isPending}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center justify-between gap-2"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate">{p.prenom} {p.nom}</span>
+                    {p.email && <span className="block text-xs text-muted-foreground truncate">{p.email}</span>}
+                  </span>
+                  {estMembre && <Check size={14} className="text-primary flex-shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+          {error && <p className="text-xs text-destructive px-3 py-2">{error}</p>}
         </div>
       )}
-
-      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }

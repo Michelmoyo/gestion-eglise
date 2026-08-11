@@ -162,17 +162,28 @@ export function ListeSuiviDetail({
 
   return (
     <div className="space-y-4">
-      {peutGerer && supprimerListeAction && (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={supprimer}
-            disabled={isPending}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors"
-          >
-            <Trash2 size={14} />
-            Supprimer la liste
-          </button>
+      {peutGerer && (
+        <div className="flex justify-end items-center gap-3">
+          {ajouterMembreListeAction && retirerMembreListeAction && (
+            <MembresSuivi
+              membres={membresListe}
+              candidats={candidatsListe}
+              ajouterAction={ajouterMembreListeAction}
+              retirerAction={retirerMembreListeAction}
+            />
+          )}
+          {supprimerListeAction && (
+            <button
+              type="button"
+              onClick={supprimer}
+              disabled={isPending}
+              className="text-muted-foreground hover:text-destructive transition-colors"
+              aria-label="Supprimer la liste"
+              title="Supprimer la liste"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
         </div>
       )}
 
@@ -219,16 +230,6 @@ export function ListeSuiviDetail({
           />
           Inclure dans le rapport mensuel
         </label>
-      )}
-
-      {peutGerer && ajouterMembreListeAction && retirerMembreListeAction && (
-        <MembresSuivi
-          label="Membres ajoutés à cette liste"
-          membres={membresListe}
-          candidats={candidatsListe}
-          ajouterAction={ajouterMembreListeAction}
-          retirerAction={retirerMembreListeAction}
-        />
       )}
 
       <div className="pt-2 border-t border-border space-y-3">

@@ -153,15 +153,23 @@ export function PointSuiviDetail({
           </span>
         )}
         {peutGerer && (
-          <button
-            type="button"
-            onClick={supprimer}
-            disabled={isPending}
-            className="text-muted-foreground hover:text-destructive transition-colors"
-            aria-label="Supprimer"
-          >
-            <Trash2 size={16} />
-          </button>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <MembresSuivi
+              membres={membresTache}
+              candidats={candidatsTache}
+              ajouterAction={ajouterMembreTacheAction}
+              retirerAction={retirerMembreTacheAction}
+            />
+            <button
+              type="button"
+              onClick={supprimer}
+              disabled={isPending}
+              className="text-muted-foreground hover:text-destructive transition-colors"
+              aria-label="Supprimer"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         )}
       </div>
 
@@ -265,18 +273,6 @@ export function PointSuiviDetail({
           </label>
         )}
       </div>
-
-      {peutGerer && (
-        <div className="pt-2 border-t border-border">
-          <MembresSuivi
-            label="Membres ajoutés à cette tâche"
-            membres={membresTache}
-            candidats={candidatsTache}
-            ajouterAction={ajouterMembreTacheAction}
-            retirerAction={retirerMembreTacheAction}
-          />
-        </div>
-      )}
     </div>
   );
 }
