@@ -68,15 +68,14 @@ export async function creerOuvrier(formData: FormData) {
 }
 
 // Le lien d'invitation Supabase est a usage unique et expire (parfois
-// consomme prematurement par un scanneur de liens cote messagerie) -- cette
-// action permet de renvoyer une invitation fraiche sur la meme fiche, sans
-// recreer l'ouvrier (email deja pris par la fiche existante de toute facon).
-//
-// Note : ouvriers.auth_user_id est lie des l'envoi de la toute premiere
-// invitation (trigger on_auth_user_created), pas au moment ou le mot de passe
-// est defini -- il ne permet donc PAS de savoir si le compte est reellement
-// actif. On laisse Supabase trancher : inviteUserByEmail echoue de lui-meme
-// si le compte a deja ete confirme.
+// consomme prematurement par un scanneur de liens cote messagerie). Le
+// compte Auth existe deja des le premier envoi (voir on_auth_user_created
+// dans schema.sql), donc admin.inviteUserByEmail() echoue systematiquement
+// au deuxieme essai avec "user already registered" -- meme si l'ouvrier n'a
+// jamais defini de mot de passe. On utilise donc resetPasswordForEmail(),
+// exactement le mecanisme deja employe par "mot de passe oublie" : il cible
+// un compte existant qu'il soit confirme ou non, et renvoie vers la meme
+// page de definition de mot de passe.
 export async function renvoyerInvitation(id: string) {
   const { supabase } = await assertPilotage();
 
@@ -88,18 +87,12 @@ export async function renvoyerInvitation(id: string) {
 
   if (!ouvrier) return { error: "Ouvrier introuvable." };
 
-  const admin = createAdminClient();
   const origin = await getOrigin();
-  const { error } = await admin.auth.admin.inviteUserByEmail(ouvrier.email, {
+  const { error } = await supabase.auth.resetPasswordForEmail(ouvrier.email, {
     redirectTo: `${origin}/reinitialiser-mot-de-passe`,
   });
 
-  if (error) {
-    if (/already|existe|registered|confirmed/i.test(error.message)) {
-      return { error: "Ce compte a déjà été activé : l'ouvrier peut se connecter normalement ou utiliser « Mot de passe oublié »." };
-    }
-    return { error: "Erreur lors de l'envoi de l'invitation." };
-  }
+  if (error) return { error: "Erreur lors de l'envoi de l'invitation." };
 
   return { success: true };
 }
