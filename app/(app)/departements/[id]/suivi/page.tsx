@@ -83,7 +83,7 @@ export default async function SuiviPage({
         {!listes?.length ? (
           <EmptyState icon={ListChecks} message="Aucune liste de suivi pour ce département." />
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {listes.map((liste) => {
               const nbActifs = (points ?? []).filter(
                 (p) => p.liste_id === liste.id && p.statut !== "termine"
@@ -92,9 +92,12 @@ export default async function SuiviPage({
               return (
                 <Link key={liste.id} href={`/departements/${id}/suivi/liste/${liste.id}`}>
                   <Card className="hover:bg-primary/5 hover:border-primary/30 transition-colors">
-                    <CardContent className="p-4 flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold">
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <ListChecks size={18} className="text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold truncate">
                           {liste.nom}
                           {nbActifs > 0 && (
                             <span className="text-muted-foreground font-normal"> ({nbActifs})</span>

@@ -84,14 +84,17 @@ export default async function MesTachesPage() {
         {aucunAcces ? (
           <EmptyState icon={ListChecks} message="Aucune tâche partagée avec vous pour l'instant." />
         ) : (
-          <>
+          <div className="space-y-3">
             {(listes ?? []).map((liste) => (
               <Link key={liste.id} href={`/departements/${liste.departement_id}/suivi/liste/${liste.id}`}>
                 <Card className="hover:bg-primary/5 hover:border-primary/30 transition-colors">
-                  <CardContent className="p-4 flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold">{liste.nom}</p>
-                      <p className="text-xs text-muted-foreground">{deptNomById[liste.departement_id] ?? "—"}</p>
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <ListChecks size={18} className="text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">{liste.nom}</p>
+                      <p className="text-xs text-muted-foreground truncate">{deptNomById[liste.departement_id] ?? "—"}</p>
                     </div>
                     <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
                   </CardContent>
@@ -100,25 +103,26 @@ export default async function MesTachesPage() {
             ))}
 
             {tachesSeules.length > 0 && (
-              <Card>
-                <CardContent className="p-4 space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground">Tâches individuelles</p>
-                  {tachesSeules.map((t) => (
-                    <Link
-                      key={t.id}
-                      href={`/departements/${t.departement_id}/suivi/${t.id}`}
-                      className="flex items-center justify-between gap-2 text-sm hover:underline"
-                    >
-                      <span className="truncate">{t.contenu}</span>
-                      <span className="text-xs text-muted-foreground flex-shrink-0">
-                        {deptNomTachesById[t.departement_id] ?? "—"}
-                      </span>
-                    </Link>
-                  ))}
-                </CardContent>
-              </Card>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground px-1">Tâches individuelles</p>
+                {tachesSeules.map((t) => (
+                  <Link
+                    key={t.id}
+                    href={`/departements/${t.departement_id}/suivi/${t.id}`}
+                  >
+                    <Card className="hover:bg-primary/5 hover:border-primary/30 transition-colors">
+                      <CardContent className="p-3 flex items-center justify-between gap-2 text-sm">
+                        <span className="truncate">{t.contenu}</span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          {deptNomTachesById[t.departement_id] ?? "—"}
+                        </span>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </>

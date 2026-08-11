@@ -271,9 +271,12 @@ export function ListeSuiviDetail({
         {!visibles.length ? (
           <p className="text-sm text-muted-foreground">Rien à afficher.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {visibles.map((item) => (
-              <div key={item.id} className="flex items-start gap-2">
+              <div
+                key={item.id}
+                className="flex items-start gap-2 rounded-lg border border-border bg-card p-3 hover:border-primary/30 transition-colors"
+              >
                 <Link
                   href={`/departements/${departementId}/suivi/${item.id}`}
                   className="flex-1 min-w-0 flex items-start justify-between gap-1 group/link"
