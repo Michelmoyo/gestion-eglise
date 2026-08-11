@@ -42,6 +42,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/mot-de-passe-oublie") ||
     pathname.startsWith("/reinitialiser-mot-de-passe") ||
     pathname.startsWith("/setup") ||
+    pathname.startsWith("/confirmation") ||
     pathname.startsWith("/api/");
 
   // Non authentifié → page protégée : redirige vers la connexion

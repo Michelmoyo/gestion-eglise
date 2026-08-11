@@ -28,13 +28,11 @@ export default function ReinitialiserMotDePassePage() {
   });
 
   useEffect(() => {
-    // Le lien envoyé par email transporte la session sous deux formes
-    // possibles selon le flux Supabase : un fragment d'URL
-    // (#access_token=...&type=recovery, flux implicite, detecte et echange
-    // automatiquement par le client via detectSessionInUrl), ou un parametre
-    // ?code=... (flux PKCE) qui doit etre echange manuellement contre une
-    // session via exchangeCodeForSession -- sans quoi getSession() ne verra
-    // jamais de session et la page affichera "lien invalide" a tort.
+    // La verification du lien (token_hash + type) se fait desormais cote
+    // serveur dans app/auth/confirm/route.ts, qui etablit la session via
+    // cookie avant de rediriger ici -- il ne reste plus qu'a la lire.
+    // Le fragment de hash reste verifie en repli pour un eventuel flux
+    // implicite (#access_token=...&type=recovery).
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const query = new URLSearchParams(window.location.search);
     if (hash.get("error") || query.get("error")) {
@@ -43,15 +41,6 @@ export default function ReinitialiserMotDePassePage() {
     }
 
     const supabase = createClient();
-    const code = query.get("code");
-
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ data, error }) => {
-        setEtat(data.session && !error ? "pret" : "invalide");
-      });
-      return;
-    }
-
     supabase.auth.getSession().then(({ data }) => {
       setEtat(data.session ? "pret" : "invalide");
     });
