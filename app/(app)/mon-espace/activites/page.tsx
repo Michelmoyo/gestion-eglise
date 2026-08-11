@@ -55,7 +55,7 @@ export default async function MesActivitesPage() {
           Mon espace
         </Link>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {!activites?.length ? (
             <EmptyState icon={CalendarDays} message="Aucune activité planifiée." />
           ) : (

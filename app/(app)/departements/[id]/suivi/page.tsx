@@ -83,7 +83,7 @@ export default async function SuiviPage({
         {!listes?.length ? (
           <EmptyState icon={ListChecks} message="Aucune liste de suivi pour ce département." />
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             {listes.map((liste) => {
               const nbActifs = (points ?? []).filter(
                 (p) => p.liste_id === liste.id && p.statut !== "termine"

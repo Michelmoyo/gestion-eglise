@@ -84,7 +84,7 @@ export default async function MesTachesPage() {
         {aucunAcces ? (
           <EmptyState icon={ListChecks} message="Aucune tâche partagée avec vous pour l'instant." />
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             {(listes ?? []).map((liste) => (
               <Link key={liste.id} href={`/departements/${liste.departement_id}/suivi/liste/${liste.id}`}>
                 <Card className="hover:bg-primary/5 hover:border-primary/30 transition-colors">
