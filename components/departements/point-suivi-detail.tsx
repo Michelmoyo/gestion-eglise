@@ -44,6 +44,13 @@ interface Props {
   retirerMembreTacheAction: (ouvrierId: string) => Promise<{ error?: string; success?: boolean }>;
 }
 
+function libellePeriode(debut: string | null, fin: string | null): string | null {
+  if (debut && fin) return `Du ${format.date(debut)} au ${format.date(fin)}`;
+  if (debut) return `À partir du ${format.date(debut)}`;
+  if (fin) return `Jusqu'au ${format.date(fin)}`;
+  return null;
+}
+
 export function PointSuiviDetail({
   departementId,
   point,
@@ -125,35 +132,25 @@ export function PointSuiviDetail({
     });
   }
 
+  const periode = libellePeriode(point.date_debut, point.date_fin);
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        {peutAgir ? (
-          <div className="flex gap-1.5">
-            {STATUTS_POINT_SUIVI.map((s) => (
-              <button
-                key={s.value}
-                type="button"
-                onClick={() => changerStatut(s.value)}
-                disabled={isPending}
-                className={cn(
-                  "text-xs px-3 py-1.5 rounded-full border transition-colors",
-                  point.statut === s.value
-                    ? `border-transparent ${STATUT_POINT_SUIVI_STYLE[s.value]}`
-                    : "border-input text-muted-foreground hover:bg-accent"
-                )}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
+    <div className="space-y-5">
+      {/* Identité : titre + actions de gestion */}
+      <div className="flex items-start justify-between gap-3">
+        {peutGerer ? (
+          <Input
+            value={contenu}
+            onChange={(e) => { setContenu(e.target.value); setSaved(false); }}
+            disabled={isPending}
+            placeholder="Titre de la tâche"
+            className="flex-1 min-w-0 h-auto border-none shadow-none px-0 text-xl font-semibold focus-visible:ring-0"
+          />
         ) : (
-          <span className={cn("text-sm px-3 py-1.5 rounded-full", STATUT_POINT_SUIVI_STYLE[point.statut])}>
-            {STATUTS_POINT_SUIVI.find((s) => s.value === point.statut)?.label}
-          </span>
+          <h1 className="flex-1 min-w-0 text-xl font-semibold">{point.contenu}</h1>
         )}
         {peutGerer && (
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 flex-shrink-0 pt-1.5">
             <MembresSuivi
               membres={membresTache}
               candidats={candidatsTache}
@@ -173,66 +170,93 @@ export function PointSuiviDetail({
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Émis le {format.date(point.date_creation)}
-        {point.statut === "termine" && point.date_resolution ? ` · résolu le ${format.date(point.date_resolution)}` : ""}
-      </p>
+      {/* Métadonnées : statut, période, émission */}
+      <div className="space-y-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {peutAgir ? (
+            <div className="flex gap-1.5 flex-wrap">
+              {STATUTS_POINT_SUIVI.map((s) => (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => changerStatut(s.value)}
+                  disabled={isPending}
+                  className={cn(
+                    "text-xs px-3 py-1.5 rounded-full border transition-colors",
+                    point.statut === s.value
+                      ? `border-transparent ${STATUT_POINT_SUIVI_STYLE[s.value]}`
+                      : "border-input text-muted-foreground hover:bg-accent"
+                  )}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span className={cn("text-sm px-3 py-1.5 rounded-full", STATUT_POINT_SUIVI_STYLE[point.statut])}>
+              {STATUTS_POINT_SUIVI.find((s) => s.value === point.statut)?.label}
+            </span>
+          )}
+          {periode && <span className="text-xs text-muted-foreground">{periode}</span>}
+        </div>
 
-      <form onSubmit={enregistrer} className="space-y-3">
-        <div className="space-y-1">
-          <Label htmlFor="contenu">Titre</Label>
-          <Input
-            id="contenu"
-            value={contenu}
-            onChange={(e) => { setContenu(e.target.value); setSaved(false); }}
-            disabled={!peutGerer || isPending}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => { setDescription(e.target.value); setSaved(false); }}
-            disabled={!peutGerer || isPending}
-            rows={6}
-            placeholder="Détailler ici…"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+        <p className="text-xs text-muted-foreground">
+          Émis le {format.date(point.date_creation)}
+          {point.statut === "termine" && point.date_resolution ? ` · résolu le ${format.date(point.date_resolution)}` : ""}
+        </p>
+      </div>
+
+      {/* Détails : description et planification, modifiables par un manager */}
+      {peutGerer ? (
+        <form onSubmit={enregistrer} className="space-y-3 pt-3 border-t border-border">
           <div className="space-y-1">
-            <Label htmlFor="date_debut">Date de début</Label>
-            <Input
-              id="date_debut"
-              type="date"
-              value={dateDebut}
-              onChange={(e) => { setDateDebut(e.target.value); setSaved(false); }}
-              disabled={!peutGerer || isPending}
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => { setDescription(e.target.value); setSaved(false); }}
+              disabled={isPending}
+              rows={6}
+              placeholder="Détailler ici…"
             />
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="date_fin">Date de fin</Label>
-            <Input
-              id="date_fin"
-              type="date"
-              value={dateFin}
-              onChange={(e) => { setDateFin(e.target.value); setSaved(false); }}
-              disabled={!peutGerer || isPending}
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="date_debut">Date de début</Label>
+              <Input
+                id="date_debut"
+                type="date"
+                value={dateDebut}
+                onChange={(e) => { setDateDebut(e.target.value); setSaved(false); }}
+                disabled={isPending}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="date_fin">Date de fin</Label>
+              <Input
+                id="date_fin"
+                type="date"
+                value={dateFin}
+                onChange={(e) => { setDateFin(e.target.value); setSaved(false); }}
+                disabled={isPending}
+              />
+            </div>
           </div>
-        </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {saved && <p className="text-sm text-green-600">Enregistré.</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {saved && <p className="text-sm text-green-600">Enregistré.</p>}
 
-        {peutGerer && (
           <Button type="submit" disabled={isPending || !contenu.trim()}>
             {isPending ? "Enregistrement…" : "Enregistrer"}
           </Button>
-        )}
-      </form>
+        </form>
+      ) : (
+        point.description && (
+          <p className="text-sm whitespace-pre-wrap pt-3 border-t border-border">{point.description}</p>
+        )
+      )}
 
-      <div className="space-y-2 pt-2 border-t border-border">
+      <div className="space-y-2 pt-3 border-t border-border">
         <Label>Pièce jointe</Label>
         {point.piece_jointe_nom ? (
           <div className="flex items-center gap-2 text-sm">

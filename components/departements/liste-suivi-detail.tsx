@@ -95,6 +95,7 @@ export function ListeSuiviDetail({
   const [filtre, setFiltre] = useState<Filtre>("tous");
 
   const visibles = items.filter((i) => filtre === "tous" || i.statut === filtre);
+  const nbActifs = items.filter((i) => i.statut !== "termine").length;
 
   function enregistrer(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -161,43 +162,57 @@ export function ListeSuiviDetail({
   }
 
   return (
-    <div className="space-y-4">
-      {peutGerer && (
-        <div className="flex justify-end items-center gap-3">
-          {ajouterMembreListeAction && retirerMembreListeAction && (
-            <MembresSuivi
-              membres={membresListe}
-              candidats={candidatsListe}
-              ajouterAction={ajouterMembreListeAction}
-              retirerAction={retirerMembreListeAction}
-            />
-          )}
-          {supprimerListeAction && (
-            <button
-              type="button"
-              onClick={supprimer}
-              disabled={isPending}
-              className="text-muted-foreground hover:text-destructive transition-colors"
-              aria-label="Supprimer la liste"
-              title="Supprimer la liste"
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
-        </div>
-      )}
-
-      {peutGerer && modifierListeAction ? (
-        <form onSubmit={enregistrer} className="space-y-3">
-          <div className="space-y-1">
-            <Label htmlFor="nom">Nom</Label>
+    <div className="space-y-5">
+      {/* Identité : nom + actions de gestion */}
+      <div className="space-y-1.5">
+        <div className="flex items-start justify-between gap-3">
+          {peutGerer && modifierListeAction ? (
             <Input
-              id="nom"
               value={nom}
               onChange={(e) => { setNom(e.target.value); setSaved(false); }}
               disabled={isPending}
+              placeholder="Nom de la liste"
+              className="flex-1 min-w-0 h-auto border-none shadow-none px-0 text-xl font-semibold focus-visible:ring-0"
             />
-          </div>
+          ) : (
+            <h1 className="flex-1 min-w-0 text-xl font-semibold">{liste.nom}</h1>
+          )}
+          {peutGerer && (
+            <div className="flex items-center gap-3 flex-shrink-0 pt-1.5">
+              {ajouterMembreListeAction && retirerMembreListeAction && (
+                <MembresSuivi
+                  membres={membresListe}
+                  candidats={candidatsListe}
+                  ajouterAction={ajouterMembreListeAction}
+                  retirerAction={retirerMembreListeAction}
+                />
+              )}
+              {supprimerListeAction && (
+                <button
+                  type="button"
+                  onClick={supprimer}
+                  disabled={isPending}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  aria-label="Supprimer la liste"
+                  title="Supprimer la liste"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {items.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {nbActifs} tâche{nbActifs > 1 ? "s" : ""} active{nbActifs > 1 ? "s" : ""} sur {items.length}
+          </p>
+        )}
+      </div>
+
+      {/* Description, modifiable par un manager */}
+      {peutGerer && modifierListeAction ? (
+        <form onSubmit={enregistrer} className="space-y-3 pt-3 border-t border-border">
           <div className="space-y-1">
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -216,7 +231,9 @@ export function ListeSuiviDetail({
           </Button>
         </form>
       ) : (
-        liste.description && <p className="text-sm text-muted-foreground">{liste.description}</p>
+        liste.description && (
+          <p className="text-sm text-muted-foreground pt-3 border-t border-border">{liste.description}</p>
+        )
       )}
 
       {peutGerer && changerInclureRapportAction && (
@@ -232,7 +249,7 @@ export function ListeSuiviDetail({
         </label>
       )}
 
-      <div className="pt-2 border-t border-border space-y-3">
+      <div className="pt-3 border-t border-border space-y-3">
         <div className="flex gap-1 flex-wrap">
           {FILTRES.map((f) => (
             <button
