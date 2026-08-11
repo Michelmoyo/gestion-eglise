@@ -83,7 +83,7 @@ export default async function SuiviPage({
         {!listes?.length ? (
           <EmptyState icon={ListChecks} message="Aucune liste de suivi pour ce département." />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {listes.map((liste) => {
               const nbActifs = (points ?? []).filter(
                 (p) => p.liste_id === liste.id && p.statut !== "termine"
