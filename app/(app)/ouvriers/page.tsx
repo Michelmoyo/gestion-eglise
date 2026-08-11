@@ -104,7 +104,7 @@ export default async function OuvriersPage({
                           ? "bg-green-100 text-green-700"
                           : statutAffiche === "suspendu"
                           ? "bg-orange-100 text-orange-700"
-                          : "bg-gray-100 text-gray-500"
+                          : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {format.statut(statutAffiche)}

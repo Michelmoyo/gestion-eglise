@@ -32,7 +32,7 @@ export async function TopBar({ title, prenom }: TopBarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-border px-4 h-14 flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-background border-b border-border px-4 h-14 flex items-center justify-between">
       <div>
         <h1 className="font-semibold text-base leading-tight">{title}</h1>
         {prenom && (

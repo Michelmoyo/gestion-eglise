@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const departementIds = (affectations ?? []).map((a) => a.departement_id);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <main className="pb-20 max-w-lg mx-auto">
         {children}
       </main>

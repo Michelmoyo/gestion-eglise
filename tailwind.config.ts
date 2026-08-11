@@ -48,6 +48,9 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        // Accent de marque reserve aux mises en avant ponctuelles (badges,
+        // mentions speciales) -- pas une couleur de theme a part entiere.
+        gold: "#f4c63a",
         chart: {
           "1": "hsl(var(--chart-1))",
           "2": "hsl(var(--chart-2))",

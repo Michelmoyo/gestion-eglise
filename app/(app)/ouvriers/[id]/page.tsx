@@ -91,7 +91,7 @@ export default async function OuvrierDetailPage({
                 className={`text-xs px-2 py-0.5 rounded-full ${
                   ouvrier.statut === "actif"
                     ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-500"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
                 {format.statut(ouvrier.statut)}
@@ -140,7 +140,7 @@ export default async function OuvrierDetailPage({
                           ? "bg-green-100 text-green-700"
                           : a.statut === "suspendu"
                           ? "bg-orange-100 text-orange-700"
-                          : "bg-gray-100 text-gray-500"
+                          : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {format.statut(a.statut)}

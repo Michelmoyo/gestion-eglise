@@ -190,7 +190,7 @@ export default async function RapportDocumentPage({
     // max-w-lg (~512px) pense pour les ecrans "app mobile" — beaucoup trop
     // etroit pour ce document (860px). On en sort volontairement ici.
     <div
-      className="min-h-screen bg-gray-50 py-6 px-4"
+      className="min-h-screen bg-background py-6 px-4"
       style={{ width: "100vw", marginLeft: "calc(50% - 50vw)" }}
     >
       <div className="max-w-[860px] mx-auto flex items-center justify-between mb-4 print:hidden">
