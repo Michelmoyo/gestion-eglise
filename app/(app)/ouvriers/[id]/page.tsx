@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { format } from "@/lib/format";
+import { RenvoyerInvitationButton } from "@/components/ouvriers/renvoyer-invitation-button";
 
 export default async function OuvrierDetailPage({
   params,
@@ -99,6 +100,18 @@ export default async function OuvrierDetailPage({
             </div>
           </CardContent>
         </Card>
+
+        {!ouvrier.auth_user_id && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="pt-4 space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Cet ouvrier n&apos;a pas encore activé son compte. Si le lien reçu par
+                email est expiré ou invalide, renvoyez-en un nouveau.
+              </p>
+              <RenvoyerInvitationButton ouvrierId={id} />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Infos */}
         <Card>

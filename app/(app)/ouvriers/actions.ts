@@ -67,6 +67,35 @@ export async function creerOuvrier(formData: FormData) {
   redirect("/ouvriers");
 }
 
+// Le lien d'invitation Supabase est a usage unique et expire (parfois
+// consomme prematurement par un scanneur de liens cote messagerie) -- cette
+// action permet de renvoyer une invitation fraiche sur la meme fiche, sans
+// recreer l'ouvrier (email deja pris par la fiche existante de toute facon).
+export async function renvoyerInvitation(id: string) {
+  const { supabase } = await assertPilotage();
+
+  const { data: ouvrier } = await supabase
+    .from("ouvriers")
+    .select("email, auth_user_id")
+    .eq("id", id)
+    .single();
+
+  if (!ouvrier) return { error: "Ouvrier introuvable." };
+  if (ouvrier.auth_user_id) {
+    return { error: "Ce compte est déjà activé, l'invitation ne peut plus être renvoyée." };
+  }
+
+  const admin = createAdminClient();
+  const origin = await getOrigin();
+  const { error } = await admin.auth.admin.inviteUserByEmail(ouvrier.email, {
+    redirectTo: `${origin}/reinitialiser-mot-de-passe`,
+  });
+
+  if (error) return { error: "Erreur lors de l'envoi de l'invitation." };
+
+  return { success: true };
+}
+
 export async function modifierOuvrier(id: string, formData: FormData) {
   const { supabase, ouvrierId } = await assertPilotage();
 
