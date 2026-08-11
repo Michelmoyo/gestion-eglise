@@ -42,7 +42,7 @@ export default async function CultesPage() {
           </Link>
         )}
 
-        <div className="space-y-16">
+        <div className="flex flex-col gap-16">
           {!cultes?.length && (
             <EmptyState icon={Church} message="Aucun culte enregistré." />
           )}

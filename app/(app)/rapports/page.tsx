@@ -37,7 +37,7 @@ export default async function RapportsPage() {
             Choisissez un département pour voir ses rapports.
           </p>
 
-          <div className="space-y-16">
+          <div className="flex flex-col gap-16">
             {!departements?.length ? (
               <EmptyState icon={Building2} message="Aucun département créé." />
             ) : (

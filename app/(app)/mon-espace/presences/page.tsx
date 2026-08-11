@@ -47,7 +47,7 @@ export default async function MesPresencesPage() {
         {!presences.length ? (
           <p className="text-sm text-muted-foreground">Aucune présence enregistrée ce mois.</p>
         ) : (
-          <div className="space-y-16">
+          <div className="flex flex-col gap-16">
             {presences.map((p) => {
               const href =
                 p.type === "culte"
