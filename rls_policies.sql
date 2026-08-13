@@ -144,6 +144,25 @@ create policy ouvriers_update on ouvriers for update using (
 );
 -- Pas de policy DELETE : la desactivation passe par UPDATE du champ "statut".
 
+-- Un ouvrier ne peut pas modifier sa propre fiche via UPDATE direct
+-- (ouvriers_update ci-dessus, reserve au pasteur/assistant) -- cette RPC
+-- l'autorise a modifier UNIQUEMENT sa propre photo_url.
+create or replace function rpc_definir_photo_profil(p_photo_url text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update ouvriers
+  set photo_url = p_photo_url
+  where id = fn_ouvrier_id_courant();
+end;
+$$;
+
+revoke execute on function rpc_definir_photo_profil(text) from public;
+grant execute on function rpc_definir_photo_profil(text) to authenticated;
+
 -- ----------------------------------------------------------------------------
 -- DEPARTEMENTS
 -- ----------------------------------------------------------------------------

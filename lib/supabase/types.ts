@@ -596,6 +596,10 @@ export interface Database {
         Args: { p_affectation_id: string };
         Returns: void;
       };
+      rpc_definir_photo_profil: {
+        Args: { p_photo_url: string };
+        Returns: void;
+      };
     };
   };
 }

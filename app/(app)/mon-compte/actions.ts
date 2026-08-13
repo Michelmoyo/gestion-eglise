@@ -35,10 +35,12 @@ export async function mettreAJourPhoto(formData: FormData) {
   const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(chemin);
   const photoUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
 
-  const { error: updateError } = await supabase
-    .from("ouvriers")
-    .update({ photo_url: photoUrl })
-    .eq("id", moi.id);
+  // Un ouvrier ne peut pas modifier sa propre fiche via un UPDATE direct
+  // (reserve au pasteur/assistant) -- cette RPC dediee l'autorise à changer
+  // uniquement sa propre photo_url.
+  const { error: updateError } = await supabase.rpc("rpc_definir_photo_profil", {
+    p_photo_url: photoUrl,
+  });
 
   if (updateError) return { error: `Erreur lors de l'enregistrement : ${updateError.message}` };
 
