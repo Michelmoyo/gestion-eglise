@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { Camera } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AvatarOuvrier } from "@/components/ouvriers/avatar-ouvrier";
 import { mettreAJourPhoto } from "@/app/(app)/mon-compte/actions";
 
@@ -13,30 +14,45 @@ interface Props {
 
 export function PhotoProfilForm({ prenom, nom, photoUrl }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [fichierChoisi, setFichierChoisi] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(photoUrl);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [enregistre, setEnregistre] = useState(false);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const fichier = e.target.files?.[0];
     if (!fichier) return;
 
-    const previewLocal = URL.createObjectURL(fichier);
-    setPreview(previewLocal);
+    setFichierChoisi(fichier);
+    setPreview(URL.createObjectURL(fichier));
     setError(null);
+    setEnregistre(false);
+  }
+
+  function annuler() {
+    setFichierChoisi(null);
+    setPreview(photoUrl);
+    setError(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  function enregistrer() {
+    if (!fichierChoisi) return;
 
     const fd = new FormData();
-    fd.set("photo", fichier);
+    fd.set("photo", fichierChoisi);
 
     startTransition(async () => {
+      setError(null);
       const res = await mettreAJourPhoto(fd);
       if (res.error) {
         setError(res.error);
-        setPreview(photoUrl);
-      } else if (res.photoUrl) {
-        setPreview(res.photoUrl);
+      } else {
+        if (res.photoUrl) setPreview(res.photoUrl);
+        setFichierChoisi(null);
+        setEnregistre(true);
       }
-      URL.revokeObjectURL(previewLocal);
     });
   }
 
@@ -61,7 +77,21 @@ export function PhotoProfilForm({ prenom, nom, photoUrl }: Props) {
           onChange={handleFileChange}
         />
       </div>
-      {isPending && <p className="text-xs text-muted-foreground">Envoi…</p>}
+
+      {fichierChoisi && (
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={annuler}>
+            Annuler
+          </Button>
+          <Button type="button" size="sm" disabled={isPending} onClick={enregistrer}>
+            {isPending ? "Enregistrement…" : "Enregistrer"}
+          </Button>
+        </div>
+      )}
+
+      {!fichierChoisi && enregistre && (
+        <p className="text-xs text-muted-foreground">Photo enregistrée.</p>
+      )}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
