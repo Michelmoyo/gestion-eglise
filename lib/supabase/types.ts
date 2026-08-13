@@ -141,6 +141,7 @@ export interface Database {
           statut: StatutAffectationEnum;
           date_affectation: string;
           date_changement_statut: string | null;
+          date_fin_suspension: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -152,6 +153,7 @@ export interface Database {
           statut?: StatutAffectationEnum;
           date_affectation?: string;
           date_changement_statut?: string | null;
+          date_fin_suspension?: string | null;
         };
         Update: {
           id?: string;
@@ -161,6 +163,7 @@ export interface Database {
           statut?: StatutAffectationEnum;
           date_affectation?: string;
           date_changement_statut?: string | null;
+          date_fin_suspension?: string | null;
         };
         Relationships: [];
       };
@@ -522,6 +525,7 @@ export interface Database {
           statut: StatutAffectationEnum;
           date_affectation: string;
           date_changement_statut: string | null;
+          date_fin_suspension: string | null;
         };
         Relationships: [];
       };

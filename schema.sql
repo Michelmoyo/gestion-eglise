@@ -140,6 +140,7 @@ create table affectations (
   statut                 statut_affectation_enum not null default 'actif',
   date_affectation       date not null default current_date,
   date_changement_statut date,
+  date_fin_suspension    date,
   created_at             timestamptz not null default now(),
   updated_at             timestamptz not null default now(),
   unique (ouvrier_id, departement_id)
@@ -904,7 +905,8 @@ select
   a.role,
   a.statut,
   a.date_affectation,
-  a.date_changement_statut
+  a.date_changement_statut,
+  a.date_fin_suspension
 from affectations a
 join ouvriers o on o.id = a.ouvrier_id
 where a.statut in ('actif', 'suspendu');

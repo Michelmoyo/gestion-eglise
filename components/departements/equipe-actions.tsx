@@ -40,6 +40,9 @@ export function EquipeActions({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showRoles, setShowRoles] = useState(false);
+  const [showSuspension, setShowSuspension] = useState(false);
+  const [indeterminee, setIndeterminee] = useState(true);
+  const [dateFin, setDateFin] = useState("");
 
   const peutGerer = isPilotage || isPresident;
 
@@ -57,8 +60,11 @@ export function EquipeActions({
         router.refresh();
       }
       setShowRoles(false);
+      setShowSuspension(false);
     });
   }
+
+  const aujourdHui = new Date().toISOString().split("T")[0];
 
   return (
     <div className="space-y-2">
@@ -98,16 +104,69 @@ export function EquipeActions({
         </div>
       )}
 
-      {statut === "actif" && (
+      {statut === "actif" && !showSuspension && (
         <Button
           type="button"
           variant="outline"
           className="w-full text-orange-600 border-orange-600/30 hover:bg-orange-500/10 hover:text-orange-600"
           disabled={isPending}
-          onClick={() => handle(() => suspendreOuvrier(departementId, affectationId))}
+          onClick={() => setShowSuspension(true)}
         >
           Suspendre
         </Button>
+      )}
+
+      {statut === "actif" && showSuspension && (
+        <div className="border border-orange-600/30 rounded-md p-3 space-y-2">
+          <p className="text-xs font-medium text-orange-600">Suspendre ce membre</p>
+          <label className="flex items-center gap-2 text-xs cursor-pointer">
+            <input
+              type="checkbox"
+              checked={indeterminee}
+              onChange={(e) => setIndeterminee(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-input accent-primary cursor-pointer"
+            />
+            Durée indéterminée
+          </label>
+          {!indeterminee && (
+            <input
+              type="date"
+              value={dateFin}
+              min={aujourdHui}
+              onChange={(e) => setDateFin(e.target.value)}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          )}
+          <div className="flex gap-2 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              disabled={isPending}
+              onClick={() => {
+                setShowSuspension(false);
+                setIndeterminee(true);
+                setDateFin("");
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="flex-1"
+              disabled={isPending || (!indeterminee && !dateFin)}
+              onClick={() =>
+                handle(() =>
+                  suspendreOuvrier(departementId, affectationId, indeterminee ? null : dateFin)
+                )
+              }
+            >
+              Confirmer
+            </Button>
+          </div>
+        </div>
       )}
 
       {statut === "suspendu" && (

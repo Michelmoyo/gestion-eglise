@@ -560,7 +560,11 @@ revoke execute on function rpc_assigner_role(uuid, role_departement_enum) from p
 grant execute on function rpc_assigner_role(uuid, role_departement_enum) to authenticated;
 
 -- Suspension temporaire : pasteur, assistant, ou president de ce departement.
-create or replace function rpc_suspendre_ouvrier(p_affectation_id uuid)
+-- p_date_fin_suspension optionnelle -- absente/nulle = duree indeterminee.
+create or replace function rpc_suspendre_ouvrier(
+  p_affectation_id uuid,
+  p_date_fin_suspension date default null
+)
 returns void
 language plpgsql
 security definer
@@ -579,14 +583,24 @@ begin
     raise exception 'Non autorise a suspendre cet ouvrier.';
   end if;
 
+  if p_date_fin_suspension is not null and p_date_fin_suspension < current_date then
+    raise exception 'La date de fin de suspension ne peut pas etre dans le passe.';
+  end if;
+
   update affectations
-    set statut = 'suspendu', date_changement_statut = current_date
+    set statut = 'suspendu',
+        date_changement_statut = current_date,
+        date_fin_suspension = p_date_fin_suspension
     where id = p_affectation_id;
 end;
 $$;
 
-revoke execute on function rpc_suspendre_ouvrier(uuid) from public;
-grant execute on function rpc_suspendre_ouvrier(uuid) to authenticated;
+revoke execute on function rpc_suspendre_ouvrier(uuid, date) from public;
+grant execute on function rpc_suspendre_ouvrier(uuid, date) to authenticated;
+
+-- L'ancienne signature (sans date de fin) doit etre supprimee explicitement :
+-- create or replace ne change pas la signature d'une fonction existante.
+drop function if exists rpc_suspendre_ouvrier(uuid);
 
 -- Reactivation : memes autorises que la suspension.
 create or replace function rpc_reactiver_ouvrier(p_affectation_id uuid)
@@ -609,7 +623,7 @@ begin
   end if;
 
   update affectations
-    set statut = 'actif', date_changement_statut = current_date
+    set statut = 'actif', date_changement_statut = current_date, date_fin_suspension = null
     where id = p_affectation_id;
 end;
 $$;
@@ -631,7 +645,7 @@ begin
   end if;
 
   update affectations
-    set statut = 'quitte', date_changement_statut = current_date
+    set statut = 'quitte', date_changement_statut = current_date, date_fin_suspension = null
     where id = p_affectation_id;
 end;
 $$;

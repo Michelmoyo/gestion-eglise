@@ -84,12 +84,17 @@ export async function assignerRole(
   return { success: true };
 }
 
-export async function suspendreOuvrier(departementId: string, affectationId: string) {
+export async function suspendreOuvrier(
+  departementId: string,
+  affectationId: string,
+  dateFinSuspension: string | null
+) {
   const { supabase, peutGerer } = await getContexte(departementId);
   if (!peutGerer) return { error: "Accès refusé." };
 
   const { error } = await supabase.rpc("rpc_suspendre_ouvrier", {
     p_affectation_id: affectationId,
+    p_date_fin_suspension: dateFinSuspension,
   });
 
   if (error) return { error: error.message };

@@ -51,7 +51,7 @@ export default async function MembreEquipeDetailPage({
 
   const { data: affectation } = await supabase
     .from("affectations")
-    .select("id, role, statut, date_affectation, date_changement_statut, ouvrier_id")
+    .select("id, role, statut, date_affectation, date_changement_statut, date_fin_suspension, ouvrier_id")
     .eq("id", affectationId)
     .eq("departement_id", id)
     .single();
@@ -116,6 +116,16 @@ export default async function MembreEquipeDetailPage({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Suspendu depuis</span>
                 <span className="font-medium">{format.date(affectation.date_changement_statut)}</span>
+              </div>
+            )}
+            {affectation.statut === "suspendu" && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Jusqu&apos;au</span>
+                <span className="font-medium">
+                  {affectation.date_fin_suspension
+                    ? format.date(affectation.date_fin_suspension)
+                    : "Durée indéterminée"}
+                </span>
               </div>
             )}
           </CardContent>
