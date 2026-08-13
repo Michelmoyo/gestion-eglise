@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Plus, Search, Users } from "lucide-react";
 import { format } from "@/lib/format";
+import { AvatarOuvrier } from "@/components/ouvriers/avatar-ouvrier";
 
 export default async function OuvriersPage({
   searchParams,
@@ -29,7 +30,7 @@ export default async function OuvriersPage({
 
   let query = supabase
     .from("ouvriers")
-    .select("id, nom, postnom, prenom, email, statut, role_global, date_integration")
+    .select("id, nom, postnom, prenom, email, photo_url, statut, role_global, date_integration")
     .order("nom", { ascending: true });
 
   if (q) {
@@ -88,9 +89,7 @@ export default async function OuvriersPage({
               <Link key={o.id} href={`/ouvriers/${o.id}`}>
                 <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                   <CardContent className="p-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
-                      {o.prenom[0]}{o.nom[0]}
-                    </div>
+                    <AvatarOuvrier photoUrl={o.photo_url} prenom={o.prenom} nom={o.nom} size={40} />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">
                         {o.prenom} {o.postnom ? `${o.postnom} ` : ""}{o.nom}

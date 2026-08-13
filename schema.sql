@@ -369,6 +369,16 @@ values ('pieces-jointes', 'pieces-jointes', false)
 on conflict (id) do nothing;
 
 -- ----------------------------------------------------------------------------
+-- STOCKAGE DE LA PHOTO DE PROFIL
+-- Bucket public : chaque ouvrier peut definir sa propre photo. Chemin
+-- "<ouvrier_id>/avatar" -- le premier segment sert d'ouvrier_id pour les
+-- policies RLS.
+-- ----------------------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+-- ----------------------------------------------------------------------------
 -- COMMENTAIRES SUR UN POINT DE SUIVI
 -- Fil de discussion sur la fiche detail, reserve aux responsables du
 -- departement et au pilotage (meme sensibilite que points_suivi). Immuable
@@ -902,6 +912,7 @@ select
   a.departement_id,
   o.id as ouvrier_id,
   o.nom, o.postnom, o.prenom,
+  o.photo_url,
   a.role,
   a.statut,
   a.date_affectation,

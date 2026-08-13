@@ -463,6 +463,40 @@ create policy pieces_jointes_delete on storage.objects for delete using (
 );
 
 -- ----------------------------------------------------------------------------
+-- STOCKAGE : PHOTOS DE PROFIL
+-- Bucket public "avatars" ; chemin "<ouvrier_id>/avatar" -- le premier
+-- segment sert d'ouvrier_id pour verifier l'acces. Chaque ouvrier gere sa
+-- propre photo, le pilotage peut gerer celle de n'importe qui.
+-- ----------------------------------------------------------------------------
+create policy avatars_select on storage.objects for select using (
+  bucket_id = 'avatars'
+);
+
+create policy avatars_insert on storage.objects for insert with check (
+  bucket_id = 'avatars'
+  and (
+    fn_is_pasteur_ou_assistant()
+    or (storage.foldername(name))[1] = fn_ouvrier_id_courant()::text
+  )
+);
+
+create policy avatars_update on storage.objects for update using (
+  bucket_id = 'avatars'
+  and (
+    fn_is_pasteur_ou_assistant()
+    or (storage.foldername(name))[1] = fn_ouvrier_id_courant()::text
+  )
+);
+
+create policy avatars_delete on storage.objects for delete using (
+  bucket_id = 'avatars'
+  and (
+    fn_is_pasteur_ou_assistant()
+    or (storage.foldername(name))[1] = fn_ouvrier_id_courant()::text
+  )
+);
+
+-- ----------------------------------------------------------------------------
 -- COMMENTAIRES SUR UN POINT DE SUIVI
 -- Meme regle d'acces que la tache concernee (fn_peut_voir_tache) : les
 -- responsables du departement et le pilotage, ainsi que les membres ajoutes

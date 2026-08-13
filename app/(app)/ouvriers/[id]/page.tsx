@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { format } from "@/lib/format";
 import { RenvoyerInvitationButton } from "@/components/ouvriers/renvoyer-invitation-button";
+import { AvatarOuvrier } from "@/components/ouvriers/avatar-ouvrier";
 
 export default async function OuvrierDetailPage({
   params,
@@ -81,9 +82,7 @@ export default async function OuvrierDetailPage({
         {/* En-tête */}
         <Card>
           <CardContent className="pt-6 flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">
-              {ouvrier.prenom[0]}{ouvrier.nom[0]}
-            </div>
+            <AvatarOuvrier photoUrl={ouvrier.photo_url} prenom={ouvrier.prenom} nom={ouvrier.nom} size={64} />
             <div>
               <h2 className="text-xl font-semibold">
                 {ouvrier.prenom} {ouvrier.postnom ? `${ouvrier.postnom} ` : ""}{ouvrier.nom}

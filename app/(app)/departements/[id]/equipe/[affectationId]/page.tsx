@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import { format } from "@/lib/format";
 import { EquipeActions } from "@/components/departements/equipe-actions";
+import { AvatarOuvrier } from "@/components/ouvriers/avatar-ouvrier";
 
 export default async function MembreEquipeDetailPage({
   params,
@@ -60,7 +61,7 @@ export default async function MembreEquipeDetailPage({
 
   const { data: ouvrier } = await supabase
     .from("ouvriers")
-    .select("prenom, postnom, nom, email")
+    .select("prenom, postnom, nom, email, photo_url")
     .eq("id", affectation.ouvrier_id)
     .single();
 
@@ -81,9 +82,7 @@ export default async function MembreEquipeDetailPage({
 
         <Card>
           <CardContent className="pt-6 flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold flex-shrink-0">
-              {ouvrier.prenom[0]}{ouvrier.nom[0]}
-            </div>
+            <AvatarOuvrier photoUrl={ouvrier.photo_url} prenom={ouvrier.prenom} nom={ouvrier.nom} size={64} />
             <div className="min-w-0">
               <h2 className="text-xl font-semibold truncate">
                 {ouvrier.prenom} {ouvrier.postnom ? `${ouvrier.postnom} ` : ""}{ouvrier.nom}

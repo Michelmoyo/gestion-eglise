@@ -521,6 +521,7 @@ export interface Database {
           nom: string;
           postnom: string | null;
           prenom: string;
+          photo_url: string | null;
           role: RoleDepartementEnum;
           statut: StatutAffectationEnum;
           date_affectation: string;

@@ -5,6 +5,7 @@ import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, Clock, Church, ChevronRight, ListChecks } from "lucide-react";
 import { format } from "@/lib/format";
+import { AvatarOuvrier } from "@/components/ouvriers/avatar-ouvrier";
 
 export default async function MonEspacePage() {
   const supabase = await createClient();
@@ -92,9 +93,7 @@ export default async function MonEspacePage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
-                {ouvrier.prenom[0]}{ouvrier.nom[0]}
-              </div>
+              <AvatarOuvrier photoUrl={ouvrier.photo_url} prenom={ouvrier.prenom} nom={ouvrier.nom} size={56} />
               <div>
                 <p className="font-semibold text-lg">
                   {ouvrier.prenom} {ouvrier.nom}
