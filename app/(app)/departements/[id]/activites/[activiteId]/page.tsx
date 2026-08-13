@@ -73,7 +73,7 @@ export default async function ActiviteDetailPage({
     <>
       <TopBar title={activite.titre} />
 
-      <div className="p-4 space-y-4">
+      <div className="p-4 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <Link
             href={`/departements/${departementId}/activites`}
