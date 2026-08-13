@@ -30,7 +30,7 @@ export async function mettreAJourPhoto(formData: FormData) {
     .from("avatars")
     .upload(chemin, fichier, { upsert: true, contentType: fichier.type });
 
-  if (uploadError) return { error: "Erreur lors de l'envoi de la photo." };
+  if (uploadError) return { error: `Erreur lors de l'envoi de la photo : ${uploadError.message}` };
 
   const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(chemin);
   const photoUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
@@ -40,7 +40,7 @@ export async function mettreAJourPhoto(formData: FormData) {
     .update({ photo_url: photoUrl })
     .eq("id", moi.id);
 
-  if (updateError) return { error: "Erreur lors de l'enregistrement." };
+  if (updateError) return { error: `Erreur lors de l'enregistrement : ${updateError.message}` };
 
   revalidatePath("/mon-compte");
   revalidatePath("/mon-espace");
