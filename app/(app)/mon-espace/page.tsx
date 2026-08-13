@@ -3,9 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, CheckCircle2, Clock, Church, ChevronRight, ListChecks } from "lucide-react";
+import { CalendarDays, Clock, Church, ChevronRight, ListChecks } from "lucide-react";
 import { format } from "@/lib/format";
-import { getPresencesMois } from "@/lib/presences";
 
 export default async function MonEspacePage() {
   const supabase = await createClient();
@@ -60,15 +59,6 @@ export default async function MonEspacePage() {
     : { data: [] };
 
   const prochainesActivites = prochainesActivitesData ?? [];
-
-  // Présences ce mois (activités de département + cultes)
-  const debutMois = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
-
-  const presencesMois = await getPresencesMois(supabase, ouvrier.id, debutMois);
-  const totalPresences = presencesMois.length;
-  const nbPresent = presencesMois.filter((p) => p.statut === "present").length;
 
   // Prochains cultes (evenement d'eglise, distinct des activites de departement)
   const { data: prochainsCultesData } = await supabase
@@ -143,33 +133,6 @@ export default async function MonEspacePage() {
             </Card>
           </Link>
         )}
-
-        {/* Présences ce mois */}
-        <Link href="/mon-espace/presences">
-          <Card className="hover:bg-primary/5 transition-colors">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 size={16} />
-                  Présences ce mois
-                </span>
-                <ChevronRight size={16} />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {totalPresences === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucune activité ce mois.</p>
-              ) : (
-                <p className="text-2xl font-bold">
-                  {nbPresent}{" "}
-                  <span className="text-base font-normal text-muted-foreground">
-                    sur {totalPresences} activité{totalPresences > 1 ? "s" : ""}
-                  </span>
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </Link>
 
         {/* Prochains cultes */}
         <Card>
