@@ -36,18 +36,21 @@ create policy avatars_delete on storage.objects for delete using (
 );
 
 -- La fiche/liste "Equipe" d'un departement affiche aussi la photo de profil.
+-- photo_url ajoutee en derniere position : CREATE OR REPLACE VIEW ne peut
+-- pas inserer une colonne au milieu d'une vue existante (uniquement en
+-- ajouter a la fin), sans quoi Postgres croit qu'on renomme une colonne.
 create or replace view v_effectifs_departement as
 select
   a.id as affectation_id,
   a.departement_id,
   o.id as ouvrier_id,
   o.nom, o.postnom, o.prenom,
-  o.photo_url,
   a.role,
   a.statut,
   a.date_affectation,
   a.date_changement_statut,
-  a.date_fin_suspension
+  a.date_fin_suspension,
+  o.photo_url
 from affectations a
 join ouvriers o on o.id = a.ouvrier_id
 where a.statut in ('actif', 'suspendu');

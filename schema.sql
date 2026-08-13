@@ -912,12 +912,12 @@ select
   a.departement_id,
   o.id as ouvrier_id,
   o.nom, o.postnom, o.prenom,
-  o.photo_url,
   a.role,
   a.statut,
   a.date_affectation,
   a.date_changement_statut,
-  a.date_fin_suspension
+  a.date_fin_suspension,
+  o.photo_url
 from affectations a
 join ouvriers o on o.id = a.ouvrier_id
 where a.statut in ('actif', 'suspendu');
