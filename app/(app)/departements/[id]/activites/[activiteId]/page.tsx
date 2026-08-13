@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Users } from "lucide-react";
 import { format } from "@/lib/format";
 
 export default async function ActiviteDetailPage({
@@ -129,6 +129,24 @@ export default async function ActiviteDetailPage({
             )}
           </CardContent>
         </Card>
+
+        {/* Saisie des présences : réservée à la gestion du département, pas à
+            la simple consultation de l'activité. */}
+        {peutGerer && (
+          <Link href={`/departements/${departementId}/activites/${activiteId}/presences`}>
+            <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
+              <CardContent className="p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Users size={18} className="text-primary" />
+                  </div>
+                  <p className="font-semibold text-sm">Présences</p>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+              </CardContent>
+            </Card>
+          </Link>
+        )}
       </div>
     </>
   );
