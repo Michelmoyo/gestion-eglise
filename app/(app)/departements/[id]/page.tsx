@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { format } from "@/lib/format";
@@ -280,45 +280,6 @@ export default async function DepartementDetailPage({
             </>
           )}
         </div>
-
-        {/* Liste équipe rapide */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Équipe</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {!effectifs?.length ? (
-              <p className="text-sm text-muted-foreground">Aucun membre.</p>
-            ) : (
-              effectifs.map((e) => (
-                <div key={e.ouvrier_id} className="flex items-center justify-between text-sm">
-                  <div>
-                    <span className="font-medium">{e.prenom} {e.nom}</span>
-                    <span className="text-xs text-muted-foreground ml-2">
-                      {format.roleDepartement(e.role)}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        e.statut === "actif"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-orange-100 text-orange-700"
-                      }`}
-                    >
-                      {format.statut(e.statut)}
-                    </span>
-                    {e.statut === "suspendu" && e.date_changement_statut && (
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        depuis {format.date(e.date_changement_statut)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
       </div>
     </>
   );
