@@ -2,10 +2,10 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, UserPlus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ChevronLeft, UserPlus, Users } from "lucide-react";
 import { format } from "@/lib/format";
-import { EquipeActions } from "@/components/departements/equipe-actions";
 
 export default async function EquipePage({
   params,
@@ -57,9 +57,6 @@ export default async function EquipePage({
     .order("statut", { ascending: true })
     .order("nom", { ascending: true });
 
-  const actifs = (effectifs ?? []).filter((e) => e.statut === "actif");
-  const suspendus = (effectifs ?? []).filter((e) => e.statut === "suspendu");
-
   return (
     <>
       <TopBar title="Équipe" />
@@ -84,80 +81,37 @@ export default async function EquipePage({
           )}
         </div>
 
-        {/* Membres actifs */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">
-              Membres actifs ({actifs.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="divide-y divide-border">
-            {!actifs.length ? (
-              <p className="text-sm text-muted-foreground py-2">Aucun membre actif.</p>
-            ) : (
-              actifs.map((e) => (
-                <div key={e.ouvrier_id} className="py-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-sm">
-                        {e.prenom} {e.nom}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format.roleDepartement(e.role)} · depuis {format.date(e.date_affectation)}
-                      </p>
-                    </div>
-                    <EquipeActions
-                      departementId={id}
-                      affectationId={e.affectation_id}
-                      statut="actif"
-                      roleActuel={e.role}
-                      isPilotage={isPilotage}
-                      isPresident={isPresident}
-                    />
+        <div className="flex flex-col gap-4 pt-2">
+          {!effectifs?.length && <EmptyState icon={Users} message="Aucun membre." />}
+          {(effectifs ?? []).map((e) => (
+            <Link key={e.ouvrier_id} href={`/departements/${id}/equipe/${e.affectation_id}`}>
+              <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+                    {e.prenom[0]}{e.nom[0]}
                   </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Membres suspendus */}
-        {suspendus.length > 0 && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-orange-600">
-                Suspendus ({suspendus.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="divide-y divide-border">
-              {suspendus.map((e) => (
-                <div key={e.ouvrier_id} className="py-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-sm">
-                        {e.prenom} {e.nom}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format.roleDepartement(e.role)}
-                        {e.date_changement_statut
-                          ? ` · suspendu le ${format.date(e.date_changement_statut)}`
-                          : ""}
-                      </p>
-                    </div>
-                    <EquipeActions
-                      departementId={id}
-                      affectationId={e.affectation_id}
-                      statut="suspendu"
-                      roleActuel={e.role}
-                      isPilotage={isPilotage}
-                      isPresident={isPresident}
-                    />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">
+                      {e.prenom} {e.nom}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {format.roleDepartement(e.role)} · depuis {format.date(e.date_affectation)}
+                    </p>
                   </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                      e.statut === "actif"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-orange-100 text-orange-700"
+                    }`}
+                  >
+                    {format.statut(e.statut)}
+                  </span>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
     </>
   );

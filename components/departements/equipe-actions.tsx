@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   assignerRole,
@@ -34,6 +36,7 @@ export function EquipeActions({
   isPilotage,
   isPresident,
 }: Props) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showRoles, setShowRoles] = useState(false);
@@ -42,37 +45,41 @@ export function EquipeActions({
 
   if (!peutGerer) return null;
 
-  function handle(fn: () => Promise<{ error?: string; success?: boolean }>) {
+  function handle(fn: () => Promise<{ error?: string; success?: boolean }>, retourListe = false) {
     startTransition(async () => {
       setError(null);
       const res = await fn();
-      if (res.error) setError(res.error);
+      if (res.error) {
+        setError(res.error);
+      } else if (retourListe) {
+        router.push(`/departements/${departementId}/equipe`);
+      } else {
+        router.refresh();
+      }
       setShowRoles(false);
     });
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      {/* Changer de rôle */}
+    <div className="space-y-2">
       {statut === "actif" && (
         <div className="relative">
           <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs h-7 px-2"
+            type="button"
+            variant="outline"
+            className="w-full justify-between"
             onClick={() => setShowRoles((v) => !v)}
             disabled={isPending}
           >
-            Rôle ▾
+            Rôle : {ROLES.find((r) => r.value === roleActuel)?.label ?? roleActuel}
+            <ChevronDown size={16} className="text-muted-foreground" />
           </Button>
           {showRoles && (
-            <div className="absolute right-0 top-8 z-10 bg-popover border border-border rounded-md shadow-md min-w-[140px]">
-              {ROLES.filter((r) => {
-                if (r.value === "president" && !isPilotage) return false;
-                return true;
-              }).map((r) => (
+            <div className="absolute inset-x-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md overflow-hidden">
+              {ROLES.filter((r) => r.value !== "president" || isPilotage).map((r) => (
                 <button
                   key={r.value}
+                  type="button"
                   className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
                     r.value === roleActuel ? "font-semibold text-primary" : ""
                   }`}
@@ -91,12 +98,11 @@ export function EquipeActions({
         </div>
       )}
 
-      {/* Suspendre */}
       {statut === "actif" && (
         <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs h-7 px-2 text-orange-600 hover:text-orange-700"
+          type="button"
+          variant="outline"
+          className="w-full text-orange-600 border-orange-600/30 hover:bg-orange-500/10 hover:text-orange-600"
           disabled={isPending}
           onClick={() => handle(() => suspendreOuvrier(departementId, affectationId))}
         >
@@ -104,12 +110,11 @@ export function EquipeActions({
         </Button>
       )}
 
-      {/* Réactiver */}
       {statut === "suspendu" && (
         <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs h-7 px-2 text-green-600 hover:text-green-700"
+          type="button"
+          variant="outline"
+          className="w-full text-green-600 border-green-600/30 hover:bg-green-500/10 hover:text-green-600"
           disabled={isPending}
           onClick={() => handle(() => reactiverOuvrier(departementId, affectationId))}
         >
@@ -117,23 +122,22 @@ export function EquipeActions({
         </Button>
       )}
 
-      {/* Marquer départ définitif — pasteur/assistant uniquement */}
       {isPilotage && (
         <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs h-7 px-2 text-destructive hover:text-destructive"
+          type="button"
+          variant="outline"
+          className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
           disabled={isPending}
           onClick={() => {
             if (!confirm("Marquer ce départ comme définitif ?")) return;
-            handle(() => marquerQuitte(departementId, affectationId));
+            handle(() => marquerQuitte(departementId, affectationId), true);
           }}
         >
-          Départ définitif
+          Marquer le départ définitif
         </Button>
       )}
 
-      {error && <p className="text-xs text-destructive text-right">{error}</p>}
+      {error && <p className="text-xs text-destructive text-center">{error}</p>}
     </div>
   );
 }
