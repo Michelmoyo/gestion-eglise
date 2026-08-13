@@ -48,7 +48,11 @@ export default async function CaissePage({
   const rolesCaisse = ["president", "vice_president", "tresorier"];
   const peutEcrire = isPilotage || rolesCaisse.includes(monAff?.role ?? "");
 
-  if (!peutEcrire && !monAff) redirect(`/departements/${id}`);
+  // Accès (même en lecture seule) réservé au pilotage, président,
+  // vice-président et trésorier — ni le secrétaire ni un simple membre n'ont
+  // accès à la caisse de leur département (cahier des charges §3.5, §3.7).
+  const peutVoir = isPilotage || rolesCaisse.includes(monAff?.role ?? "");
+  if (!peutVoir) redirect(`/departements/${id}`);
 
   // Solde via la fonction RPC sécurisée
   const { data: soldeData } = await supabase.rpc("fn_solde_departement", {

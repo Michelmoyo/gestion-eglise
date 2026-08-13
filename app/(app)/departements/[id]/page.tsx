@@ -67,6 +67,16 @@ export default async function DepartementDetailPage({
     isPilotage ||
     ["president", "vice_president", "secretaire"].includes(monAff?.role ?? "");
 
+  // Un simple membre n'a pas accès aux effectifs nommés (président,
+  // vice-président, secrétaire, trésorier en revanche les voient).
+  const estSimpleMembre = !isPilotage && (monAff?.role ?? "membre") === "membre";
+
+  // Le solde de caisse est réservé au pilotage, président, vice-président et
+  // trésorier -- ni le secrétaire ni un simple membre n'y ont accès
+  // (cahier des charges §3.5, §3.7).
+  const peutVoirCaisse =
+    isPilotage || ["president", "vice_president", "tresorier"].includes(monAff?.role ?? "");
+
   // Effectifs du département
   const { data: effectifs } = await supabase
     .from("v_effectifs_departement")
@@ -141,9 +151,9 @@ export default async function DepartementDetailPage({
     absences3Consecutives: false,
   });
 
-  const { data: soldeData } = await supabase.rpc("fn_solde_departement", {
-    p_departement_id: id,
-  });
+  const { data: soldeData } = peutVoirCaisse
+    ? await supabase.rpc("fn_solde_departement", { p_departement_id: id })
+    : { data: null };
   const solde = (soldeData as number) ?? 0;
 
   return (
@@ -196,21 +206,23 @@ export default async function DepartementDetailPage({
           </CardContent>
         </Card>
 
-        {/* Résumé effectifs */}
-        <div className="grid grid-cols-2 gap-3">
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <p className="text-3xl font-bold text-green-600">{nbActifs}</p>
-              <p className="text-xs text-muted-foreground mt-1">Actifs</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <p className="text-3xl font-bold text-orange-500">{nbSuspendus}</p>
-              <p className="text-xs text-muted-foreground mt-1">Suspendus</p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Résumé effectifs — masqué pour un simple membre */}
+        {!estSimpleMembre && (
+          <div className="grid grid-cols-2 gap-3">
+            <Card>
+              <CardContent className="pt-4 text-center">
+                <p className="text-3xl font-bold text-green-600">{nbActifs}</p>
+                <p className="text-xs text-muted-foreground mt-1">Actifs</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 text-center">
+                <p className="text-3xl font-bold text-orange-500">{nbSuspendus}</p>
+                <p className="text-xs text-muted-foreground mt-1">Suspendus</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Présence, activités du mois, solde */}
         <div className="grid grid-cols-2 gap-3">
@@ -230,14 +242,16 @@ export default async function DepartementDetailPage({
           </Card>
         </div>
 
-        <Card>
-          <CardContent className="pt-4 text-center">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Solde de caisse</p>
-            <p className={`text-2xl font-bold ${solde >= 0 ? "text-green-600" : "text-destructive"}`}>
-              {format.montant(solde)}
-            </p>
-          </CardContent>
-        </Card>
+        {peutVoirCaisse && (
+          <Card>
+            <CardContent className="pt-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Solde de caisse</p>
+              <p className={`text-2xl font-bold ${solde >= 0 ? "text-green-600" : "text-destructive"}`}>
+                {format.montant(solde)}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Liens vers les modules de gestion */}
         <div className="grid grid-cols-2 gap-3">

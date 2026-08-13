@@ -653,8 +653,10 @@ $$;
 revoke execute on function rpc_marquer_quitte(uuid) from public;
 grant execute on function rpc_marquer_quitte(uuid) to authenticated;
 
--- Solde agrege d'un departement, visible par tout membre affecte (y compris
--- simple membre) SANS lui donner acces a la liste detaillee des mouvements.
+-- Solde agrege d'un departement, visible par le pilotage, le president, le
+-- vice-president et le tresorier SANS donner acces a la liste detaillee des
+-- mouvements. Le secretaire et le simple membre n'y ont pas acces (cahier
+-- des charges §3.5, §3.7).
 create or replace function fn_solde_departement(p_departement_id uuid)
 returns numeric
 language plpgsql
@@ -665,7 +667,7 @@ as $$
 declare
   v_solde numeric;
 begin
-  if not (fn_is_pasteur_ou_assistant() or fn_est_affecte(p_departement_id)) then
+  if not (fn_is_pasteur_ou_assistant() or fn_role_departement(p_departement_id) in ('president', 'vice_president', 'tresorier')) then
     raise exception 'Non autorise.';
   end if;
 
