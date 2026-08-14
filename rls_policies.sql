@@ -163,6 +163,28 @@ $$;
 revoke execute on function rpc_definir_photo_profil(text) from public;
 grant execute on function rpc_definir_photo_profil(text) to authenticated;
 
+-- Meme principe : un ouvrier peut modifier UNIQUEMENT son telephone et son
+-- adresse sur sa propre fiche (mon-compte), sans acces au reste via UPDATE.
+create or replace function rpc_modifier_coordonnees_ouvrier(
+  p_telephone text,
+  p_adresse text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update ouvriers
+  set telephone = nullif(p_telephone, ''),
+      adresse = nullif(p_adresse, '')
+  where id = fn_ouvrier_id_courant();
+end;
+$$;
+
+revoke execute on function rpc_modifier_coordonnees_ouvrier(text, text) from public;
+grant execute on function rpc_modifier_coordonnees_ouvrier(text, text) to authenticated;
+
 -- ----------------------------------------------------------------------------
 -- DEPARTEMENTS
 -- ----------------------------------------------------------------------------

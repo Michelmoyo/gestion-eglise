@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { newPasswordSchema, type NewPasswordInput } from "@/lib/validations/auth";
-import { updatePassword } from "@/app/(auth)/actions";
+import { changerMotDePasse } from "@/app/(app)/mon-compte/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,10 +13,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export function ChangerMotDePasseForm() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [succes, setSucces] = useState(false);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<NewPasswordInput>({
     resolver: zodResolver(newPasswordSchema),
@@ -25,14 +27,18 @@ export function ChangerMotDePasseForm() {
   async function onSubmit(data: NewPasswordInput) {
     setLoading(true);
     setServerError(null);
+    setSucces(false);
 
     const formData = new FormData();
     formData.set("password", data.password);
 
-    const result = await updatePassword(formData);
+    const result = await changerMotDePasse(formData);
+    setLoading(false);
     if (result?.error) {
       setServerError(result.error);
-      setLoading(false);
+    } else {
+      setSucces(true);
+      reset();
     }
   }
 
@@ -70,6 +76,7 @@ export function ChangerMotDePasseForm() {
           </div>
 
           {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+          {succes && <p className="text-sm text-green-600">Mot de passe modifié.</p>}
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Enregistrement…" : "Enregistrer"}

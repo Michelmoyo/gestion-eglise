@@ -600,6 +600,10 @@ export interface Database {
         Args: { p_photo_url: string };
         Returns: void;
       };
+      rpc_modifier_coordonnees_ouvrier: {
+        Args: { p_telephone: string | null; p_adresse: string | null };
+        Returns: void;
+      };
     };
   };
 }

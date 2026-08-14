@@ -48,3 +48,40 @@ export async function mettreAJourPhoto(formData: FormData) {
   revalidatePath("/mon-espace");
   return { success: true, photoUrl };
 }
+
+// Dediee a "Mon compte" : contrairement a updatePassword() (app/(auth)/actions.ts),
+// utilisee pour la definition initiale du mot de passe et qui redirige
+// ensuite vers l'accueil, celle-ci reste sur place et affiche une
+// confirmation -- changer son mot de passe depuis ses reglages ne doit pas
+// faire quitter la page sans un retour visible.
+export async function changerMotDePasse(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/connexion");
+
+  const password = formData.get("password") as string;
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) return { error: "Impossible de mettre à jour le mot de passe." };
+
+  return { success: true };
+}
+
+export async function modifierCoordonnees(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/connexion");
+
+  const telephone = (formData.get("telephone") as string) || "";
+  const adresse = (formData.get("adresse") as string) || "";
+
+  const { error } = await supabase.rpc("rpc_modifier_coordonnees_ouvrier", {
+    p_telephone: telephone,
+    p_adresse: adresse,
+  });
+
+  if (error) return { error: `Erreur lors de l'enregistrement : ${error.message}` };
+
+  revalidatePath("/mon-compte");
+  return { success: true };
+}
