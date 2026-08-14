@@ -123,6 +123,31 @@ export async function modifierOuvrier(id: string, formData: FormData) {
     return { error: parsed.error.errors[0]?.message ?? "Données invalides." };
   }
 
+  // Le compte Auth n'est jamais synchronise automatiquement avec
+  // ouvriers.email (aucun trigger ne fonctionne dans ce sens) : sans ceci,
+  // changer l'email ici desynchronise la fiche de l'identifiant de connexion
+  // reel -- l'ouvrier continuerait a se connecter avec l'ancien email, et
+  // "Renvoyer l'invitation" enverrait vers une adresse sans compte associe.
+  const { data: avant } = await supabase
+    .from("ouvriers")
+    .select("email, auth_user_id")
+    .eq("id", id)
+    .single();
+
+  if (avant?.auth_user_id && avant.email !== parsed.data.email) {
+    const admin = createAdminClient();
+    const { error: authError } = await admin.auth.admin.updateUserById(avant.auth_user_id, {
+      email: parsed.data.email,
+      email_confirm: true,
+    });
+    if (authError) {
+      if (/already been registered|already exists/i.test(authError.message)) {
+        return { error: "Cet email est déjà utilisé par un autre compte." };
+      }
+      return { error: `Erreur lors de la mise à jour du compte de connexion : ${authError.message}` };
+    }
+  }
+
   let error = null;
 
   // Si l'utilisateur modifie SON PROPRE rôle global pour le retirer (NULL),
