@@ -5,6 +5,7 @@ import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AvatarOuvrier } from "@/components/ouvriers/avatar-ouvrier";
 import { mettreAJourPhoto } from "@/app/(app)/mon-compte/actions";
+import { comprimerImage } from "@/lib/comprimer-image";
 
 interface Props {
   prenom: string;
@@ -19,15 +20,21 @@ export function PhotoProfilForm({ prenom, nom, photoUrl }: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [enregistre, setEnregistre] = useState(false);
+  const [compression, setCompression] = useState(false);
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const fichier = e.target.files?.[0];
     if (!fichier) return;
 
-    setFichierChoisi(fichier);
-    setPreview(URL.createObjectURL(fichier));
     setError(null);
     setEnregistre(false);
+    setCompression(true);
+
+    const compresse = await comprimerImage(fichier);
+
+    setFichierChoisi(compresse);
+    setPreview(URL.createObjectURL(compresse));
+    setCompression(false);
   }
 
   function annuler() {
@@ -63,7 +70,7 @@ export function PhotoProfilForm({ prenom, nom, photoUrl }: Props) {
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={isPending}
+          disabled={isPending || compression}
           className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center border-2 border-background disabled:opacity-50"
           aria-label="Changer la photo de profil"
         >
@@ -78,7 +85,9 @@ export function PhotoProfilForm({ prenom, nom, photoUrl }: Props) {
         />
       </div>
 
-      {fichierChoisi && (
+      {compression && <p className="text-xs text-muted-foreground">Compression…</p>}
+
+      {fichierChoisi && !compression && (
         <div className="flex gap-2">
           <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={annuler}>
             Annuler
@@ -89,7 +98,7 @@ export function PhotoProfilForm({ prenom, nom, photoUrl }: Props) {
         </div>
       )}
 
-      {!fichierChoisi && enregistre && (
+      {!fichierChoisi && !compression && enregistre && (
         <p className="text-xs text-muted-foreground">Photo enregistrée.</p>
       )}
       {error && <p className="text-xs text-destructive">{error}</p>}
