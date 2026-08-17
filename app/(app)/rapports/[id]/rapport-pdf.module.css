@@ -16,6 +16,16 @@
   --line: #DDD5C1;
   --line-soft: #EDE7D8;
 
+  /* Identite de marque (rose/or) -- reservee aux elements decoratifs
+     (en-tete, numeros de section, titres, chiffres cles). Ne remplace PAS
+     les couleurs de statut ci-dessous, qui portent un sens et restent
+     inchangees quel que soit le theme. */
+  --brand: #E2037A;
+  --brand-deep: #A10259;
+  --gold: #F4C63A;
+  --gold-deep: #8A6A00;
+
+  /* Couleurs de statut -- semantiques, ne pas aligner sur la marque. */
   --red: #E3340A;
   --red-deep: #9C2607;
   --red-tint: #FBE2DA;
@@ -40,7 +50,7 @@
 
 /* ---------- Letterhead ---------- */
 .letterhead {
-  background: linear-gradient(155deg, var(--red) 0%, var(--red-deep) 100%);
+  background: linear-gradient(155deg, var(--brand) 0%, var(--brand-deep) 100%);
   color: #FFFFFF;
   padding: 22px 24px;
   display: flex;
@@ -77,9 +87,9 @@
 
 .brandRule { height: 4px; display: flex; }
 .brandRule span { flex: 1; }
-.brandRule .r1 { background: var(--red); }
-.brandRule .r2 { background: var(--amber); }
-.brandRule .r3 { background: var(--olive); }
+.brandRule .r1 { background: var(--brand); }
+.brandRule .r2 { background: var(--gold); }
+.brandRule .r3 { background: var(--brand-deep); }
 
 /* ---------- Title block ---------- */
 .titleblock { padding: 22px 24px 20px; border-bottom: 1px solid var(--line); }
@@ -139,7 +149,7 @@
 .section { padding: 22px 24px; border-bottom: 1px solid var(--line); }
 .section:last-of-type { border-bottom: none; }
 .sectionHead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
-.sectionNum { font-family: var(--font-display); font-size: 1.15rem; color: var(--red); font-weight: 400; }
+.sectionNum { font-family: var(--font-display); font-size: 1.15rem; color: var(--brand); font-weight: 400; }
 .sectionHead h2 {
   font-family: var(--font-display);
   font-size: 1.3rem;
@@ -151,7 +161,7 @@
 
 .statRow { display: flex; gap: 28px; margin-bottom: 16px; flex-wrap: wrap; }
 .stat { display: flex; flex-direction: column; }
-.stat .n { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; color: var(--red); }
+.stat .n { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; color: var(--brand); }
 .stat .l { font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-soft); margin-top: 4px; }
 
 .subhead {
@@ -328,7 +338,7 @@
 .balanceRow { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 0.88rem; }
 .balanceRow .amt { font-variant-numeric: tabular-nums; font-weight: 700; }
 .balanceRow.total { border-bottom: none; padding-top: 10px; font-weight: 700; }
-.balanceRow.total .amt { color: var(--red); font-size: 1rem; }
+.balanceRow.total .amt { color: var(--brand); font-size: 1rem; }
 .amt.pos { color: var(--olive-deep); }
 .amt.neg { color: var(--red-deep); }
 
@@ -338,13 +348,13 @@
   font-size: 0.78rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--red-deep);
+  color: var(--brand-deep);
   margin: 0 0 8px;
   font-weight: 700;
 }
 .qualBlock ul { margin: 0; padding: 0; list-style: none; }
 .qualBlock li { position: relative; padding-left: 16px; font-size: 0.88rem; line-height: 1.55; margin-bottom: 5px; }
-.qualBlock li::before { content: "\2014"; position: absolute; left: 0; color: var(--amber); font-weight: 700; }
+.qualBlock li::before { content: "\2014"; position: absolute; left: 0; color: var(--gold-deep); font-weight: 700; }
 
 .footer { padding: 22px 24px 26px; background: var(--line-soft); }
 .sigrow { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 20px; }
