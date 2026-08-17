@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, FileDown } from "lucide-react";
 import { format } from "@/lib/format";
 import { RapportForm } from "@/components/departements/rapport-form";
+import { SelecteurPeriode } from "@/components/departements/selecteur-periode";
 import { soumettrerapport } from "./actions";
 import { getDonneesRapport } from "@/lib/rapport";
 
@@ -64,6 +65,9 @@ export default async function RapportPage({
     ? periodeParam!
     : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const periodeCourante = `${periodeCourte}-01`;
+  const [anneeSelectionnee, moisSelectionne] = periodeCourte.split("-").map(Number);
+  const anneeMax = now.getFullYear();
+  const moisMax = now.getMonth() + 1;
 
   // Rapport existant pour cette période
   const { data: rapportExistant } = await supabase
@@ -116,22 +120,16 @@ export default async function RapportPage({
           </Link>
         </div>
 
-        {/* Sélection de la période */}
-        <form method="GET" className="flex items-center justify-center gap-2">
-          <input
-            type="month"
-            name="periode"
-            defaultValue={periodeCourte}
-            max={`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-          />
-          <button
-            type="submit"
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm hover:bg-accent"
-          >
-            Changer
-          </button>
-        </form>
+        {/* Sélection de la période -- deux menus (mois/année) plutôt qu'un
+            input type="month", dont le support navigateur est inégal (Firefox
+            desktop entre autres l'affiche comme un champ texte libre). */}
+        <SelecteurPeriode
+          departementId={id}
+          moisSelectionne={moisSelectionne}
+          anneeSelectionnee={anneeSelectionnee}
+          anneeMax={anneeMax}
+          moisMax={moisMax}
+        />
 
         <div className="text-center">
           <h2 className="font-semibold text-lg capitalize">{moisLabel}</h2>
