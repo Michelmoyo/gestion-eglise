@@ -59,7 +59,7 @@ export default async function DepartementRapportsPage({
 
         <ListeRapports rapports={rapportsAffiches} />
 
-        <Link href={`/departements/${id}/rapport`}>
+        <Link href={`/departements/${id}/rapport`} className="block pt-2">
           <Button className="w-full gap-2">
             <Plus size={16} />
             Nouveau rapport

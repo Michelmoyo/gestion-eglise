@@ -107,7 +107,7 @@ export default async function RapportsPage() {
       <div className="p-4 space-y-4">
         <ListeRapports rapports={rapportsAffiches} afficherDepartement={deptIds.length > 1} />
 
-        <Link href="/rapports/nouveau">
+        <Link href="/rapports/nouveau" className="block pt-2">
           <Button className="w-full gap-2">
             <Plus size={16} />
             Nouveau rapport
