@@ -59,6 +59,20 @@
   gap: 20px;
   flex-wrap: wrap;
 }
+.letterheadIdentity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.logo {
+  height: 44px;
+  width: 44px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #FFFFFF;
+  padding: 4px;
+  flex-shrink: 0;
+}
 .letterheadOrg .network {
   font-size: 0.62rem;
   letter-spacing: 0.08em;

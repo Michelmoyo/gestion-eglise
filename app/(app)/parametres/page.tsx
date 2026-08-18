@@ -5,6 +5,7 @@ import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import { ParametresForm } from "@/components/parametres/parametres-form";
+import { LogoForm } from "@/components/parametres/logo-form";
 import { enregistrerParametresEglise } from "./actions";
 
 export default async function ParametresPage() {
@@ -22,7 +23,7 @@ export default async function ParametresPage() {
 
   const { data: parametres } = await supabase
     .from("parametres_eglise")
-    .select("nom_eglise, reseau, adresse, telephone, email")
+    .select("nom_eglise, reseau, adresse, telephone, email, logo_url")
     .limit(1)
     .single();
 
@@ -38,6 +39,18 @@ export default async function ParametresPage() {
           <ChevronLeft size={16} />
           Pilotage
         </Link>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Logo de l&apos;église</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground mb-4">
+              Affiché dans l&apos;en-tête des rapports.
+            </p>
+            <LogoForm logoUrl={parametres?.logo_url ?? null} />
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader className="pb-2">

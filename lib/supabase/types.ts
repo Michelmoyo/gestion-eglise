@@ -36,6 +36,7 @@ export interface Database {
           adresse: string | null;
           telephone: string | null;
           email: string | null;
+          logo_url: string | null;
           updated_at: string;
         };
         Insert: {
@@ -45,6 +46,7 @@ export interface Database {
           adresse?: string | null;
           telephone?: string | null;
           email?: string | null;
+          logo_url?: string | null;
         };
         Update: {
           id?: string;
@@ -53,6 +55,7 @@ export interface Database {
           adresse?: string | null;
           telephone?: string | null;
           email?: string | null;
+          logo_url?: string | null;
         };
         Relationships: [];
       };

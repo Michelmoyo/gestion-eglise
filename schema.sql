@@ -48,6 +48,7 @@ create table parametres_eglise (
   adresse     text,
   telephone   text,
   email       text,
+  logo_url    text,
   updated_at  timestamptz not null default now()
 );
 
@@ -376,6 +377,15 @@ on conflict (id) do nothing;
 -- ----------------------------------------------------------------------------
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+-- ----------------------------------------------------------------------------
+-- STOCKAGE DU LOGO DE L'EGLISE
+-- Bucket public, une seule eglise : pas de portee par dossier a verifier,
+-- l'ecriture est simplement reservee au pasteur.
+-- ----------------------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('logo-eglise', 'logo-eglise', true)
 on conflict (id) do nothing;
 
 -- ----------------------------------------------------------------------------

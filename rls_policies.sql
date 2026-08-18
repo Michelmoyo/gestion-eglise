@@ -538,6 +538,27 @@ create policy avatars_delete on storage.objects for delete using (
 );
 
 -- ----------------------------------------------------------------------------
+-- STOCKAGE : LOGO DE L'EGLISE
+-- Bucket public "logo-eglise" ; une seule eglise, ecriture reservee au
+-- pasteur.
+-- ----------------------------------------------------------------------------
+create policy logo_eglise_select on storage.objects for select using (
+  bucket_id = 'logo-eglise'
+);
+
+create policy logo_eglise_insert on storage.objects for insert with check (
+  bucket_id = 'logo-eglise' and fn_is_pasteur()
+);
+
+create policy logo_eglise_update on storage.objects for update using (
+  bucket_id = 'logo-eglise' and fn_is_pasteur()
+);
+
+create policy logo_eglise_delete on storage.objects for delete using (
+  bucket_id = 'logo-eglise' and fn_is_pasteur()
+);
+
+-- ----------------------------------------------------------------------------
 -- COMMENTAIRES SUR UN POINT DE SUIVI
 -- Meme regle d'acces que la tache concernee (fn_peut_voir_tache) : les
 -- responsables du departement et le pilotage, ainsi que les membres ajoutes

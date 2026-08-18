@@ -143,7 +143,7 @@ export default async function RapportDocumentPage({
 
   const { data: parametres } = await supabase
     .from("parametres_eglise")
-    .select("nom_eglise, reseau, adresse, telephone, email")
+    .select("nom_eglise, reseau, adresse, telephone, email, logo_url")
     .limit(1)
     .single();
 
@@ -203,9 +203,15 @@ export default async function RapportDocumentPage({
       <div className={`${styles.document} ${titillium.variable}`}>
         <article className={styles.page}>
           <header className={styles.letterhead}>
-            <div className={styles.letterheadOrg}>
-              {parametres?.reseau && <div className={styles.network}>{parametres.reseau}</div>}
-              <div className={styles.church}>{nomEglise}</div>
+            <div className={styles.letterheadIdentity}>
+              {parametres?.logo_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={parametres.logo_url} alt="" className={styles.logo} />
+              )}
+              <div className={styles.letterheadOrg}>
+                {parametres?.reseau && <div className={styles.network}>{parametres.reseau}</div>}
+                <div className={styles.church}>{nomEglise}</div>
+              </div>
             </div>
             {(parametres?.adresse || contactLigne2) && (
               <div className={styles.letterheadContact}>
