@@ -246,7 +246,7 @@
 
 /* ---------- Tableau croise ouvrier x evenement ----------
    4 evenements par tableau ; au-dela, un tableau "(suite)" s'empile
-   en dessous (voir chunk() dans page.tsx). */
+   en dessous (voir chunk() dans document-rapport.tsx). */
 .matrixWrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; margin-bottom: 10px; }
 .matrixWrap:last-of-type { margin-bottom: 0; }
 .matrixCont {

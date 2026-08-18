@@ -5,10 +5,11 @@ import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, FileDown } from "lucide-react";
 import { format } from "@/lib/format";
-import { RapportForm } from "@/components/departements/rapport-form";
+import { ApercuRapport } from "@/components/rapports/apercu-rapport";
 import { SelecteurPeriode } from "@/components/departements/selecteur-periode";
 import { soumettrerapport } from "./actions";
 import { getDonneesRapport } from "@/lib/rapport";
+import { normaliserReference } from "@/components/rapports/document-rapport";
 
 export default async function RapportPage({
   params,
@@ -33,7 +34,7 @@ export default async function RapportPage({
 
   const { data: moi } = await supabase
     .from("ouvriers")
-    .select("id, role_global")
+    .select("id, prenom, nom, role_global")
     .eq("auth_user_id", user.id)
     .single();
 
@@ -56,6 +57,10 @@ export default async function RapportPage({
 
   const peutVoirDetailCaisse =
     isPilotage || ["president", "vice_president", "tresorier"].includes(monAff?.role ?? "");
+
+  const fonctionAuteur = moi.role_global
+    ? format.roleGlobal(moi.role_global)
+    : format.roleDepartement(monAff?.role ?? "membre");
 
   // Période sélectionnée (mois courant par défaut) : le président choisit
   // une plage libre avant de générer le rapport, pas forcément un mois
@@ -81,16 +86,20 @@ export default async function RapportPage({
 
   // Données calculées pour le rapport pré-rempli
   const {
+    roster,
     statsByActivite,
+    presenceActiviteParOuvrier,
     nbActifs,
     nouveauxOuvriers,
     suspendusOuvriers,
     statsCultes,
+    presenceCulteParOuvrier,
     soldeDebut,
     soldeFin,
     mouvementsPeriode,
     listesSuivi,
     pointsSuivi,
+    suiviInclus,
   } = await getDonneesRapport(supabase, id, periodeDebut, periodeFin, { peutVoirDetailCaisse });
 
   const suiviOuvert = (listeId: string) =>
@@ -98,6 +107,16 @@ export default async function RapportPage({
 
   const action = soumettrerapport.bind(null, id);
   const periodeLabel = format.periode(periodeDebut, periodeFin);
+
+  const { data: parametres } = await supabase
+    .from("parametres_eglise")
+    .select("nom_eglise, reseau, adresse, telephone, email, logo_url")
+    .limit(1)
+    .single();
+
+  const nomEglise = parametres?.nom_eglise || "Église";
+  const contactLigne2 = [parametres?.telephone, parametres?.email].filter(Boolean).join(" · ");
+  const reference = `RAP-${periodeDebut.replace(/-/g, "")}-${normaliserReference(dept.nom)}`;
 
   return (
     <>
@@ -325,7 +344,39 @@ export default async function RapportPage({
           </CardContent>
         </Card>
 
-        <RapportForm action={action} periodeDebut={periodeDebut} periodeFin={periodeFin} />
+        <ApercuRapport
+          action={action}
+          periodeDebut={periodeDebut}
+          periodeFin={periodeFin}
+          dejaSoumis={!!rapportExistant}
+          documentProps={{
+            nomEglise,
+            reseau: parametres?.reseau ?? null,
+            adresse: parametres?.adresse ?? null,
+            contactLigne2,
+            logoUrl: parametres?.logo_url ?? null,
+            deptNom: dept.nom,
+            periodeLabel,
+            periodeDebut,
+            periodeFin,
+            reference,
+            auteurNom: `${moi.prenom} ${moi.nom}`,
+            fonctionAuteur,
+            nbActifs,
+            nouveauxOuvriers,
+            suspendusOuvriers,
+            roster,
+            statsByActivite,
+            presenceActiviteParOuvrier,
+            statsCultes,
+            presenceCulteParOuvrier,
+            soldeDebut,
+            soldeFin,
+            peutVoirDetailCaisse,
+            mouvementsPeriode,
+            blocsSuivi: suiviInclus,
+          }}
+        />
       </div>
     </>
   );
