@@ -348,7 +348,6 @@ export default async function RapportPage({
           action={action}
           periodeDebut={periodeDebut}
           periodeFin={periodeFin}
-          dejaSoumis={!!rapportExistant}
           documentProps={{
             nomEglise,
             reseau: parametres?.reseau ?? null,

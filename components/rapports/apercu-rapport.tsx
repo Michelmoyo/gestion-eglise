@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Eye, X } from "lucide-react";
+import { Eye, X, Download, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DocumentRapport, type DocumentRapportProps } from "./document-rapport";
@@ -12,11 +12,10 @@ interface Props {
   action: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
   periodeDebut: string;
   periodeFin: string;
-  dejaSoumis: boolean;
   documentProps: DocumentProps;
 }
 
-export function ApercuRapport({ action, periodeDebut, periodeFin, dejaSoumis, documentProps }: Props) {
+export function ApercuRapport({ action, periodeDebut, periodeFin, documentProps }: Props) {
   const [apercuOuvert, setApercuOuvert] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +55,7 @@ export function ApercuRapport({ action, periodeDebut, periodeFin, dejaSoumis, do
 
           <Button type="button" className="w-full gap-2" onClick={() => setApercuOuvert(true)}>
             <Eye size={16} />
-            Prévisualiser {dejaSoumis ? "et resoumettre" : "et soumettre"}
+            Prévisualiser
           </Button>
         </CardContent>
       </Card>
@@ -64,13 +63,19 @@ export function ApercuRapport({ action, periodeDebut, periodeFin, dejaSoumis, do
       {apercuOuvert && (
         <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3 flex items-center justify-between gap-2 print:hidden">
-            <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => setApercuOuvert(false)}>
-              <X size={14} />
-              Modifier
+            <Button type="button" variant="ghost" size="icon" className="shrink-0" onClick={() => setApercuOuvert(false)} aria-label="Fermer l'aperçu">
+              <X size={16} />
             </Button>
-            <Button type="button" size="sm" disabled={isPending} onClick={soumettre}>
-              {isPending ? "Soumission…" : "Confirmer et soumettre"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => window.print()}>
+                <Download size={14} />
+                Télécharger
+              </Button>
+              <Button type="button" size="sm" className="gap-1" disabled={isPending} onClick={soumettre}>
+                <Send size={14} />
+                {isPending ? "Soumission…" : "Soumettre"}
+              </Button>
+            </div>
           </div>
 
           {error && (
