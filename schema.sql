@@ -580,14 +580,16 @@ create trigger trg_seed_listes_suivi
 create table rapports (
   id              uuid primary key default gen_random_uuid(),
   departement_id  uuid references departements(id) on delete cascade,
-  periode         date not null, -- premier jour du mois couvert
+  periode_debut   date not null, -- plage libre (pas necessairement un mois calendaire)
+  periode_fin     date not null,
   difficultes     text,          -- legacy, cf. commentaire ci-dessus
   besoins         text,          -- legacy
   objectifs       text,          -- legacy
   suivi_snapshot  jsonb,         -- [{ nom: string, texte: string | null }, ...]
   auteur_id       uuid not null references ouvriers(id),
   date_soumission timestamptz not null default now(),
-  unique (departement_id, periode)
+  check (periode_fin >= periode_debut),
+  unique (departement_id, periode_debut, periode_fin)
 );
 
 create index idx_rapports_departement on rapports(departement_id);
@@ -699,7 +701,8 @@ begin
     o.id,
     'rapport_soumis',
     'Rapport soumis pour ' || coalesce(v_nom_departement, '')
-      || ' (période du ' || to_char(new.periode, 'DD/MM/YYYY') || ')',
+      || ' (période du ' || to_char(new.periode_debut, 'DD/MM/YYYY')
+      || ' au ' || to_char(new.periode_fin, 'DD/MM/YYYY') || ')',
     '/rapports/' || new.id
   from ouvriers o
   where o.role_global in ('pasteur', 'assistant');
@@ -992,7 +995,7 @@ begin
   select taux_presence into v_taux_presence_precedent
   from v_taux_presence_departement_30j_precedent where departement_id = p_departement_id;
 
-  select max(periode) into v_dernier_rapport
+  select max(periode_fin) into v_dernier_rapport
   from rapports where departement_id = p_departement_id;
 
   select max(act.date_activite) into v_derniere_action_responsable

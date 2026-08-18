@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Props {
   action: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
-  periode: string;
+  periodeDebut: string;
+  periodeFin: string;
 }
 
 const initial = { error: undefined as string | undefined, success: false };
 
-export function RapportForm({ action, periode }: Props) {
+export function RapportForm({ action, periodeDebut, periodeFin }: Props) {
   const [state, formAction, isPending] = useActionState(
     async (_: typeof initial, fd: FormData) => {
       const res = await action(fd);
@@ -32,7 +33,8 @@ export function RapportForm({ action, periode }: Props) {
           du département avant de soumettre.
         </p>
         <form action={formAction}>
-          <input type="hidden" name="periode" value={periode} />
+          <input type="hidden" name="periode_debut" value={periodeDebut} />
+          <input type="hidden" name="periode_fin" value={periodeFin} />
 
           {state.error && <p className="text-sm text-destructive mb-2">{state.error}</p>}
           {state.success && (

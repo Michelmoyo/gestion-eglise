@@ -460,7 +460,8 @@ export interface Database {
         Row: {
           id: string;
           departement_id: string | null;
-          periode: string;
+          periode_debut: string;
+          periode_fin: string;
           difficultes: string | null;
           besoins: string | null;
           objectifs: string | null;
@@ -471,7 +472,8 @@ export interface Database {
         Insert: {
           id?: string;
           departement_id?: string | null;
-          periode: string;
+          periode_debut: string;
+          periode_fin: string;
           difficultes?: string | null;
           besoins?: string | null;
           objectifs?: string | null;

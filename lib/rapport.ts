@@ -28,13 +28,15 @@ function labelDepuis(dateAffectation: string, debutMois: string, finMois: string
 export async function getDonneesRapport(
   supabase: SupabaseServerClient,
   departementId: string,
-  periode: string,
+  periodeDebut: string,
+  periodeFin: string,
   options: OptionsRapport
 ) {
-  const debutMois = periode;
-  const [annee, mois] = periode.split("-").map(Number);
-  const finMois = new Date(annee, mois, 0).toISOString().split("T")[0];
-  const veilleDebutMois = new Date(annee, mois - 1, 0).toISOString().split("T")[0];
+  const debutMois = periodeDebut;
+  const finMois = periodeFin;
+  const veille = new Date(periodeDebut);
+  veille.setDate(veille.getDate() - 1);
+  const veilleDebutMois = veille.toISOString().split("T")[0];
 
   // ── Activités du mois et leur taux de présence ──────────────────────────
   const { data: activitesMois } = await supabase

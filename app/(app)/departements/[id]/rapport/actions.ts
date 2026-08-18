@@ -33,25 +33,28 @@ export async function soumettrerapport(departementId: string, formData: FormData
     }
   }
 
-  const periode = formData.get("periode") as string;
-  if (!periode) return { error: "Période requise." };
+  const periodeDebut = formData.get("periode_debut") as string;
+  const periodeFin = formData.get("periode_fin") as string;
+  if (!periodeDebut || !periodeFin) return { error: "Période requise." };
+  if (periodeFin < periodeDebut) return { error: "La date de fin doit suivre la date de début." };
 
   // Le suivi ne se saisit plus par rapport : on capture ici un instantané de
-  // ce qui est ouvert (ou résolu ce mois-ci) dans chaque liste marquée
-  // "inclure dans le rapport" au moment de la soumission.
-  const { suiviInclus } = await getDonneesRapport(supabase, departementId, periode, {
+  // ce qui est ouvert (ou résolu pendant cette période) dans chaque liste
+  // marquée "inclure dans le rapport" au moment de la soumission.
+  const { suiviInclus } = await getDonneesRapport(supabase, departementId, periodeDebut, periodeFin, {
     peutVoirDetailCaisse: false,
   });
 
   const { error } = await supabase.from("rapports").upsert(
     {
       departement_id: departementId,
-      periode,
+      periode_debut: periodeDebut,
+      periode_fin: periodeFin,
       suivi_snapshot: suiviInclus,
       auteur_id: moi.id,
       date_soumission: new Date().toISOString(),
     },
-    { onConflict: "departement_id,periode" }
+    { onConflict: "departement_id,periode_debut,periode_fin" }
   );
 
   if (error) return { error: "Erreur lors de la soumission." };

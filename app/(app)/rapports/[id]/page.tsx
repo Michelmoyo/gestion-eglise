@@ -87,7 +87,7 @@ export default async function RapportDocumentPage({
 
   const { data: rapport } = await supabase
     .from("rapports")
-    .select("id, departement_id, periode, difficultes, besoins, objectifs, suivi_snapshot, auteur_id, date_soumission")
+    .select("id, departement_id, periode_debut, periode_fin, difficultes, besoins, objectifs, suivi_snapshot, auteur_id, date_soumission")
     .eq("id", id)
     .single();
 
@@ -159,16 +159,12 @@ export default async function RapportDocumentPage({
     soldeDebut,
     soldeFin,
     mouvementsPeriode,
-  } = await getDonneesRapport(supabase, rapport.departement_id, rapport.periode, {
+  } = await getDonneesRapport(supabase, rapport.departement_id, rapport.periode_debut, rapport.periode_fin, {
     peutVoirDetailCaisse,
   });
 
-  const [anneeNum, moisNum] = rapport.periode.split("-").map(Number);
-  const dernierJour = new Date(anneeNum, moisNum, 0).getDate();
-  const moisLabel = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
-    new Date(anneeNum, moisNum - 1, 1)
-  );
-  const reference = `RAP-${anneeNum}-${String(moisNum).padStart(2, "0")}-${normaliserReference(dept.nom)}`;
+  const periodeLabel = format.periode(rapport.periode_debut, rapport.periode_fin);
+  const reference = `RAP-${rapport.periode_debut.replace(/-/g, "")}-${normaliserReference(dept.nom)}`;
 
   // suivi_snapshot est le format courant (nombre de listes variable, cf.
   // listes_suivi.inclure_rapport). Les rapports soumis avant l'introduction
@@ -228,7 +224,7 @@ export default async function RapportDocumentPage({
           <div className={styles.titleblock}>
             <h1>Rapport d&apos;activités du département</h1>
             <div className={styles.sub}>
-              Département <strong>{dept.nom}</strong> — période de <strong>{moisLabel}</strong>
+              Département <strong>{dept.nom}</strong> — période <strong>{periodeLabel}</strong>
             </div>
 
             <div className={styles.idgrid}>
@@ -238,7 +234,7 @@ export default async function RapportDocumentPage({
               </div>
               <div className={styles.idcell}>
                 <p className={styles.k}>Période couverte</p>
-                <p className={styles.v}>01 – {dernierJour} {moisLabel}</p>
+                <p className={styles.v}>{format.date(rapport.periode_debut)} – {format.date(rapport.periode_fin)}</p>
               </div>
               <div className={styles.idcell}>
                 <p className={styles.k}>Statut</p>

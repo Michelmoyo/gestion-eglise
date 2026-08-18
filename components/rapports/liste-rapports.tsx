@@ -6,7 +6,8 @@ import { format } from "@/lib/format";
 
 export interface RapportListe {
   id: string;
-  periode: string;
+  periodeDebut: string;
+  periodeFin: string;
   date_soumission: string;
   auteurNom: string;
   departementNom?: string;
@@ -43,9 +44,7 @@ export function ListeRapports({
                       : "font-semibold text-sm capitalize"
                   }
                 >
-                  {new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
-                    new Date(r.periode)
-                  )}
+                  {format.periode(r.periodeDebut, r.periodeFin)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Soumis le {format.date(r.date_soumission)} par {r.auteurNom}

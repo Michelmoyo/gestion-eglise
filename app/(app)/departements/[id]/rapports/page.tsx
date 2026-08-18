@@ -26,7 +26,7 @@ export default async function DepartementRapportsPage({
 
   const { data: rapports } = await supabase
     .from("rapports")
-    .select("id, periode, date_soumission, auteur_id")
+    .select("id, periode_debut, periode_fin, date_soumission, auteur_id")
     .eq("departement_id", id)
     .order("date_soumission", { ascending: false });
 
@@ -38,7 +38,8 @@ export default async function DepartementRapportsPage({
 
   const rapportsAffiches = (rapports ?? []).map((r) => ({
     id: r.id,
-    periode: r.periode,
+    periodeDebut: r.periode_debut,
+    periodeFin: r.periode_fin,
     date_soumission: r.date_soumission,
     auteurNom: auteurNomById[r.auteur_id] ?? "—",
   }));

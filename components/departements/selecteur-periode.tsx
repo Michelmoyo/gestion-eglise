@@ -1,64 +1,55 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const MOIS = [
-  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
-];
+import { Button } from "@/components/ui/button";
 
 interface Props {
   departementId: string;
-  moisSelectionne: number;
-  anneeSelectionnee: number;
-  anneeMax: number;
-  moisMax: number;
+  periodeDebut: string;
+  periodeFin: string;
+  aujourdHui: string;
 }
 
-export function SelecteurPeriode({
-  departementId,
-  moisSelectionne,
-  anneeSelectionnee,
-  anneeMax,
-  moisMax,
-}: Props) {
+export function SelecteurPeriode({ departementId, periodeDebut, periodeFin, aujourdHui }: Props) {
   const router = useRouter();
-  const anneeMin = anneeMax - 5;
-  const anneesDisponibles = Array.from({ length: anneeMax - anneeMin + 1 }, (_, i) => anneeMin + i);
+  const [debut, setDebut] = useState(periodeDebut);
+  const [fin, setFin] = useState(periodeFin);
 
-  function naviguer(mois: number, annee: number) {
-    const periode = `${annee}-${String(mois).padStart(2, "0")}`;
-    router.push(`/departements/${departementId}/rapport?periode=${periode}`);
+  const invalide = !debut || !fin || fin < debut;
+
+  function appliquer() {
+    if (invalide) return;
+    router.push(`/departements/${departementId}/rapport?debut=${debut}&fin=${fin}`);
   }
 
   return (
-    <div className="flex items-center justify-center gap-2">
-      <select
-        value={moisSelectionne}
-        onChange={(e) => naviguer(Number(e.target.value), anneeSelectionnee)}
-        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-        aria-label="Mois"
-      >
-        {MOIS.map((label, i) => {
-          const valeur = i + 1;
-          const desactive = anneeSelectionnee === anneeMax && valeur > moisMax;
-          return (
-            <option key={valeur} value={valeur} disabled={desactive}>
-              {label}
-            </option>
-          );
-        })}
-      </select>
-      <select
-        value={anneeSelectionnee}
-        onChange={(e) => naviguer(moisSelectionne, Number(e.target.value))}
-        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-        aria-label="Année"
-      >
-        {anneesDisponibles.map((a) => (
-          <option key={a} value={a}>{a}</option>
-        ))}
-      </select>
+    <div className="flex flex-col items-center gap-2">
+      <div className="flex items-center gap-2">
+        <input
+          type="date"
+          value={debut}
+          max={aujourdHui}
+          onChange={(e) => setDebut(e.target.value)}
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+          aria-label="Début de la période"
+        />
+        <span className="text-muted-foreground text-sm">→</span>
+        <input
+          type="date"
+          value={fin}
+          max={aujourdHui}
+          onChange={(e) => setFin(e.target.value)}
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+          aria-label="Fin de la période"
+        />
+      </div>
+      <Button type="button" variant="outline" size="sm" disabled={invalide} onClick={appliquer}>
+        Changer
+      </Button>
+      {invalide && debut && fin && (
+        <p className="text-xs text-destructive">La date de fin doit suivre la date de début.</p>
+      )}
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default async function RapportPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ periode?: string }>;
+  searchParams: Promise<{ debut?: string; fin?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -57,24 +57,26 @@ export default async function RapportPage({
   const peutVoirDetailCaisse =
     isPilotage || ["president", "vice_president", "tresorier"].includes(monAff?.role ?? "");
 
-  // Période sélectionnée (mois courant par défaut) : le président choisit la
-  // période avant de générer le rapport, pas forcément le mois en cours.
-  const { periode: periodeParam } = await searchParams;
+  // Période sélectionnée (mois courant par défaut) : le président choisit
+  // une plage libre avant de générer le rapport, pas forcément un mois
+  // calendaire complet.
+  const { debut: debutParam, fin: finParam } = await searchParams;
   const now = new Date();
-  const periodeCourte = /^\d{4}-\d{2}$/.test(periodeParam ?? "")
-    ? periodeParam!
-    : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const periodeCourante = `${periodeCourte}-01`;
-  const [anneeSelectionnee, moisSelectionne] = periodeCourte.split("-").map(Number);
-  const anneeMax = now.getFullYear();
-  const moisMax = now.getMonth() + 1;
+  const aujourdHui = now.toISOString().split("T")[0];
+  const premierJourMois = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+  const dateValide = /^\d{4}-\d{2}-\d{2}$/;
 
-  // Rapport existant pour cette période
+  const periodeDebut = dateValide.test(debutParam ?? "") ? debutParam! : premierJourMois;
+  const periodeFin =
+    dateValide.test(finParam ?? "") && finParam! >= periodeDebut ? finParam! : aujourdHui;
+
+  // Rapport existant pour cette période exacte
   const { data: rapportExistant } = await supabase
     .from("rapports")
     .select("*")
     .eq("departement_id", id)
-    .eq("periode", periodeCourante)
+    .eq("periode_debut", periodeDebut)
+    .eq("periode_fin", periodeFin)
     .single();
 
   // Données calculées pour le rapport pré-rempli
@@ -89,19 +91,17 @@ export default async function RapportPage({
     mouvementsPeriode,
     listesSuivi,
     pointsSuivi,
-  } = await getDonneesRapport(supabase, id, periodeCourante, { peutVoirDetailCaisse });
+  } = await getDonneesRapport(supabase, id, periodeDebut, periodeFin, { peutVoirDetailCaisse });
 
   const suiviOuvert = (listeId: string) =>
     pointsSuivi.filter((p) => p.liste_id === listeId && p.statut !== "termine");
 
   const action = soumettrerapport.bind(null, id);
-  const moisLabel = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(
-    new Date(periodeCourante)
-  );
+  const periodeLabel = format.periode(periodeDebut, periodeFin);
 
   return (
     <>
-      <TopBar title="Rapport mensuel" />
+      <TopBar title="Rapport" />
 
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
@@ -120,19 +120,17 @@ export default async function RapportPage({
           </Link>
         </div>
 
-        {/* Sélection de la période -- deux menus (mois/année) plutôt qu'un
-            input type="month", dont le support navigateur est inégal (Firefox
-            desktop entre autres l'affiche comme un champ texte libre). */}
+        {/* Sélection de la période -- plage de dates libre (plus
+            nécessairement un mois calendaire complet). */}
         <SelecteurPeriode
           departementId={id}
-          moisSelectionne={moisSelectionne}
-          anneeSelectionnee={anneeSelectionnee}
-          anneeMax={anneeMax}
-          moisMax={moisMax}
+          periodeDebut={periodeDebut}
+          periodeFin={periodeFin}
+          aujourdHui={aujourdHui}
         />
 
         <div className="text-center">
-          <h2 className="font-semibold text-lg capitalize">{moisLabel}</h2>
+          <h2 className="font-semibold text-lg capitalize">{periodeLabel}</h2>
           {rapportExistant && (
             <>
               <p className="text-xs text-green-600 mt-1">
@@ -327,7 +325,7 @@ export default async function RapportPage({
           </CardContent>
         </Card>
 
-        <RapportForm action={action} periode={periodeCourante} />
+        <RapportForm action={action} periodeDebut={periodeDebut} periodeFin={periodeFin} />
       </div>
     </>
   );
