@@ -151,15 +151,15 @@ export function DocumentRapport({
     <div className={`${styles.document} ${titillium.variable}`}>
       <article className={styles.page}>
         <header className={styles.letterhead}>
-          <div className={styles.letterheadIdentity}>
+          <div className={styles.letterheadLogo}>
             {logoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="" className={styles.logo} />
             )}
-            <div className={styles.letterheadOrg}>
-              {reseau && <div className={styles.network}>{reseau}</div>}
-              <div className={styles.church}>{nomEglise}</div>
-            </div>
+          </div>
+          <div className={styles.letterheadOrg}>
+            {reseau && <div className={styles.network}>{reseau}</div>}
+            <div className={styles.church}>{nomEglise}</div>
           </div>
           {(adresse || contactLigne2) && (
             <div className={styles.letterheadContact}>

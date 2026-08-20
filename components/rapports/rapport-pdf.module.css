@@ -49,27 +49,30 @@
 }
 
 /* ---------- Letterhead ---------- */
+/* Trois portions dediees (logo / identite / coordonnees) plutot qu'un
+   flex a deux groupes -- l'identite (reseau + nom d'eglise) garde la
+   plus grande part pour rester l'element dominant de l'en-tete. */
 .letterhead {
   background: linear-gradient(155deg, var(--brand) 0%, var(--brand-deep) 100%);
   color: #FFFFFF;
   padding: 22px 24px;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(70px, 1fr) minmax(160px, 3fr) minmax(120px, 1.3fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  gap: 16px;
 }
-.letterheadIdentity {
+.letterheadLogo {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  justify-content: center;
 }
 .logo {
   height: 44px;
   width: auto;
   max-width: 200px;
   object-fit: contain;
-  flex-shrink: 0;
+}
+.letterheadOrg {
+  text-align: center;
 }
 .letterheadOrg .network {
   font-size: 0.62rem;
@@ -93,8 +96,6 @@
   font-size: 0.68rem;
   line-height: 1.6;
   color: #FBD9CC;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .brandRule { height: 4px; display: flex; }
