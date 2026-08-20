@@ -66,11 +66,12 @@
 }
 .logo {
   height: 44px;
-  width: 44px;
+  width: auto;
+  max-width: 200px;
   object-fit: contain;
   border-radius: 6px;
   background: #FFFFFF;
-  padding: 4px;
+  padding: 4px 10px;
   flex-shrink: 0;
 }
 .letterheadOrg .network {
