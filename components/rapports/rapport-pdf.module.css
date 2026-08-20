@@ -70,6 +70,10 @@
   max-width: 200px;
   object-fit: contain;
   flex-shrink: 0;
+  /* Le PNG fourni a un fond blanc plein (non transparent). En multiply,
+     le blanc se fond dans le degrade de l'en-tete (blanc x couleur =
+     couleur) tandis que le trait noir du logo reste inchange. */
+  mix-blend-mode: multiply;
 }
 .letterheadOrg .network {
   font-size: 0.62rem;
