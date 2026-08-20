@@ -70,11 +70,6 @@
   max-width: 200px;
   object-fit: contain;
   flex-shrink: 0;
-  /* Le PNG fourni a un fond noir plein (non transparent), logo en
-     blanc dessus. En screen, le noir se fond dans le degrade de
-     l'en-tete (noir + couleur = couleur inchangee) tandis que le
-     blanc du logo reste visible. */
-  mix-blend-mode: screen;
 }
 .letterheadOrg .network {
   font-size: 0.62rem;

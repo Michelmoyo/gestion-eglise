@@ -22,12 +22,20 @@ export async function comprimerImage(
     ctx.drawImage(bitmap, 0, 0, largeur, hauteur);
     bitmap.close();
 
+    // PNG et WebP peuvent porter une transparence : la reencoder en JPEG
+    // (pas de canal alpha) l'aplatirait sur un fond opaque (noir dans la
+    // plupart des navigateurs) -- on ne recompresse en JPEG que les
+    // sources qui n'ont de toute facon pas de transparence a perdre.
+    const conserveTransparence = fichier.type === "image/png" || fichier.type === "image/webp";
+    const formatSortie = conserveTransparence ? "image/png" : "image/jpeg";
+    const extension = conserveTransparence ? "png" : "jpg";
+
     const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", qualite)
+      canvas.toBlob(resolve, formatSortie, qualite)
     );
     if (!blob || blob.size >= fichier.size) return fichier;
 
-    return new File([blob], "avatar.jpg", { type: "image/jpeg" });
+    return new File([blob], `image.${extension}`, { type: formatSortie });
   } catch {
     return fichier;
   }
