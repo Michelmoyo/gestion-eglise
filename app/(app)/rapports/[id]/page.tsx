@@ -5,7 +5,9 @@ import { ChevronLeft } from "lucide-react";
 import { format } from "@/lib/format";
 import { getDonneesRapport } from "@/lib/rapport";
 import { BoutonTelecharger } from "@/components/rapports/bouton-telecharger";
+import { BoutonSupprimerRapport } from "@/components/rapports/bouton-supprimer";
 import { DocumentRapport, normaliserReference } from "@/components/rapports/document-rapport";
+import { supprimerRapport } from "./actions";
 
 export default async function RapportDocumentPage({
   params,
@@ -45,17 +47,25 @@ export default async function RapportDocumentPage({
     .eq("auth_user_id", user.id)
     .single();
 
-  let peutVoirDetailCaisse = !!moi?.role_global;
-  if (moi && !peutVoirDetailCaisse) {
-    const { data: monAff } = await supabase
-      .from("affectations")
-      .select("role")
-      .eq("ouvrier_id", moi.id)
-      .eq("departement_id", rapport.departement_id)
-      .eq("statut", "actif")
-      .single();
-    peutVoirDetailCaisse = ["president", "vice_president", "tresorier"].includes(monAff?.role ?? "");
-  }
+  const isPilotage = !!moi?.role_global;
+
+  const { data: monAff } = moi
+    ? await supabase
+        .from("affectations")
+        .select("role")
+        .eq("ouvrier_id", moi.id)
+        .eq("departement_id", rapport.departement_id)
+        .eq("statut", "actif")
+        .single()
+    : { data: null };
+
+  const peutVoirDetailCaisse =
+    isPilotage || ["president", "vice_president", "tresorier"].includes(monAff?.role ?? "");
+
+  // Meme perimetre que la soumission d'un rapport (cf. rapports_delete) :
+  // pilotage ou gestionnaire du departement.
+  const peutSupprimer =
+    isPilotage || ["president", "vice_president", "secretaire"].includes(monAff?.role ?? "");
 
   // Fonction du rédacteur : son rôle global s'il est pilotage, sinon son
   // rôle actuel dans ce département.
@@ -129,7 +139,15 @@ export default async function RapportDocumentPage({
           <ChevronLeft size={16} />
           Rapports
         </Link>
-        <BoutonTelecharger />
+        <div className="flex items-center gap-2">
+          <BoutonTelecharger />
+          {peutSupprimer && (
+            <BoutonSupprimerRapport
+              action={supprimerRapport.bind(null, rapport.id, rapport.departement_id)}
+              redirectTo={`/departements/${rapport.departement_id}/rapports`}
+            />
+          )}
+        </div>
       </div>
 
       <DocumentRapport

@@ -15,6 +15,15 @@ export async function marquerLue(notificationId: string, lien: string | null) {
   if (lien) redirect(lien);
 }
 
+export async function supprimerNotification(notificationId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/connexion");
+
+  await supabase.from("notifications").delete().eq("id", notificationId);
+  revalidatePath("/notifications");
+}
+
 export async function marquerToutesLues() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

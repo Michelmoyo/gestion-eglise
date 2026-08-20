@@ -585,7 +585,10 @@ create policy commentaires_suivi_delete on commentaires_suivi for delete using (
 -- RAPPORTS
 -- Visible par toute personne affectee au departement (faible sensibilite,
 -- utile a toute l'equipe) ; soumission reservee aux gestionnaires.
--- Aucune policy UPDATE : un rapport soumis reste une archive datee.
+-- Aucune policy UPDATE : un rapport soumis reste une archive datee, on
+-- resoumet plutot que de le corriger. Suppression reservee au meme
+-- perimetre que la soumission (pilotage + gestionnaires du departement) --
+-- ex : rapport soumis par erreur ou sur la mauvaise periode.
 -- ----------------------------------------------------------------------------
 alter table rapports enable row level security;
 
@@ -594,6 +597,10 @@ create policy rapports_select on rapports for select using (
 );
 
 create policy rapports_insert on rapports for insert with check (
+  fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
+);
+
+create policy rapports_delete on rapports for delete using (
   fn_is_pasteur_ou_assistant() or fn_gere_departement(departement_id)
 );
 
@@ -609,6 +616,10 @@ create policy notifications_select on notifications for select using (
 create policy notifications_update on notifications for update using (
   destinataire_id = fn_ouvrier_id_courant()
 ) with check (
+  destinataire_id = fn_ouvrier_id_courant()
+);
+
+create policy notifications_delete on notifications for delete using (
   destinataire_id = fn_ouvrier_id_courant()
 );
 -- Pas de policy INSERT : les notifications sont creees par le backend
