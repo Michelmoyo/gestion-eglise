@@ -141,6 +141,7 @@ export interface Database {
           ouvrier_id: string;
           departement_id: string;
           role: RoleDepartementEnum;
+          titre_fonction: string | null;
           statut: StatutAffectationEnum;
           date_affectation: string;
           date_changement_statut: string | null;
@@ -153,6 +154,7 @@ export interface Database {
           ouvrier_id: string;
           departement_id: string;
           role?: RoleDepartementEnum;
+          titre_fonction?: string | null;
           statut?: StatutAffectationEnum;
           date_affectation?: string;
           date_changement_statut?: string | null;
@@ -163,6 +165,7 @@ export interface Database {
           ouvrier_id?: string;
           departement_id?: string;
           role?: RoleDepartementEnum;
+          titre_fonction?: string | null;
           statut?: StatutAffectationEnum;
           date_affectation?: string;
           date_changement_statut?: string | null;
@@ -532,6 +535,7 @@ export interface Database {
           date_affectation: string;
           date_changement_statut: string | null;
           date_fin_suspension: string | null;
+          titre_fonction: string | null;
         };
         Relationships: [];
       };
@@ -587,6 +591,10 @@ export interface Database {
           p_affectation_id: string;
           p_nouveau_role: RoleDepartementEnum;
         };
+        Returns: void;
+      };
+      rpc_definir_titre_fonction: {
+        Args: { p_affectation_id: string; p_titre: string };
         Returns: void;
       };
       rpc_suspendre_ouvrier: {

@@ -84,6 +84,27 @@ export async function assignerRole(
   return { success: true };
 }
 
+export async function definirTitreFonction(
+  departementId: string,
+  affectationId: string,
+  formData: FormData
+) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const titre = (formData.get("titre_fonction") as string) ?? "";
+
+  const { error } = await supabase.rpc("rpc_definir_titre_fonction", {
+    p_affectation_id: affectationId,
+    p_titre: titre,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/departements/${departementId}/equipe`);
+  return { success: true };
+}
+
 export async function suspendreOuvrier(
   departementId: string,
   affectationId: string,

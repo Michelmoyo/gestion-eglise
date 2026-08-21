@@ -666,6 +666,43 @@ $$;
 revoke execute on function rpc_assigner_role(uuid, role_departement_enum) from public;
 grant execute on function rpc_assigner_role(uuid, role_departement_enum) to authenticated;
 
+-- Intitule libre affiche a cote du role (ex: "Chef de chorale") -- purement
+-- cosmetique, ne touche jamais a `role` ni aux permissions. Meme perimetre
+-- que rpc_assigner_role : pasteur/assistant ou president de ce departement.
+create or replace function rpc_definir_titre_fonction(p_affectation_id uuid, p_titre text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_departement_id uuid;
+  v_titre text;
+begin
+  select departement_id into v_departement_id from affectations where id = p_affectation_id;
+
+  if v_departement_id is null then
+    raise exception 'Affectation introuvable.';
+  end if;
+
+  if not (fn_is_pasteur_ou_assistant() or fn_role_departement(v_departement_id) = 'president') then
+    raise exception 'Seul le president de ce departement (ou le pasteur) peut definir un titre.';
+  end if;
+
+  v_titre := nullif(trim(p_titre), '');
+  if v_titre is not null and char_length(v_titre) > 60 then
+    raise exception 'Le titre est limite a 60 caracteres.';
+  end if;
+
+  update affectations
+    set titre_fonction = v_titre
+    where id = p_affectation_id;
+end;
+$$;
+
+revoke execute on function rpc_definir_titre_fonction(uuid, text) from public;
+grant execute on function rpc_definir_titre_fonction(uuid, text) to authenticated;
+
 -- Suspension temporaire : pasteur, assistant, ou president de ce departement.
 -- p_date_fin_suspension optionnelle -- absente/nulle = duree indeterminee.
 create or replace function rpc_suspendre_ouvrier(

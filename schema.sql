@@ -138,13 +138,18 @@ create table affectations (
   ouvrier_id             uuid not null references ouvriers(id) on delete cascade,
   departement_id         uuid not null references departements(id) on delete cascade,
   role                   role_departement_enum not null default 'membre',
+  -- Intitule libre affiche a cote du role (ex: "Chef de chorale") -- ne
+  -- porte aucune permission, le role reste la seule source de verite pour
+  -- les droits (cf. rls_policies.sql).
+  titre_fonction         text,
   statut                 statut_affectation_enum not null default 'actif',
   date_affectation       date not null default current_date,
   date_changement_statut date,
   date_fin_suspension    date,
   created_at             timestamptz not null default now(),
   updated_at             timestamptz not null default now(),
-  unique (ouvrier_id, departement_id)
+  unique (ouvrier_id, departement_id),
+  check (titre_fonction is null or char_length(titre_fonction) <= 60)
 );
 
 create trigger trg_affectations_updated_at
@@ -930,7 +935,8 @@ select
   a.date_affectation,
   a.date_changement_statut,
   a.date_fin_suspension,
-  o.photo_url
+  o.photo_url,
+  a.titre_fonction
 from affectations a
 join ouvriers o on o.id = a.ouvrier_id
 where a.statut in ('actif', 'suspendu');

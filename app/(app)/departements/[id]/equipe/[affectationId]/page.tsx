@@ -52,7 +52,7 @@ export default async function MembreEquipeDetailPage({
 
   const { data: affectation } = await supabase
     .from("affectations")
-    .select("id, role, statut, date_affectation, date_changement_statut, date_fin_suspension, ouvrier_id")
+    .select("id, role, titre_fonction, statut, date_affectation, date_changement_statut, date_fin_suspension, ouvrier_id")
     .eq("id", affectationId)
     .eq("departement_id", id)
     .single();
@@ -107,6 +107,12 @@ export default async function MembreEquipeDetailPage({
               <span className="text-muted-foreground">Rôle</span>
               <span className="font-medium">{format.roleDepartement(affectation.role)}</span>
             </div>
+            {affectation.titre_fonction && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Titre / fonction</span>
+                <span className="font-medium">{affectation.titre_fonction}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-muted-foreground">Affecté depuis</span>
               <span className="font-medium">{format.date(affectation.date_affectation)}</span>
@@ -136,6 +142,7 @@ export default async function MembreEquipeDetailPage({
             affectationId={affectation.id}
             statut={affectation.statut}
             roleActuel={affectation.role}
+            titreFonction={affectation.titre_fonction}
             isPilotage={isPilotage}
             isPresident={isPresident}
           />

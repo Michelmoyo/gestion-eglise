@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   assignerRole,
+  definirTitreFonction,
   suspendreOuvrier,
   reactiverOuvrier,
   marquerQuitte,
@@ -24,6 +25,7 @@ interface Props {
   affectationId: string;
   statut: "actif" | "suspendu";
   roleActuel: string;
+  titreFonction: string | null;
   isPilotage: boolean;
   isPresident: boolean;
 }
@@ -33,6 +35,7 @@ export function EquipeActions({
   affectationId,
   statut,
   roleActuel,
+  titreFonction,
   isPilotage,
   isPresident,
 }: Props) {
@@ -43,10 +46,27 @@ export function EquipeActions({
   const [showSuspension, setShowSuspension] = useState(false);
   const [indeterminee, setIndeterminee] = useState(true);
   const [dateFin, setDateFin] = useState("");
+  const [titre, setTitre] = useState(titreFonction ?? "");
+  const [titreSucces, setTitreSucces] = useState(false);
 
   const peutGerer = isPilotage || isPresident;
 
   if (!peutGerer) return null;
+
+  function enregistrerTitre() {
+    const fd = new FormData();
+    fd.set("titre_fonction", titre);
+    startTransition(async () => {
+      setError(null);
+      setTitreSucces(false);
+      const res = await definirTitreFonction(departementId, affectationId, fd);
+      if (res.error) setError(res.error);
+      else {
+        setTitreSucces(true);
+        router.refresh();
+      }
+    });
+  }
 
   function handle(fn: () => Promise<{ error?: string; success?: boolean }>, retourListe = false) {
     startTransition(async () => {
@@ -68,6 +88,36 @@ export function EquipeActions({
 
   return (
     <div className="space-y-2">
+      <div className="space-y-1.5">
+        <label htmlFor="titre_fonction" className="text-xs text-muted-foreground">
+          Titre / fonction (optionnel)
+        </label>
+        <div className="flex gap-2">
+          <input
+            id="titre_fonction"
+            type="text"
+            value={titre}
+            maxLength={60}
+            placeholder="ex. Chef de chorale"
+            onChange={(e) => {
+              setTitre(e.target.value);
+              setTitreSucces(false);
+            }}
+            className="flex-1 h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isPending || titre === (titreFonction ?? "")}
+            onClick={enregistrerTitre}
+          >
+            Enregistrer
+          </Button>
+        </div>
+        {titreSucces && <p className="text-xs text-green-600">Titre enregistré.</p>}
+      </div>
+
       {statut === "actif" && (
         <div className="relative">
           <Button
