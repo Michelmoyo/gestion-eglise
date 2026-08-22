@@ -46,27 +46,15 @@ export function EquipeActions({
   const [showSuspension, setShowSuspension] = useState(false);
   const [indeterminee, setIndeterminee] = useState(true);
   const [dateFin, setDateFin] = useState("");
+  const [modePersonnalise, setModePersonnalise] = useState(false);
   const [titre, setTitre] = useState(titreFonction ?? "");
-  const [titreSucces, setTitreSucces] = useState(false);
 
   const peutGerer = isPilotage || isPresident;
 
   if (!peutGerer) return null;
 
-  function enregistrerTitre() {
-    const fd = new FormData();
-    fd.set("titre_fonction", titre);
-    startTransition(async () => {
-      setError(null);
-      setTitreSucces(false);
-      const res = await definirTitreFonction(departementId, affectationId, fd);
-      if (res.error) setError(res.error);
-      else {
-        setTitreSucces(true);
-        router.refresh();
-      }
-    });
-  }
+  const labelRole = ROLES.find((r) => r.value === roleActuel)?.label ?? roleActuel;
+  const labelAffiche = titreFonction || labelRole;
 
   function handle(fn: () => Promise<{ error?: string; success?: boolean }>, retourListe = false) {
     startTransition(async () => {
@@ -80,7 +68,48 @@ export function EquipeActions({
         router.refresh();
       }
       setShowRoles(false);
+      setModePersonnalise(false);
       setShowSuspension(false);
+    });
+  }
+
+  function choisirRoleFixe(value: string) {
+    startTransition(async () => {
+      setError(null);
+      const fd = new FormData();
+      fd.set("role", value);
+      const res = await assignerRole(departementId, affectationId, fd);
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      // Choisir un role fixe dans la liste efface un eventuel titre
+      // personnalise : les deux representent le meme "role affiche", on ne
+      // garde pas un intitule perime a cote d'un role different.
+      if (titreFonction) {
+        const fdTitre = new FormData();
+        fdTitre.set("titre_fonction", "");
+        await definirTitreFonction(departementId, affectationId, fdTitre);
+      }
+      router.refresh();
+      setShowRoles(false);
+    });
+  }
+
+  function validerPersonnalise() {
+    if (!titre.trim()) return;
+    startTransition(async () => {
+      setError(null);
+      const fd = new FormData();
+      fd.set("titre_fonction", titre);
+      const res = await definirTitreFonction(departementId, affectationId, fd);
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      router.refresh();
+      setShowRoles(false);
+      setModePersonnalise(false);
     });
   }
 
@@ -88,36 +117,6 @@ export function EquipeActions({
 
   return (
     <div className="space-y-2">
-      <div className="space-y-1.5">
-        <label htmlFor="titre_fonction" className="text-xs text-muted-foreground">
-          Titre / fonction (optionnel)
-        </label>
-        <div className="flex gap-2">
-          <input
-            id="titre_fonction"
-            type="text"
-            value={titre}
-            maxLength={60}
-            placeholder="ex. Chef de chorale"
-            onChange={(e) => {
-              setTitre(e.target.value);
-              setTitreSucces(false);
-            }}
-            className="flex-1 h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isPending || titre === (titreFonction ?? "")}
-            onClick={enregistrerTitre}
-          >
-            Enregistrer
-          </Button>
-        </div>
-        {titreSucces && <p className="text-xs text-green-600">Titre enregistré.</p>}
-      </div>
-
       {statut === "actif" && (
         <div className="relative">
           <Button
@@ -127,28 +126,81 @@ export function EquipeActions({
             onClick={() => setShowRoles((v) => !v)}
             disabled={isPending}
           >
-            Rôle : {ROLES.find((r) => r.value === roleActuel)?.label ?? roleActuel}
+            Rôle : {labelAffiche}
             <ChevronDown size={16} className="text-muted-foreground" />
           </Button>
           {showRoles && (
             <div className="absolute inset-x-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md overflow-hidden">
-              {ROLES.filter((r) => r.value !== "president" || isPilotage).map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
-                    r.value === roleActuel ? "font-semibold text-primary" : ""
-                  }`}
-                  onClick={() => {
-                    const fd = new FormData();
-                    fd.set("role", r.value);
-                    handle(() => assignerRole(departementId, affectationId, fd));
-                  }}
-                  disabled={isPending || r.value === roleActuel}
-                >
-                  {r.label}
-                </button>
-              ))}
+              {!modePersonnalise ? (
+                <>
+                  {ROLES.filter((r) => r.value !== "president" || isPilotage).map((r) => (
+                    <button
+                      key={r.value}
+                      type="button"
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
+                        !titreFonction && r.value === roleActuel ? "font-semibold text-primary" : ""
+                      }`}
+                      onClick={() => choisirRoleFixe(r.value)}
+                      disabled={isPending || (!titreFonction && r.value === roleActuel)}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                  <div className="border-t border-border" />
+                  <button
+                    type="button"
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
+                      titreFonction ? "font-semibold text-primary" : ""
+                    }`}
+                    onClick={() => {
+                      setTitre(titreFonction ?? "");
+                      setModePersonnalise(true);
+                    }}
+                    disabled={isPending}
+                  >
+                    Personnalisé…
+                  </button>
+                </>
+              ) : (
+                <div className="p-2 space-y-2">
+                  <input
+                    type="text"
+                    autoFocus
+                    value={titre}
+                    maxLength={60}
+                    placeholder="ex. Chef de chorale"
+                    onChange={(e) => setTitre(e.target.value)}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  <p className="text-[11px] text-muted-foreground px-0.5">
+                    Reste « {labelRole} » pour les permissions ; seul l&apos;intitulé affiché change.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      disabled={isPending}
+                      onClick={() => {
+                        setModePersonnalise(false);
+                        setTitre(titreFonction ?? "");
+                      }}
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="flex-1"
+                      disabled={isPending || !titre.trim()}
+                      onClick={validerPersonnalise}
+                    >
+                      Valider
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
