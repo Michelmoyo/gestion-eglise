@@ -133,23 +133,38 @@ create trigger trg_departements_updated_at
 -- Un ouvrier peut etre affecte a plusieurs departements. L'historique est
 -- conserve via le statut (actif / suspendu / quitte), jamais par suppression.
 -- ----------------------------------------------------------------------------
+-- Catalogue de titres/fonctions personnalises, par departement (ex: "Chef
+-- de chorale") -- appartient au departement, pas a un ouvrier : une fois
+-- cree, un titre est reutilisable pour n'importe lequel de ses membres, au
+-- meme niveau que les 5 roles fixes. Purement cosmetique, ne porte aucune
+-- permission (cf. rls_policies.sql).
+create table titres_fonction_departement (
+  id             uuid primary key default gen_random_uuid(),
+  departement_id uuid not null references departements(id) on delete cascade,
+  nom            text not null,
+  created_at     timestamptz not null default now(),
+  unique (departement_id, nom),
+  check (char_length(nom) between 1 and 60)
+);
+
+create index idx_titres_fonction_departement on titres_fonction_departement(departement_id);
+
 create table affectations (
   id                     uuid primary key default gen_random_uuid(),
   ouvrier_id             uuid not null references ouvriers(id) on delete cascade,
   departement_id         uuid not null references departements(id) on delete cascade,
   role                   role_departement_enum not null default 'membre',
-  -- Intitule libre affiche a cote du role (ex: "Chef de chorale") -- ne
-  -- porte aucune permission, le role reste la seule source de verite pour
-  -- les droits (cf. rls_policies.sql).
-  titre_fonction         text,
+  -- Titre du catalogue titres_fonction_departement, affiche a cote du
+  -- role -- ne porte aucune permission, le role reste la seule source de
+  -- verite pour les droits (cf. rls_policies.sql).
+  titre_fonction_id      uuid references titres_fonction_departement(id) on delete set null,
   statut                 statut_affectation_enum not null default 'actif',
   date_affectation       date not null default current_date,
   date_changement_statut date,
   date_fin_suspension    date,
   created_at             timestamptz not null default now(),
   updated_at             timestamptz not null default now(),
-  unique (ouvrier_id, departement_id),
-  check (titre_fonction is null or char_length(titre_fonction) <= 60)
+  unique (ouvrier_id, departement_id)
 );
 
 create trigger trg_affectations_updated_at
@@ -936,9 +951,11 @@ select
   a.date_changement_statut,
   a.date_fin_suspension,
   o.photo_url,
-  a.titre_fonction
+  a.titre_fonction_id,
+  tf.nom as titre_fonction_nom
 from affectations a
 join ouvriers o on o.id = a.ouvrier_id
+left join titres_fonction_departement tf on tf.id = a.titre_fonction_id
 where a.statut in ('actif', 'suspendu');
 
 -- Taux de presence par activite (utilise dans le rapport mensuel detaille).

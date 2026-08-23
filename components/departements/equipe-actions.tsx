@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   assignerRole,
   definirTitreFonction,
+  creerTitreFonction,
   suspendreOuvrier,
   reactiverOuvrier,
   marquerQuitte,
@@ -20,12 +21,18 @@ const ROLES = [
   { value: "membre", label: "Membre" },
 ] as const;
 
+interface TitrePersonnalise {
+  id: string;
+  nom: string;
+}
+
 interface Props {
   departementId: string;
   affectationId: string;
   statut: "actif" | "suspendu";
   roleActuel: string;
-  titreFonction: string | null;
+  titreFonctionId: string | null;
+  titresPersonnalises: TitrePersonnalise[];
   isPilotage: boolean;
   isPresident: boolean;
 }
@@ -35,7 +42,8 @@ export function EquipeActions({
   affectationId,
   statut,
   roleActuel,
-  titreFonction,
+  titreFonctionId,
+  titresPersonnalises,
   isPilotage,
   isPresident,
 }: Props) {
@@ -46,15 +54,16 @@ export function EquipeActions({
   const [showSuspension, setShowSuspension] = useState(false);
   const [indeterminee, setIndeterminee] = useState(true);
   const [dateFin, setDateFin] = useState("");
-  const [modePersonnalise, setModePersonnalise] = useState(false);
-  const [titre, setTitre] = useState(titreFonction ?? "");
+  const [modeNouveau, setModeNouveau] = useState(false);
+  const [nouveauTitre, setNouveauTitre] = useState("");
 
   const peutGerer = isPilotage || isPresident;
 
   if (!peutGerer) return null;
 
   const labelRole = ROLES.find((r) => r.value === roleActuel)?.label ?? roleActuel;
-  const labelAffiche = titreFonction || labelRole;
+  const titreActuel = titresPersonnalises.find((t) => t.id === titreFonctionId) ?? null;
+  const labelAffiche = titreActuel?.nom || labelRole;
 
   function handle(fn: () => Promise<{ error?: string; success?: boolean }>, retourListe = false) {
     startTransition(async () => {
@@ -68,7 +77,7 @@ export function EquipeActions({
         router.refresh();
       }
       setShowRoles(false);
-      setModePersonnalise(false);
+      setModeNouveau(false);
       setShowSuspension(false);
     });
   }
@@ -83,12 +92,11 @@ export function EquipeActions({
         setError(res.error);
         return;
       }
-      // Choisir un role fixe dans la liste efface un eventuel titre
-      // personnalise : les deux representent le meme "role affiche", on ne
-      // garde pas un intitule perime a cote d'un role different.
-      if (titreFonction) {
+      // Choisir un role fixe efface un eventuel titre personnalise : les
+      // deux representent le meme "role affiche", on ne garde pas un
+      // intitule perime a cote d'un role different.
+      if (titreFonctionId) {
         const fdTitre = new FormData();
-        fdTitre.set("titre_fonction", "");
         await definirTitreFonction(departementId, affectationId, fdTitre);
       }
       router.refresh();
@@ -96,12 +104,11 @@ export function EquipeActions({
     });
   }
 
-  function validerPersonnalise() {
-    if (!titre.trim()) return;
+  function choisirTitrePersonnalise(id: string) {
     startTransition(async () => {
       setError(null);
       const fd = new FormData();
-      fd.set("titre_fonction", titre);
+      fd.set("titre_fonction_id", id);
       const res = await definirTitreFonction(departementId, affectationId, fd);
       if (res.error) {
         setError(res.error);
@@ -109,7 +116,30 @@ export function EquipeActions({
       }
       router.refresh();
       setShowRoles(false);
-      setModePersonnalise(false);
+    });
+  }
+
+  function creerEtAssignerTitre() {
+    const nom = nouveauTitre.trim();
+    if (!nom) return;
+    startTransition(async () => {
+      setError(null);
+      const resCreation = await creerTitreFonction(departementId, nom);
+      if (resCreation.error || !resCreation.id) {
+        setError(resCreation.error ?? "Erreur lors de la création du titre.");
+        return;
+      }
+      const fd = new FormData();
+      fd.set("titre_fonction_id", resCreation.id);
+      const res = await definirTitreFonction(departementId, affectationId, fd);
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      router.refresh();
+      setShowRoles(false);
+      setModeNouveau(false);
+      setNouveauTitre("");
     });
   }
 
@@ -130,35 +160,50 @@ export function EquipeActions({
             <ChevronDown size={16} className="text-muted-foreground" />
           </Button>
           {showRoles && (
-            <div className="absolute inset-x-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md overflow-hidden">
-              {!modePersonnalise ? (
+            <div className="absolute inset-x-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md overflow-hidden max-h-72 overflow-y-auto">
+              {!modeNouveau ? (
                 <>
                   {ROLES.filter((r) => r.value !== "president" || isPilotage).map((r) => (
                     <button
                       key={r.value}
                       type="button"
                       className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
-                        !titreFonction && r.value === roleActuel ? "font-semibold text-primary" : ""
+                        !titreFonctionId && r.value === roleActuel ? "font-semibold text-primary" : ""
                       }`}
                       onClick={() => choisirRoleFixe(r.value)}
-                      disabled={isPending || (!titreFonction && r.value === roleActuel)}
+                      disabled={isPending || (!titreFonctionId && r.value === roleActuel)}
                     >
                       {r.label}
                     </button>
                   ))}
+
+                  {titresPersonnalises.length > 0 && (
+                    <>
+                      <div className="border-t border-border" />
+                      {titresPersonnalises.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
+                            t.id === titreFonctionId ? "font-semibold text-primary" : ""
+                          }`}
+                          onClick={() => choisirTitrePersonnalise(t.id)}
+                          disabled={isPending || t.id === titreFonctionId}
+                        >
+                          {t.nom}
+                        </button>
+                      ))}
+                    </>
+                  )}
+
                   <div className="border-t border-border" />
                   <button
                     type="button"
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
-                      titreFonction ? "font-semibold text-primary" : ""
-                    }`}
-                    onClick={() => {
-                      setTitre(titreFonction ?? "");
-                      setModePersonnalise(true);
-                    }}
+                    className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-accent transition-colors"
+                    onClick={() => setModeNouveau(true)}
                     disabled={isPending}
                   >
-                    Personnalisé…
+                    + Nouveau titre…
                   </button>
                 </>
               ) : (
@@ -166,14 +211,15 @@ export function EquipeActions({
                   <input
                     type="text"
                     autoFocus
-                    value={titre}
+                    value={nouveauTitre}
                     maxLength={60}
                     placeholder="ex. Chef de chorale"
-                    onChange={(e) => setTitre(e.target.value)}
+                    onChange={(e) => setNouveauTitre(e.target.value)}
                     className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                   <p className="text-[11px] text-muted-foreground px-0.5">
-                    Reste « {labelRole} » pour les permissions ; seul l&apos;intitulé affiché change.
+                    Reste « {labelRole} » pour les permissions ; ce titre sera ensuite disponible
+                    pour tout le département.
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -183,8 +229,8 @@ export function EquipeActions({
                       className="flex-1"
                       disabled={isPending}
                       onClick={() => {
-                        setModePersonnalise(false);
-                        setTitre(titreFonction ?? "");
+                        setModeNouveau(false);
+                        setNouveauTitre("");
                       }}
                     >
                       Annuler
@@ -193,10 +239,10 @@ export function EquipeActions({
                       type="button"
                       size="sm"
                       className="flex-1"
-                      disabled={isPending || !titre.trim()}
-                      onClick={validerPersonnalise}
+                      disabled={isPending || !nouveauTitre.trim()}
+                      onClick={creerEtAssignerTitre}
                     >
-                      Valider
+                      Créer
                     </Button>
                   </div>
                 </div>

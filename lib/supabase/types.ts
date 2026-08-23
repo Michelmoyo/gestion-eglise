@@ -141,7 +141,7 @@ export interface Database {
           ouvrier_id: string;
           departement_id: string;
           role: RoleDepartementEnum;
-          titre_fonction: string | null;
+          titre_fonction_id: string | null;
           statut: StatutAffectationEnum;
           date_affectation: string;
           date_changement_statut: string | null;
@@ -154,7 +154,7 @@ export interface Database {
           ouvrier_id: string;
           departement_id: string;
           role?: RoleDepartementEnum;
-          titre_fonction?: string | null;
+          titre_fonction_id?: string | null;
           statut?: StatutAffectationEnum;
           date_affectation?: string;
           date_changement_statut?: string | null;
@@ -165,11 +165,30 @@ export interface Database {
           ouvrier_id?: string;
           departement_id?: string;
           role?: RoleDepartementEnum;
-          titre_fonction?: string | null;
+          titre_fonction_id?: string | null;
           statut?: StatutAffectationEnum;
           date_affectation?: string;
           date_changement_statut?: string | null;
           date_fin_suspension?: string | null;
+        };
+        Relationships: [];
+      };
+      titres_fonction_departement: {
+        Row: {
+          id: string;
+          departement_id: string;
+          nom: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          departement_id: string;
+          nom: string;
+        };
+        Update: {
+          id?: string;
+          departement_id?: string;
+          nom?: string;
         };
         Relationships: [];
       };
@@ -535,7 +554,8 @@ export interface Database {
           date_affectation: string;
           date_changement_statut: string | null;
           date_fin_suspension: string | null;
-          titre_fonction: string | null;
+          titre_fonction_id: string | null;
+          titre_fonction_nom: string | null;
         };
         Relationships: [];
       };
@@ -594,7 +614,7 @@ export interface Database {
         Returns: void;
       };
       rpc_definir_titre_fonction: {
-        Args: { p_affectation_id: string; p_titre: string };
+        Args: { p_affectation_id: string; p_titre_fonction_id: string | null };
         Returns: void;
       };
       rpc_suspendre_ouvrier: {

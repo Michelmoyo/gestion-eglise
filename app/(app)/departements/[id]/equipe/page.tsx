@@ -53,7 +53,7 @@ export default async function EquipePage({
   // Membres actifs et suspendus
   const { data: effectifs } = await supabase
     .from("v_effectifs_departement")
-    .select("affectation_id, ouvrier_id, nom, prenom, photo_url, role, titre_fonction, statut, date_affectation, date_changement_statut")
+    .select("affectation_id, ouvrier_id, nom, prenom, photo_url, role, titre_fonction_nom, statut, date_affectation, date_changement_statut")
     .eq("departement_id", id)
     .order("statut", { ascending: true })
     .order("nom", { ascending: true });
@@ -95,7 +95,7 @@ export default async function EquipePage({
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {format.roleDepartement(e.role)}
-                      {e.titre_fonction ? ` · ${e.titre_fonction}` : ""} · depuis{" "}
+                      {e.titre_fonction_nom ? ` · ${e.titre_fonction_nom}` : ""} · depuis{" "}
                       {format.date(e.date_affectation)}
                     </p>
                   </div>

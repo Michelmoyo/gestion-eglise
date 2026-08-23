@@ -230,6 +230,25 @@ create policy affectations_update_pasteur on affectations for update using (
 );
 
 -- ----------------------------------------------------------------------------
+-- TITRES_FONCTION_DEPARTEMENT
+-- Catalogue de titres personnalises par departement (ex: "Chef de
+-- chorale"), reutilisable pour n'importe quel membre. Visible par toute
+-- l'equipe (meme perimetre que rapports_select) ; creation reservee au
+-- pasteur/assistant ou au president de ce departement (meme perimetre que
+-- rpc_assigner_role). Pas de policy UPDATE/DELETE : on cree, on ne
+-- renomme/supprime pas un titre deja en circulation.
+-- ----------------------------------------------------------------------------
+alter table titres_fonction_departement enable row level security;
+
+create policy titres_fonction_departement_select on titres_fonction_departement for select using (
+  fn_is_pasteur_ou_assistant() or fn_est_affecte(departement_id)
+);
+
+create policy titres_fonction_departement_insert on titres_fonction_departement for insert with check (
+  fn_is_pasteur_ou_assistant() or fn_role_departement(departement_id) = 'president'
+);
+
+-- ----------------------------------------------------------------------------
 -- ACTIVITES
 -- ----------------------------------------------------------------------------
 alter table activites enable row level security;
@@ -666,10 +685,11 @@ $$;
 revoke execute on function rpc_assigner_role(uuid, role_departement_enum) from public;
 grant execute on function rpc_assigner_role(uuid, role_departement_enum) to authenticated;
 
--- Intitule libre affiche a cote du role (ex: "Chef de chorale") -- purement
--- cosmetique, ne touche jamais a `role` ni aux permissions. Meme perimetre
--- que rpc_assigner_role : pasteur/assistant ou president de ce departement.
-create or replace function rpc_definir_titre_fonction(p_affectation_id uuid, p_titre text)
+-- Assigne (ou retire, si null) un titre du catalogue departemental
+-- titres_fonction_departement a une affectation -- purement cosmetique, ne
+-- touche jamais a `role` ni aux permissions. Meme perimetre que
+-- rpc_assigner_role : pasteur/assistant ou president de ce departement.
+create or replace function rpc_definir_titre_fonction(p_affectation_id uuid, p_titre_fonction_id uuid)
 returns void
 language plpgsql
 security definer
@@ -677,7 +697,7 @@ set search_path = public
 as $$
 declare
   v_departement_id uuid;
-  v_titre text;
+  v_titre_departement_id uuid;
 begin
   select departement_id into v_departement_id from affectations where id = p_affectation_id;
 
@@ -689,19 +709,23 @@ begin
     raise exception 'Seul le president de ce departement (ou le pasteur) peut definir un titre.';
   end if;
 
-  v_titre := nullif(trim(p_titre), '');
-  if v_titre is not null and char_length(v_titre) > 60 then
-    raise exception 'Le titre est limite a 60 caracteres.';
+  if p_titre_fonction_id is not null then
+    select departement_id into v_titre_departement_id
+      from titres_fonction_departement where id = p_titre_fonction_id;
+
+    if v_titre_departement_id is null or v_titre_departement_id <> v_departement_id then
+      raise exception 'Ce titre n''appartient pas a ce departement.';
+    end if;
   end if;
 
   update affectations
-    set titre_fonction = v_titre
+    set titre_fonction_id = p_titre_fonction_id
     where id = p_affectation_id;
 end;
 $$;
 
-revoke execute on function rpc_definir_titre_fonction(uuid, text) from public;
-grant execute on function rpc_definir_titre_fonction(uuid, text) to authenticated;
+revoke execute on function rpc_definir_titre_fonction(uuid, uuid) from public;
+grant execute on function rpc_definir_titre_fonction(uuid, uuid) to authenticated;
 
 -- Suspension temporaire : pasteur, assistant, ou president de ce departement.
 -- p_date_fin_suspension optionnelle -- absente/nulle = duree indeterminee.

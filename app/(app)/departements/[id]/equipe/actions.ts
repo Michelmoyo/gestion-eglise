@@ -92,17 +92,56 @@ export async function definirTitreFonction(
   const { supabase, peutGerer } = await getContexte(departementId);
   if (!peutGerer) return { error: "Accès refusé." };
 
-  const titre = (formData.get("titre_fonction") as string) ?? "";
+  const titreFonctionId = (formData.get("titre_fonction_id") as string) || null;
 
   const { error } = await supabase.rpc("rpc_definir_titre_fonction", {
     p_affectation_id: affectationId,
-    p_titre: titre,
+    p_titre_fonction_id: titreFonctionId,
   });
 
   if (error) return { error: error.message };
 
   revalidatePath(`/departements/${departementId}/equipe`);
   return { success: true };
+}
+
+// Cree un titre personnalise pour le departement (catalogue partage, pas
+// une propriete d'un seul ouvrier) : reutilisable ensuite pour n'importe
+// quel membre. Pas de RPC necessaire, titres_fonction_departement n'est
+// pas `affectations` -- l'ecriture est deja restreinte par une policy
+// RLS dediee (pasteur/assistant ou president de ce departement).
+export async function creerTitreFonction(departementId: string, nom: string) {
+  const { supabase, peutGerer } = await getContexte(departementId);
+  if (!peutGerer) return { error: "Accès refusé." };
+
+  const nomTrim = nom.trim();
+  if (!nomTrim) return { error: "Le titre ne peut pas être vide." };
+  if (nomTrim.length > 60) return { error: "Le titre est limité à 60 caractères." };
+
+  const { data: cree, error: erreurCreation } = await supabase
+    .from("titres_fonction_departement")
+    .insert({ departement_id: departementId, nom: nomTrim })
+    .select("id")
+    .single();
+
+  if (!erreurCreation && cree) {
+    revalidatePath(`/departements/${departementId}/equipe`);
+    return { success: true, id: cree.id };
+  }
+
+  // Code 23505 = violation de la contrainte unique (departement_id, nom) :
+  // le titre existe deja, on le reutilise plutot que d'echouer.
+  if (erreurCreation?.code === "23505") {
+    const { data: existant } = await supabase
+      .from("titres_fonction_departement")
+      .select("id")
+      .eq("departement_id", departementId)
+      .eq("nom", nomTrim)
+      .single();
+    if (existant) return { success: true, id: existant.id };
+  }
+
+  return { error: "Erreur lors de la création du titre." };
 }
 
 export async function suspendreOuvrier(
