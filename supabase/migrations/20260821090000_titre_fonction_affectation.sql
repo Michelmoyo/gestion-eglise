@@ -4,8 +4,17 @@
 -- niveau que les 5 roles fixes dans le menu de selection. Purement
 -- cosmetique : le role (role_departement_enum) reste l'unique source de
 -- verite pour les permissions dans tout rls_policies.sql.
+--
+-- Nettoyage prealable : une version precedente (texte libre par
+-- affectation, colonne `titre_fonction`) a pu etre executee avant ce
+-- catalogue partage -- on la retire proprement si elle existe, avant de
+-- recreer la vue avec les nouvelles colonnes (CREATE OR REPLACE VIEW ne
+-- peut pas renommer une colonne existante).
 
-create table titres_fonction_departement (
+drop function if exists rpc_definir_titre_fonction(uuid, text);
+drop view if exists v_effectifs_departement;
+
+create table if not exists titres_fonction_departement (
   id             uuid primary key default gen_random_uuid(),
   departement_id uuid not null references departements(id) on delete cascade,
   nom            text not null,
@@ -14,12 +23,13 @@ create table titres_fonction_departement (
   check (char_length(nom) between 1 and 60)
 );
 
-create index idx_titres_fonction_departement on titres_fonction_departement(departement_id);
+create index if not exists idx_titres_fonction_departement on titres_fonction_departement(departement_id);
 
 alter table titres_fonction_departement enable row level security;
 
 -- Meme visibilite que rapports_select : faible sensibilite, utile a toute
 -- l'equipe du departement.
+drop policy if exists titres_fonction_departement_select on titres_fonction_departement;
 create policy titres_fonction_departement_select on titres_fonction_departement for select using (
   fn_is_pasteur_ou_assistant() or fn_est_affecte(departement_id)
 );
@@ -27,6 +37,7 @@ create policy titres_fonction_departement_select on titres_fonction_departement 
 -- Creation directe (pas de RPC necessaire : cette table n'est pas
 -- `affectations`, cf. CLAUDE.md). Meme perimetre que rpc_assigner_role :
 -- pasteur/assistant ou president de ce departement.
+drop policy if exists titres_fonction_departement_insert on titres_fonction_departement;
 create policy titres_fonction_departement_insert on titres_fonction_departement for insert with check (
   fn_is_pasteur_ou_assistant() or fn_role_departement(departement_id) = 'president'
 );
@@ -34,7 +45,12 @@ create policy titres_fonction_departement_insert on titres_fonction_departement 
 alter table affectations
   add column if not exists titre_fonction_id uuid references titres_fonction_departement(id) on delete set null;
 
-create or replace view v_effectifs_departement as
+-- Ancienne colonne texte de la version precedente : plus necessaire, le
+-- titre passe desormais par titre_fonction_id. DROP COLUMN retire aussi
+-- automatiquement son check constraint associe.
+alter table affectations drop column if exists titre_fonction;
+
+create view v_effectifs_departement as
 select
   a.id as affectation_id,
   a.departement_id,
