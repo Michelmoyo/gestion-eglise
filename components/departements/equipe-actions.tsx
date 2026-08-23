@@ -160,7 +160,7 @@ export function EquipeActions({
             <ChevronDown size={16} className="text-muted-foreground" />
           </Button>
           {showRoles && (
-            <div className="absolute inset-x-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md overflow-hidden max-h-72 overflow-y-auto">
+            <div className="absolute inset-x-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md max-h-72 overflow-y-auto overflow-x-hidden">
               {!modeNouveau ? (
                 <>
                   {ROLES.filter((r) => r.value !== "president" || isPilotage).map((r) => (
