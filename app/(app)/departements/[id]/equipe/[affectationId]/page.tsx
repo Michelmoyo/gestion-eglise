@@ -46,9 +46,21 @@ export default async function MembreEquipeDetailPage({
     .single();
 
   const isPresident = monAff?.role === "president";
-  const peutGerer = isPilotage || isPresident;
 
-  if (!peutGerer) redirect(`/departements/${id}`);
+  // "Équipe & rôles" se consulte par les trois responsables du département
+  // (président, vice-président, secrétaire) -- cahier des charges §12,
+  // couche 2 -- même si seul le président (et le pilotage) peut y agir
+  // (cf. EquipeActions).
+  const peutVoir =
+    isPilotage || ["president", "vice_president", "secretaire"].includes(monAff?.role ?? "");
+
+  if (!peutVoir) redirect(`/departements/${id}`);
+
+  // Assigner un role secondaire ou nommer un president est reserve au
+  // pasteur (et au president pour les roles secondaires) -- l'assistant en
+  // est exclu, contrairement aux autres actions de pilotage (cahier des
+  // charges §3.8).
+  const isPasteur = moi.role_global === "pasteur";
 
   const { data: affectation } = await supabase
     .from("affectations")
@@ -157,6 +169,7 @@ export default async function MembreEquipeDetailPage({
             titresPersonnalises={titresPersonnalises ?? []}
             isPilotage={isPilotage}
             isPresident={isPresident}
+            isPasteur={isPasteur}
           />
         )}
       </div>

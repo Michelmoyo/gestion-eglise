@@ -35,6 +35,7 @@ interface Props {
   titresPersonnalises: TitrePersonnalise[];
   isPilotage: boolean;
   isPresident: boolean;
+  isPasteur: boolean;
 }
 
 export function EquipeActions({
@@ -46,6 +47,7 @@ export function EquipeActions({
   titresPersonnalises,
   isPilotage,
   isPresident,
+  isPasteur,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -60,6 +62,12 @@ export function EquipeActions({
   const peutGerer = isPilotage || isPresident;
 
   if (!peutGerer) return null;
+
+  // Assigner un role secondaire (ou nommer un president) est reserve au
+  // pasteur et au president de ce departement -- l'assistant peut gerer
+  // suspension/reactivation/depart ci-dessous, mais pas ca (cahier des
+  // charges §3.8).
+  const peutAssignerRole = isPasteur || isPresident;
 
   const labelRole = ROLES.find((r) => r.value === roleActuel)?.label ?? roleActuel;
   const titreActuel = titresPersonnalises.find((t) => t.id === titreFonctionId) ?? null;
@@ -147,7 +155,7 @@ export function EquipeActions({
 
   return (
     <div className="space-y-2">
-      {statut === "actif" && (
+      {statut === "actif" && peutAssignerRole && (
         <div className="relative">
           <Button
             type="button"
@@ -163,7 +171,7 @@ export function EquipeActions({
             <div className="absolute inset-x-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md max-h-72 overflow-y-auto overflow-x-hidden">
               {!modeNouveau ? (
                 <>
-                  {ROLES.filter((r) => r.value !== "president" || isPilotage).map((r) => (
+                  {ROLES.filter((r) => r.value !== "president" || isPasteur).map((r) => (
                     <button
                       key={r.value}
                       type="button"

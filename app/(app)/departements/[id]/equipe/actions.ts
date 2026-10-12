@@ -32,8 +32,9 @@ async function getContexte(departementId: string) {
 
   const isPresident = monAff?.role === "president";
   const peutGerer = isPilotage || isPresident;
+  const isPasteur = moi.role_global === "pasteur";
 
-  return { supabase, moi, isPilotage, isPresident, peutGerer };
+  return { supabase, moi, isPilotage, isPresident, peutGerer, isPasteur };
 }
 
 export async function affecterOuvrier(departementId: string, formData: FormData) {
@@ -68,8 +69,8 @@ export async function assignerRole(
   affectationId: string,
   formData: FormData
 ) {
-  const { supabase, peutGerer } = await getContexte(departementId);
-  if (!peutGerer) return { error: "Accès refusé." };
+  const { supabase, isPresident, isPasteur } = await getContexte(departementId);
+  if (!isPasteur && !isPresident) return { error: "Accès refusé." };
 
   const role = formData.get("role") as RoleDept;
 

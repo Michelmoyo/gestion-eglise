@@ -45,10 +45,13 @@ export default async function EquipePage({
     .eq("statut", "actif")
     .single();
 
-  const isPresident = monAff?.role === "president";
-  const peutGerer = isPilotage || isPresident;
+  // "Équipe & rôles" se consulte par les trois responsables du département
+  // (président, vice-président, secrétaire), même si seul le président (et
+  // le pilotage) peut y agir -- cahier des charges §12, couche 2.
+  const peutVoir =
+    isPilotage || ["president", "vice_president", "secretaire"].includes(monAff?.role ?? "");
 
-  if (!peutGerer) redirect(`/departements/${id}`);
+  if (!peutVoir) redirect(`/departements/${id}`);
 
   // Membres actifs et suspendus
   const { data: effectifs } = await supabase

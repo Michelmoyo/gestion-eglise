@@ -668,11 +668,11 @@ begin
     raise exception 'Affectation introuvable.';
   end if;
 
-  if not (fn_is_pasteur_ou_assistant() or fn_role_departement(v_departement_id) = 'president') then
+  if not (fn_is_pasteur() or fn_role_departement(v_departement_id) = 'president') then
     raise exception 'Seul le president de ce departement (ou le pasteur) peut assigner un role.';
   end if;
 
-  if p_nouveau_role = 'president' and not fn_is_pasteur_ou_assistant() then
+  if p_nouveau_role = 'president' and not fn_is_pasteur() then
     raise exception 'La nomination d''un president est reservee au pasteur.';
   end if;
 
@@ -851,9 +851,12 @@ $$;
 revoke execute on function fn_solde_departement(uuid) from public;
 grant execute on function fn_solde_departement(uuid) to authenticated;
 
--- Meme regle d'autorisation que fn_solde_departement, mais borne a une date
--- (utilise par le rapport mensuel pour le bilan "solde au debut / a la fin
--- de la periode", pas seulement le solde courant).
+-- Variante "statistique" (ligne matrice §3.8 "voir les statistiques de son
+-- departement") : pilotage, president, vice-president, secretaire et
+-- tresorier, mais PAS un simple membre. Plus large que fn_solde_departement
+-- (qui exclut aussi le secretaire, car lui n'a acces qu'au solde agrege via
+-- le rapport, jamais a l'ecran caisse dedie) -- necessaire car le rapport
+-- mensuel, soumis par le secretaire, a besoin de ce chiffre.
 create or replace function fn_solde_departement_a_date(p_departement_id uuid, p_date date)
 returns numeric
 language plpgsql
@@ -864,7 +867,10 @@ as $$
 declare
   v_solde numeric;
 begin
-  if not (fn_is_pasteur_ou_assistant() or fn_est_affecte(p_departement_id)) then
+  if not (
+    fn_is_pasteur_ou_assistant()
+    or fn_role_departement(p_departement_id) in ('president', 'vice_president', 'secretaire', 'tresorier')
+  ) then
     raise exception 'Non autorise.';
   end if;
 
