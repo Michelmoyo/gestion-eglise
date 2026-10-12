@@ -476,7 +476,6 @@ export function DocumentRapport({
           </div>
           <div className={styles.footerMeta}>
             <span>Document généré le {format.date(new Date().toISOString())} — {nomEglise}, Gestion des Départements</span>
-            <span>Page 1 / 1</span>
           </div>
         </footer>
       </article>

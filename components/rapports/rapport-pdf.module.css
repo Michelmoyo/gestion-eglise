@@ -98,6 +98,27 @@
   color: #FBD9CC;
 }
 
+/* Sous ~520px, les largeurs minimales des 3 colonnes (70+160+120px) plus
+   marges depassent la largeur de l'ecran : le logo deborde sur le titre et
+   le bloc contact se fait rogner par .page{overflow:hidden}. On empile
+   logo+identite sur une ligne et les coordonnees en dessous, en pleine
+   largeur, pour que plus rien ne deborde. */
+@media (max-width: 520px) {
+  .letterhead {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "logo org"
+      "contact contact";
+    row-gap: 8px;
+    padding: 16px 18px;
+  }
+  .letterheadLogo { grid-area: logo; }
+  .letterheadOrg { grid-area: org; text-align: left; }
+  .letterheadOrg .church { font-size: 0.98rem; }
+  .letterheadContact { grid-area: contact; text-align: left; }
+  .logo { height: 34px; max-width: 110px; }
+}
+
 .brandRule { height: 4px; display: flex; }
 .brandRule span { flex: 1; }
 .brandRule .r1 { background: var(--brand); }
