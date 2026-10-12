@@ -64,11 +64,18 @@
 .letterheadLogo {
   display: flex;
   justify-content: flex-start;
+  /* Sans ca, une grid item garde la largeur intrinseque de son contenu
+     comme largeur minimale : le logo pouvait rester plus large que la
+     colonne qui lui est allouee et deborder sur le titre. */
+  min-width: 0;
 }
 .logo {
   height: 44px;
   width: auto;
-  max-width: 200px;
+  /* Relatif a la colonne reellement allouee par la grille (qui varie
+     selon la largeur d'ecran), pas une limite fixe en pixels : le logo
+     se redimensionne toujours pour tenir dans sa colonne. */
+  max-width: 100%;
   object-fit: contain;
 }
 .letterheadOrg {
