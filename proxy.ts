@@ -61,6 +61,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // manifest.json et sw.js doivent rester accessibles sans authentification :
+    // Chrome les recupere en arriere-plan pour evaluer l'installabilite PWA,
+    // et une redirection vers /connexion a leur place rend le site non
+    // installable (le manifest n'est alors jamais lu comme du JSON valide).
+    "/((?!_next/static|_next/image|favicon.ico|manifest\\.json|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
