@@ -128,6 +128,10 @@ export function ListeSuiviDetail({
       setError(null);
       const res = await changerInclureRapportAction(checked);
       if (res.error) setError(res.error);
+      // La case est liee a liste.inclure_rapport (prop venant du serveur) :
+      // sans refresh, l'ecriture en base reussit mais l'affichage reste sur
+      // l'ancienne valeur et la case "rebondit" a son etat precedent.
+      else router.refresh();
     });
   }
 
