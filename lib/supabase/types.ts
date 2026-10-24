@@ -294,6 +294,7 @@ export interface Database {
           culte_id: string;
           ouvrier_id: string;
           statut: StatutPresenceEnum;
+          modifie_par: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -302,12 +303,14 @@ export interface Database {
           culte_id: string;
           ouvrier_id: string;
           statut: StatutPresenceEnum;
+          modifie_par?: string | null;
         };
         Update: {
           id?: string;
           culte_id?: string;
           ouvrier_id?: string;
           statut?: StatutPresenceEnum;
+          modifie_par?: string | null;
         };
         Relationships: [];
       };

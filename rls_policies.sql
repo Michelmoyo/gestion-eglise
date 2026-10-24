@@ -82,19 +82,26 @@ as $$
   select fn_role_departement(p_departement_id) in ('president', 'vice_president', 'secretaire')
 $$;
 
--- L'utilisateur courant est-il president ou vice-president d'AU MOINS UN
--- departement (peu importe lequel) ? Utilise pour les cultes : un culte
--- n'appartient a aucun departement en particulier, donc on ne peut pas
--- verifier un departement precis comme fn_gere_departement le fait.
-create or replace function fn_est_president_ou_vice()
+-- L'utilisateur courant est-il president ou vice-president d'un departement
+-- auquel l'ouvrier cible (p_ouvrier_id) est lui-meme activement affecte ?
+-- Un culte n'a pas de departement propre, donc on relie les deux via un
+-- departement commun plutot que via fn_gere_departement (qui a besoin d'un
+-- departement precis). Restreint le pointage de presence au culte au
+-- perimetre departemental du president, au lieu d'une portee eglise entiere.
+create or replace function fn_gere_ouvrier_via_departement(p_ouvrier_id uuid)
 returns boolean language sql stable security definer
 set search_path = public
 as $$
   select exists (
-    select 1 from affectations
-    where ouvrier_id = fn_ouvrier_id_courant()
-      and role in ('president', 'vice_president')
-      and statut = 'actif'
+    select 1
+    from affectations moi
+    join affectations cible
+      on cible.departement_id = moi.departement_id
+     and cible.ouvrier_id = p_ouvrier_id
+     and cible.statut = 'actif'
+    where moi.ouvrier_id = fn_ouvrier_id_courant()
+      and moi.role in ('president', 'vice_president')
+      and moi.statut = 'actif'
   )
 $$;
 
@@ -338,19 +345,22 @@ create policy cultes_delete on cultes for delete using (
 -- Saisie deleguee aux presidents/vice-presidents de departement (en plus du
 -- pasteur/assistant) -- decision produit : le pasteur ne doit pas etre le
 -- seul point de passage pour pointer un culte, ca embouteille la saisie.
+-- Perimetre : chaque president/vice-president ne lit/ecrit que sur les
+-- ouvriers de SON (ses) departement(s) -- via fn_gere_ouvrier_via_departement
+-- -- jamais eglise entiere, comme partout ailleurs dans l'app. Plusieurs
+-- departements pointent donc en parallele le meme culte, chacun sa propre
+-- equipe, sans qu'aucun d'eux n'ait a lui seul une portee globale.
 -- ----------------------------------------------------------------------------
 alter table presences_culte enable row level security;
 
 create policy presences_culte_select on presences_culte for select using (
   fn_is_pasteur_ou_assistant()
-  or fn_est_president_ou_vice()
   or ouvrier_id = fn_ouvrier_id_courant()
   or exists (
-    -- Le secretaire (ou tout gestionnaire) d'un departement peut lire la
-    -- presence au culte des MEMBRES DE CE DEPARTEMENT -- necessaire pour
-    -- compiler le rapport mensuel, meme s'il ne peut pas pointer lui-meme
-    -- (fn_est_president_ou_vice couvre deja president/vice, en plus large :
-    -- tous departements confondus, car eux pointent le culte en general).
+    -- Gestionnaire (president, vice-president ou secretaire) d'un
+    -- departement auquel l'ouvrier cible est affecte -- necessaire aussi au
+    -- secretaire pour compiler le rapport mensuel, meme s'il ne peut pas
+    -- pointer lui-meme (cf. policy insert/update ci-dessous).
     select 1 from affectations a
     where a.ouvrier_id = presences_culte.ouvrier_id
       and a.statut = 'actif'
@@ -359,13 +369,13 @@ create policy presences_culte_select on presences_culte for select using (
 );
 
 create policy presences_culte_insert on presences_culte for insert with check (
-  fn_is_pasteur_ou_assistant() or fn_est_president_ou_vice()
+  fn_is_pasteur_ou_assistant() or fn_gere_ouvrier_via_departement(ouvrier_id)
 );
 
 create policy presences_culte_update on presences_culte for update using (
-  fn_is_pasteur_ou_assistant() or fn_est_president_ou_vice()
+  fn_is_pasteur_ou_assistant() or fn_gere_ouvrier_via_departement(ouvrier_id)
 ) with check (
-  fn_is_pasteur_ou_assistant() or fn_est_president_ou_vice()
+  fn_is_pasteur_ou_assistant() or fn_gere_ouvrier_via_departement(ouvrier_id)
 );
 
 -- ----------------------------------------------------------------------------

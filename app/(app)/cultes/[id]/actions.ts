@@ -33,14 +33,19 @@ export async function enregistrerPresencesCulte(culteId: string, formData: FormD
 
   if (!peutPointer) redirect(`/cultes/${culteId}`);
 
-  const upserts: { culte_id: string; ouvrier_id: string; statut: StatutPresenceEnum }[] = [];
+  const upserts: {
+    culte_id: string;
+    ouvrier_id: string;
+    statut: StatutPresenceEnum;
+    modifie_par: string;
+  }[] = [];
 
   for (const [key, value] of formData.entries()) {
     if (key.startsWith("statut_")) {
       const ouvrierId = key.replace("statut_", "");
       const statut = value as string;
       if (statut === "present" || statut === "absent" || statut === "excuse") {
-        upserts.push({ culte_id: culteId, ouvrier_id: ouvrierId, statut });
+        upserts.push({ culte_id: culteId, ouvrier_id: ouvrierId, statut, modifie_par: moi.id });
       }
     }
   }

@@ -258,6 +258,12 @@ create table presences_culte (
   culte_id     uuid not null references cultes(id) on delete cascade,
   ouvrier_id   uuid not null references ouvriers(id) on delete cascade,
   statut       statut_presence_enum not null,
+  -- Qui a saisi/modifie ce statut en dernier -- plusieurs presidents/vice-
+  -- presidents (eventuellement de departements differents) peuvent ecrire
+  -- sur les memes lignes, sans circuit de validation : la tracabilite sert
+  -- de garde-fou, comme pour mouvements_caisse.auteur_id. Nullable : les
+  -- lignes creees avant l'ajout de cette colonne n'ont pas cette info.
+  modifie_par  uuid references ouvriers(id),
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
   unique (culte_id, ouvrier_id)

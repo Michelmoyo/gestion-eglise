@@ -144,6 +144,38 @@ export default async function PilotagePage() {
   const nbRouge = santeDepts.filter((d) => d.sante.statut === "rouge").length;
   const nbOrange = santeDepts.filter((d) => d.sante.statut === "orange").length;
 
+  // ── Indicateurs globaux (cahier des charges §5) ─────────────────────────
+  // Presence au culte dominical / intercession / nuit de priere, sur les 30
+  // derniers jours -- meme fenetre que la sante des departements ci-dessus.
+  // "type" est un champ libre (cf. culte-form.tsx) ; ces trois libelles sont
+  // les valeurs suggerees par defaut dans le formulaire.
+  const { data: cultes30j } = await supabase
+    .from("cultes")
+    .select("id, type")
+    .gte("date_culte", il_y_a_30);
+
+  const culte30jIds = (cultes30j ?? []).map((c) => c.id);
+  const { data: presencesCulte30j } = culte30jIds.length
+    ? await supabase
+        .from("presences_culte")
+        .select("culte_id, statut")
+        .in("culte_id", culte30jIds)
+    : { data: [] };
+
+  function indicateurCulte(typeLabel: string) {
+    const ids = (cultes30j ?? []).filter((c) => c.type === typeLabel).map((c) => c.id);
+    const rows = (presencesCulte30j ?? []).filter((p) => ids.includes(p.culte_id));
+    const presents = rows.filter((p) => p.statut === "present").length;
+    const taux = rows.length ? Math.round((presents / rows.length) * 100) : null;
+    return { presents, taux };
+  }
+
+  const indicateursCultes = [
+    { label: "Culte dominical", ...indicateurCulte("Culte dominical") },
+    { label: "Intercession", ...indicateurCulte("Intercession") },
+    { label: "Nuit de prière", ...indicateurCulte("Nuit de prière") },
+  ];
+
   return (
     <>
       <TopBar title="Pilotage" prenom={moi.prenom} />
@@ -243,6 +275,26 @@ export default async function PilotagePage() {
                 );
               })
             )}
+          </CardContent>
+        </Card>
+
+        {/* Indicateurs globaux (cahier des charges §5) */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Présence aux rencontres (30 derniers jours)</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-3 gap-3 text-center">
+            {indicateursCultes.map((item) => (
+              <div key={item.label}>
+                <p className="text-2xl font-bold text-primary">
+                  {item.taux !== null ? `${item.taux}%` : "—"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">{item.label}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {item.taux !== null ? `${item.presents} présent${item.presents > 1 ? "s" : ""}` : "aucun pointage"}
+                </p>
+              </div>
+            ))}
           </CardContent>
         </Card>
 

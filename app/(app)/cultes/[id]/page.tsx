@@ -38,24 +38,47 @@ export default async function CulteDetailPage({
   const isPilotage = !!moi.role_global;
   const action = enregistrerPresencesCulte.bind(null, id);
 
-  let peutPointer = isPilotage;
-  if (!peutPointer) {
+  // Departements ou je suis president/vice-president : le pointage (comme
+  // la RLS sur presences_culte) est limite a ce perimetre, jamais eglise
+  // entiere -- cf. fn_gere_ouvrier_via_departement.
+  let mesDepartementsGeres: string[] = [];
+  if (!isPilotage) {
     const { data: aff } = await supabase
       .from("affectations")
-      .select("id")
+      .select("departement_id")
       .eq("ouvrier_id", moi.id)
       .in("role", ["president", "vice_president"])
-      .eq("statut", "actif")
-      .limit(1);
-    peutPointer = !!aff?.length;
+      .eq("statut", "actif");
+    mesDepartementsGeres = (aff ?? []).map((a) => a.departement_id);
   }
+  const peutPointer = isPilotage || mesDepartementsGeres.length > 0;
 
   if (peutPointer) {
-    const { data: ouvriers } = await supabase
-      .from("ouvriers")
-      .select("id, prenom, nom")
-      .eq("statut", "actif")
-      .order("nom");
+    let ouvriers: { id: string; prenom: string; nom: string }[] | null;
+    if (isPilotage) {
+      ({ data: ouvriers } = await supabase
+        .from("ouvriers")
+        .select("id, prenom, nom")
+        .eq("statut", "actif")
+        .order("nom"));
+    } else {
+      // Ouvriers actifs affectes a l'un de mes departements geres -- distinct
+      // (un ouvrier peut etre affecte a plusieurs de mes departements).
+      const { data: mesAffectes } = await supabase
+        .from("affectations")
+        .select("ouvrier_id")
+        .in("departement_id", mesDepartementsGeres)
+        .eq("statut", "actif");
+      const ouvrierIds = [...new Set((mesAffectes ?? []).map((a) => a.ouvrier_id))];
+      ({ data: ouvriers } = ouvrierIds.length
+        ? await supabase
+            .from("ouvriers")
+            .select("id, prenom, nom")
+            .in("id", ouvrierIds)
+            .eq("statut", "actif")
+            .order("nom")
+        : { data: [] });
+    }
 
     const { data: presences } = await supabase
       .from("presences_culte")
