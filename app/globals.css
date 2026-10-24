@@ -57,6 +57,14 @@
 }
 
 @layer base {
+  /* Taille de base relevee (18px au lieu des 16px par defaut du
+     navigateur) : toutes les tailles Tailwind (text-xs, text-sm...) sont
+     en rem, donc proportionnelles a cette valeur -- une seule ligne
+     agrandit tout le texte de l'app de facon coherente, plutot que de
+     reprendre chaque ecran un par un. */
+  html {
+    font-size: 112.5%;
+  }
   * {
     @apply border-border;
   }
