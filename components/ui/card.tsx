@@ -32,7 +32,10 @@ CardHeader.displayName = "CardHeader";
 
 const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("font-display font-semibold leading-none tracking-tight", className)} {...props} />
+    // Doubleplus est deja visuellement grasse par nature : pas de
+    // font-semibold (double-gras moche) ni de tracking-tight (le serre
+    // excessivement) -- tracking-normal pour lui laisser de l'air.
+    <h3 ref={ref} className={cn("font-display leading-none tracking-normal", className)} {...props} />
   )
 );
 CardTitle.displayName = "CardTitle";

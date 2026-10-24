@@ -8,13 +8,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Effet "bouton physique" : une ombre pleine en guise de tranche,
-        // qui disparaît et se traduit en Y au clic -- impression de
-        // pression reelle plutot qu'un simple changement de couleur.
-        default: "bg-primary text-primary-foreground shadow-[0_3px_0_0_rgba(0,0,0,0.25)] hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[0_4px_0_0_rgba(0,0,0,0.25)] active:translate-y-[3px] active:shadow-none",
-        destructive: "bg-destructive text-destructive-foreground shadow-[0_3px_0_0_rgba(0,0,0,0.25)] hover:bg-destructive/90 hover:-translate-y-0.5 hover:shadow-[0_4px_0_0_rgba(0,0,0,0.25)] active:translate-y-[3px] active:shadow-none",
+        // Effet "bouton physique" discret : une fine tranche semi-
+        // transparente qui disparaît et se traduit en Y au clic --
+        // suggestion de relief plutot qu'une ombre marquee.
+        default: "bg-primary text-primary-foreground shadow-[0_2px_0_0_rgba(0,0,0,0.12)] hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[0_3px_0_0_rgba(0,0,0,0.12)] active:translate-y-[2px] active:shadow-none",
+        destructive: "bg-destructive text-destructive-foreground shadow-[0_2px_0_0_rgba(0,0,0,0.12)] hover:bg-destructive/90 hover:-translate-y-0.5 hover:shadow-[0_3px_0_0_rgba(0,0,0,0.12)] active:translate-y-[2px] active:shadow-none",
         outline: "border border-input bg-background shadow-sm hover:bg-primary/10 hover:border-primary/30 hover:text-accent-foreground hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97]",
-        secondary: "bg-secondary text-secondary-foreground shadow-[0_3px_0_0_rgba(0,0,0,0.15)] hover:bg-secondary/80 hover:-translate-y-0.5 hover:shadow-[0_4px_0_0_rgba(0,0,0,0.15)] active:translate-y-[3px] active:shadow-none",
+        secondary: "bg-secondary text-secondary-foreground shadow-[0_2px_0_0_rgba(0,0,0,0.06)] hover:bg-secondary/80 hover:-translate-y-0.5 hover:shadow-[0_3px_0_0_rgba(0,0,0,0.06)] active:translate-y-[2px] active:shadow-none",
         ghost: "hover:bg-primary/10 hover:text-accent-foreground active:scale-[0.97]",
         link: "text-primary underline-offset-4 hover:underline",
       },
