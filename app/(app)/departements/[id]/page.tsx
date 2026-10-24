@@ -5,14 +5,29 @@ import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IconChip } from "@/components/ui/icon-chip";
-import { ChevronLeft, Pencil, CalendarDays, Pin, Church, Wallet, FileText, Users } from "lucide-react";
+import {
+  ChevronLeft,
+  Pencil,
+  CalendarDays,
+  Pin,
+  Church,
+  Wallet,
+  FileText,
+  Users,
+  UserCheck,
+  UserX,
+  CircleCheck,
+  TriangleAlert,
+  CircleAlert,
+  type LucideIcon,
+} from "lucide-react";
 import { format } from "@/lib/format";
 import { calculerSante, type Sante } from "@/lib/sante";
 
-const PASTILLE: Record<Sante, { bg: string; label: string }> = {
-  vert: { bg: "bg-green-500", label: "Bonne santé" },
-  orange: { bg: "bg-orange-400", label: "À surveiller" },
-  rouge: { bg: "bg-red-500", label: "En difficulté" },
+const PASTILLE: Record<Sante, { icon: LucideIcon; chip: string; label: string }> = {
+  vert: { icon: CircleCheck, chip: "bg-green-500/10 text-green-600", label: "Bonne santé" },
+  orange: { icon: TriangleAlert, chip: "bg-orange-400/10 text-orange-600", label: "À surveiller" },
+  rouge: { icon: CircleAlert, chip: "bg-red-500/10 text-red-600", label: "En difficulté" },
 };
 
 export default async function DepartementDetailPage({
@@ -235,9 +250,7 @@ export default async function DepartementDetailPage({
         {/* Santé du département */}
         <Card>
           <CardContent className="pt-4 flex items-center gap-3">
-            <span
-              className={`w-3 h-3 rounded-full flex-shrink-0 ${PASTILLE[sante.statut].bg}`}
-            />
+            <IconChip icon={PASTILLE[sante.statut].icon} className={PASTILLE[sante.statut].chip} size={18} chipSize={36} />
             <div>
               <p className="text-sm font-medium">{PASTILLE[sante.statut].label}</p>
               {sante.alertes.length > 0 && (
@@ -247,21 +260,28 @@ export default async function DepartementDetailPage({
           </CardContent>
         </Card>
 
-        {/* Résumé effectifs — masqué pour un simple membre */}
+        {/* Effectifs — masqué pour un simple membre */}
         {!estSimpleMembre && (
-          <div className="grid grid-cols-2 gap-3">
-            <Card>
-              <CardContent className="pt-4 text-center">
-                <p className="text-3xl font-bold text-green-600">{nbActifs}</p>
-                <p className="text-xs text-muted-foreground mt-1">Actifs</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 text-center">
-                <p className="text-3xl font-bold text-orange-500">{nbSuspendus}</p>
-                <p className="text-xs text-muted-foreground mt-1">Suspendus</p>
-              </CardContent>
-            </Card>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+              Effectifs
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <Card>
+                <CardContent className="pt-4 flex flex-col items-center text-center gap-1.5">
+                  <IconChip icon={UserCheck} size={15} chipSize={32} className="bg-green-500/10 text-green-600" />
+                  <p className="text-2xl font-bold text-green-600">{nbActifs}</p>
+                  <p className="text-xs text-muted-foreground">Actifs</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 flex flex-col items-center text-center gap-1.5">
+                  <IconChip icon={UserX} size={15} chipSize={32} className="bg-orange-400/10 text-orange-600" />
+                  <p className="text-2xl font-bold text-orange-500">{nbSuspendus}</p>
+                  <p className="text-xs text-muted-foreground">Suspendus</p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
 
