@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Pencil } from "lucide-react";
+import { ChevronLeft, Pencil, CalendarDays, Pin, Church, Wallet, FileText, Users } from "lucide-react";
 import { format } from "@/lib/format";
 import { calculerSante, type Sante } from "@/lib/sante";
 
@@ -257,14 +257,14 @@ export default async function DepartementDetailPage({
         <div className="grid grid-cols-2 gap-3">
           <Link href={`/departements/${id}/activites`}>
             <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-              <span className="text-lg">📅</span>
+              <CalendarDays size={20} />
               Activités
             </Button>
           </Link>
           {peutGerer && (
             <Link href={`/departements/${id}/suivi`}>
               <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                <span className="text-lg">📌</span>
+                <Pin size={20} />
                 Suivi
               </Button>
             </Link>
@@ -272,7 +272,7 @@ export default async function DepartementDetailPage({
           {peutGerer && (
             <Link href="/cultes">
               <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                <span className="text-lg">⛪</span>
+                <Church size={20} />
                 Cultes
               </Button>
             </Link>
@@ -280,7 +280,7 @@ export default async function DepartementDetailPage({
           {(["president", "vice_president", "tresorier"].includes(monAff?.role ?? "") || isPilotage) && (
             <Link href={`/departements/${id}/caisse`}>
               <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                <span className="text-lg">💰</span>
+                <Wallet size={20} />
                 Caisse
               </Button>
             </Link>
@@ -289,13 +289,13 @@ export default async function DepartementDetailPage({
             <>
               <Link href={`/departements/${id}/rapports`}>
                 <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                  <span className="text-lg">📄</span>
+                  <FileText size={20} />
                   Rapports
                 </Button>
               </Link>
               <Link href={`/departements/${id}/equipe`}>
                 <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                  <span className="text-lg">👥</span>
+                  <Users size={20} />
                   Équipe
                 </Button>
               </Link>

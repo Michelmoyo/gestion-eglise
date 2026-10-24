@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Building2, UserPlus, Plus, Church, FileText, Settings, TriangleAlert } from "lucide-react";
+import { Users, Building2, UserPlus, Plus, Church, FileText, Settings, TriangleAlert, Eye } from "lucide-react";
 import { calculerSante, type Sante } from "@/lib/sante";
 
 const PASTILLE: Record<Sante, { bg: string; label: string }> = {
@@ -230,8 +230,9 @@ export default async function PilotagePage() {
               </span>
             )}
             {nbOrange > 0 && (
-              <span className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium">
-                🟠 {nbOrange} à surveiller
+              <span className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium flex items-center gap-1">
+                <Eye size={14} />
+                {nbOrange} à surveiller
               </span>
             )}
           </div>

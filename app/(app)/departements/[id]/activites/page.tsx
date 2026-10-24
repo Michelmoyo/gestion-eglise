@@ -5,7 +5,7 @@ import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Plus, CalendarDays, Clock, MapPin } from "lucide-react";
+import { Plus, CalendarDays, Clock, MapPin, ChevronLeft } from "lucide-react";
 import { format } from "@/lib/format";
 
 const STATUT_PRESENCE_STYLE: Record<string, { label: string; className: string }> = {
@@ -86,9 +86,10 @@ export default async function ActivitesPage({
         <div className="flex items-center justify-between">
           <Link
             href={`/departements/${departementId}`}
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
-            ← {dept.nom}
+            <ChevronLeft size={16} />
+            {dept.nom}
           </Link>
           {peutGerer && (
             <Link href={`/departements/${departementId}/activites/nouvelle`}>

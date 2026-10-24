@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Pencil, Users } from "lucide-react";
+import { ChevronLeft, Pencil, Users, MapPin } from "lucide-react";
 import { format } from "@/lib/format";
 import { PresencesCulteForm } from "@/components/cultes/presences-culte-form";
 import { enregistrerPresencesCulte } from "./actions";
@@ -121,7 +121,7 @@ export default async function CulteDetailPage({
               <p className="text-muted-foreground">
                 {format.date(culte.date_culte)}{culte.heure ? ` · ${culte.heure.slice(0, 5)}${culte.heure_fin ? ` – ${culte.heure_fin.slice(0, 5)}` : ""}` : ""}
               </p>
-              {culte.lieu && <p className="text-muted-foreground">📍 {culte.lieu}</p>}
+              {culte.lieu && <p className="text-muted-foreground flex items-center gap-1"><MapPin size={13} className="shrink-0" />{culte.lieu}</p>}
               {culte.description && <p className="mt-2">{culte.description}</p>}
             </CardContent>
           </Card>
@@ -194,7 +194,7 @@ export default async function CulteDetailPage({
             <p className="text-muted-foreground">
               {format.date(culte.date_culte)}{culte.heure ? ` · ${culte.heure.slice(0, 5)}${culte.heure_fin ? ` – ${culte.heure_fin.slice(0, 5)}` : ""}` : ""}
             </p>
-            {culte.lieu && <p className="text-muted-foreground">📍 {culte.lieu}</p>}
+            {culte.lieu && <p className="text-muted-foreground flex items-center gap-1"><MapPin size={13} className="shrink-0" />{culte.lieu}</p>}
             {culte.description && <p className="mt-2">{culte.description}</p>}
           </CardContent>
         </Card>
