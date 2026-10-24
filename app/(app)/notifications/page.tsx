@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { IconChip } from "@/components/ui/icon-chip";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Bell, UserPlus, CalendarDays, FileText, Pin, MessageCircle, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -64,7 +65,7 @@ export default async function NotificationsPage() {
                 <CardContent className="p-3 flex items-start gap-3">
                   <form action={marquerLue.bind(null, n.id, n.lien)} className="flex-1 min-w-0">
                     <button type="submit" className="w-full text-left flex items-start gap-3">
-                      <Icone size={18} className="text-primary mt-0.5 flex-shrink-0" />
+                      <IconChip icon={Icone} size={16} chipSize={32} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">{n.contenu}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">

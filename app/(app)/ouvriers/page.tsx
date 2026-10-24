@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Plus, Search, Users } from "lucide-react";
 import { format } from "@/lib/format";
@@ -58,11 +59,11 @@ export default async function OuvriersPage({
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
-          <input
+          <Input
             name="q"
             defaultValue={q}
             placeholder="Rechercher un ouvrier…"
-            className="w-full h-9 pl-9 pr-4 rounded-md border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="pl-9"
           />
         </form>
 

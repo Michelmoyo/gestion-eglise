@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   assignerRole,
   definirTitreFonction,
@@ -216,14 +217,13 @@ export function EquipeActions({
                 </>
               ) : (
                 <div className="p-2 space-y-2">
-                  <input
+                  <Input
                     type="text"
                     autoFocus
                     value={nouveauTitre}
                     maxLength={60}
                     placeholder="ex. Chef de chorale"
                     onChange={(e) => setNouveauTitre(e.target.value)}
-                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                   <p className="text-[11px] text-muted-foreground px-0.5">
                     Reste « {labelRole} » pour les permissions ; ce titre sera ensuite disponible
@@ -285,12 +285,11 @@ export function EquipeActions({
             Durée indéterminée
           </label>
           {!indeterminee && (
-            <input
+            <Input
               type="date"
               value={dateFin}
               min={aujourdHui}
               onChange={(e) => setDateFin(e.target.value)}
-              className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           )}
           <div className="flex gap-2 pt-1">
