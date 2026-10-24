@@ -7,8 +7,13 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Plus, CalendarDays, Clock, MapPin, Church } from "lucide-react";
 import { format } from "@/lib/format";
+import { FiltresCultes } from "@/components/cultes/filtres-cultes";
 
-export default async function CultesPage() {
+export default async function CultesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ debut?: string; fin?: string; type?: string }>;
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/connexion");
@@ -23,10 +28,23 @@ export default async function CultesPage() {
 
   const isPilotage = !!moi.role_global;
 
-  const { data: cultes } = await supabase
+  const { debut = "", fin = "", type = "" } = await searchParams;
+
+  // Types disponibles pour le filtre : independant de la periode/type deja
+  // choisis, pour que le menu ne retrecisse pas au fil des filtres.
+  const { data: tousLesCultes } = await supabase.from("cultes").select("type");
+  const typesDisponibles = [...new Set((tousLesCultes ?? []).map((c) => c.type))].sort();
+
+  let requete = supabase
     .from("cultes")
     .select("id, type, date_culte, heure, heure_fin, lieu")
     .order("date_culte", { ascending: false });
+
+  if (debut) requete = requete.gte("date_culte", debut);
+  if (fin) requete = requete.lte("date_culte", fin);
+  if (type) requete = requete.eq("type", type);
+
+  const { data: cultes } = await requete;
 
   return (
     <>
@@ -42,9 +60,16 @@ export default async function CultesPage() {
           </Link>
         )}
 
+        {typesDisponibles.length > 0 && (
+          <FiltresCultes typesDisponibles={typesDisponibles} debut={debut} fin={fin} type={type} />
+        )}
+
         <div className="flex flex-col gap-4">
           {!cultes?.length && (
-            <EmptyState icon={Church} message="Aucun culte enregistré." />
+            <EmptyState
+              icon={Church}
+              message={debut || fin || type ? "Aucun culte pour ces filtres." : "Aucun culte enregistré."}
+            />
           )}
           {(cultes ?? []).map((c) => (
             <Link key={c.id} href={`/cultes/${c.id}`}>
