@@ -2,8 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Police d'affichage de la charte du rapport imprimable (titres de
+   section), desormais partagee par toute l'app -- auto-hebergee car pas
+   disponible sur Google Fonts. Declaree ici (globale) plutot que dans
+   rapport-pdf.module.css pour que .font-display marche partout. */
+@font-face {
+  font-family: "Doubleplus";
+  src: url("/fonts/doubleplus.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+
 @layer base {
   :root {
+    /* Doubleplus pour les titres (coherent avec le rapport imprimable),
+       Titillium Web pour le corps de texte (next/font, variable injectee
+       par la classe titillium.variable sur <html> dans app/layout.tsx). */
+    --font-display: "Doubleplus", var(--font-titillium), Georgia, serif;
+    --font-body: var(--font-titillium), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
     /* Theme clair "doux" : meme rose de marque qu'avant (--primary,
        identique au rapport imprimable), mais fond chaleureux (meme teinte
        que le papier du rapport, --paper: #FBF9F3) plutot que le gris
@@ -45,5 +62,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
   }
+}
+
+.font-display {
+  font-family: var(--font-display);
 }

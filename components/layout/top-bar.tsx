@@ -34,7 +34,9 @@ export async function TopBar({ title, prenom }: TopBarProps) {
   return (
     <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-sm border-b border-border/60 px-4 h-14 flex items-center justify-between">
       <div>
-        <h1 className="font-semibold text-base leading-tight">{title}</h1>
+        {/* Doubleplus n'a qu'une seule graisse (400) -- pas de
+            font-semibold, qui ne ferait que du faux-gras moche. */}
+        <h1 className="font-display text-lg leading-tight">{title}</h1>
         {prenom && (
           <p className="text-xs text-muted-foreground">Bonjour, {prenom}</p>
         )}

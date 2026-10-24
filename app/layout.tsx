@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SwRegister } from "@/components/pwa/sw-register";
+import { titillium } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: "Gestion Église",
@@ -22,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={titillium.variable}>
       <body>
         {children}
         <SwRegister />

@@ -1,14 +1,7 @@
-@font-face {
-  font-family: "Doubleplus";
-  src: url("/fonts/doubleplus.otf") format("opentype");
-  font-weight: 400;
-  font-display: swap;
-}
-
+/* --font-display / --font-body / le @font-face Doubleplus sont maintenant
+   globaux (app/globals.css), partages par toute l'app -- plus besoin de les
+   redeclarer ici. */
 .document {
-  --font-display: "Doubleplus", var(--font-titillium), Georgia, serif;
-  --font-body: var(--font-titillium), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-
   --paper: #FBF9F3;
   --paper-edge: #EEE8D9;
   --ink: #221D16;
