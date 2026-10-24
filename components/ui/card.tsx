@@ -5,7 +5,17 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}
+      className={cn(
+        // Le theme est sombre (--background ~0% de luminosite) : une ombre
+        // noire classique s'y fond et ne lit comme "elevation" nulle part.
+        // Un filet clair en haut (comme une lumiere qui accroche le bord
+        // superieur) est le signal d'elevation qui fonctionne en sombre.
+        // transition-all pour que les hover: deja presents un peu partout
+        // (hover:border-primary/30, hover:bg-primary/5...) s'animent au
+        // lieu de basculer brutalement.
+        "rounded-xl border bg-card text-card-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-150",
+        className
+      )}
       {...props}
     />
   )
