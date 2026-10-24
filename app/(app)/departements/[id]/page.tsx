@@ -30,6 +30,20 @@ const PASTILLE: Record<Sante, { icon: LucideIcon; chip: string; label: string }>
   rouge: { icon: CircleAlert, chip: "bg-red-500/10 text-red-600", label: "En difficulté" },
 };
 
+// Palette fermee : une couleur par module, assignee une fois pour toutes --
+// casse la monotonie du rose partout sans devenir illisible (cf. retour
+// utilisateur + reference "Age+"). Ne pas piocher une couleur au hasard
+// ailleurs sans l'ajouter ici.
+// bleu ecarte volontairement : c'est desormais --primary (cf. globals.css).
+const COULEUR_MODULE = {
+  activites: "bg-rose-500/10 text-rose-600",
+  suivi: "bg-violet-500/10 text-violet-600",
+  cultes: "bg-fuchsia-500/10 text-fuchsia-600",
+  caisse: "bg-green-500/10 text-green-600",
+  rapports: "bg-amber-500/10 text-amber-600",
+  equipe: "bg-teal-500/10 text-teal-600",
+};
+
 export default async function DepartementDetailPage({
   params,
 }: {
@@ -333,13 +347,21 @@ export default async function DepartementDetailPage({
           </div>
         )}
 
+        {/* Carte "heros" : seul chiffre de l'ecran avec un fond plein,
+            pour qu'il se detache des autres cartes blanches -- le rouge
+            prend le pas sur le degrade de marque si le solde est negatif,
+            ce signal ne doit pas se perdre dans le traitement visuel. */}
         {peutVoirCaisse && (
-          <Card>
+          <Card
+            className={`border-none text-white ${
+              solde >= 0
+                ? "bg-gradient-to-br from-primary to-[#293693]"
+                : "bg-gradient-to-br from-destructive to-red-800"
+            }`}
+          >
             <CardContent className="pt-4 text-center">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Solde de caisse</p>
-              <p className={`text-2xl font-bold ${solde >= 0 ? "text-green-600" : "text-destructive"}`}>
-                {format.montant(solde)}
-              </p>
+              <p className="text-xs uppercase tracking-wide mb-1 text-white/80">Solde de caisse</p>
+              <p className="text-3xl font-bold">{format.montant(solde)}</p>
             </CardContent>
           </Card>
         )}
@@ -348,14 +370,14 @@ export default async function DepartementDetailPage({
         <div className="grid grid-cols-2 gap-3">
           <Link href={`/departements/${id}/activites`}>
             <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-              <IconChip icon={CalendarDays} />
+              <IconChip icon={CalendarDays} className={COULEUR_MODULE.activites} />
               Activités
             </Button>
           </Link>
           {peutGerer && (
             <Link href={`/departements/${id}/suivi`}>
               <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                <IconChip icon={Pin} />
+                <IconChip icon={Pin} className={COULEUR_MODULE.suivi} />
                 Suivi
               </Button>
             </Link>
@@ -363,7 +385,7 @@ export default async function DepartementDetailPage({
           {peutGerer && (
             <Link href="/cultes">
               <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                <IconChip icon={Church} />
+                <IconChip icon={Church} className={COULEUR_MODULE.cultes} />
                 Cultes
               </Button>
             </Link>
@@ -371,7 +393,7 @@ export default async function DepartementDetailPage({
           {(["president", "vice_president", "tresorier"].includes(monAff?.role ?? "") || isPilotage) && (
             <Link href={`/departements/${id}/caisse`}>
               <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                <IconChip icon={Wallet} />
+                <IconChip icon={Wallet} className={COULEUR_MODULE.caisse} />
                 Caisse
               </Button>
             </Link>
@@ -380,13 +402,13 @@ export default async function DepartementDetailPage({
             <>
               <Link href={`/departements/${id}/rapports`}>
                 <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                  <IconChip icon={FileText} />
+                  <IconChip icon={FileText} className={COULEUR_MODULE.rapports} />
                   Rapports
                 </Button>
               </Link>
               <Link href={`/departements/${id}/equipe`}>
                 <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                  <IconChip icon={Users} />
+                  <IconChip icon={Users} className={COULEUR_MODULE.equipe} />
                   Équipe
                 </Button>
               </Link>

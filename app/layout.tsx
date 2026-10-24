@@ -14,9 +14,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Rose de la marque (--primary), couleur de l'en-tete -- reste du theme
-  // sombre d'origine, jamais mis a jour lors du passage au theme clair.
-  themeColor: "#E2037A",
+  // Bleu de la marque (--primary), couleur de l'en-tete.
+  themeColor: "#5462CF",
 };
 
 export default function RootLayout({

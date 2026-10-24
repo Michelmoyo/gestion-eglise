@@ -21,32 +21,36 @@
     --font-display: "Doubleplus", var(--font-titillium), Georgia, serif;
     --font-body: var(--font-titillium), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 
-    /* Theme clair "doux" : meme rose de marque qu'avant (--primary,
-       identique au rapport imprimable), mais fond chaleureux (meme teinte
-       que le papier du rapport, --paper: #FBF9F3) plutot que le gris
-       generique du theme sombre precedent. --radius genereux (20px),
-       aligne sur les maquettes d'origine qui utilisaient deja
-       border-radius:20px -- pas une invention, un retour a l'intention
-       initiale qui s'etait perdue en cours de route. */
+    /* Theme clair "doux" : fond chaleureux (meme teinte que le papier du
+       rapport imprimable, --paper: #FBF9F3) plutot que le gris generique
+       du theme sombre precedent. --radius genereux (20px), aligne sur les
+       maquettes d'origine qui utilisaient deja border-radius:20px -- pas
+       une invention, un retour a l'intention initiale qui s'etait perdue
+       en cours de route.
+       --primary : bleu #5462CF (demande explicite), remplace le rose
+       d'origine -- le rapport imprimable (rapport-pdf.module.css) garde
+       son propre --brand rose, volontairement non touche ici : l'app et
+       le document officiel ont donc desormais deux identites couleur
+       distinctes, a signaler si ce n'est pas voulu. */
     --background: 48 38% 97%;
     --foreground: 20 10% 15%;
     --card: 0 0% 100%;
     --card-foreground: 20 10% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 20 10% 15%;
-    --primary: 328 97% 45%;
+    --primary: 233 56% 57%;
     --primary-foreground: 0 0% 100%;
     --secondary: 40 25% 94%;
     --secondary-foreground: 20 10% 15%;
     --muted: 40 25% 94%;
     --muted-foreground: 25 8% 45%;
-    --accent: 328 60% 95%;
-    --accent-foreground: 328 70% 30%;
+    --accent: 233 56% 95%;
+    --accent-foreground: 233 56% 30%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
     --border: 30 15% 89%;
     --input: 30 15% 89%;
-    --ring: 328 97% 45%;
+    --ring: 233 56% 57%;
     --radius: 1.25rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;

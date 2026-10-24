@@ -9,12 +9,13 @@
   --line: #DDD5C1;
   --line-soft: #EDE7D8;
 
-  /* Identite de marque (rose/or) -- reservee aux elements decoratifs
+  /* Identite de marque (bleu/or) -- reservee aux elements decoratifs
      (en-tete, numeros de section, titres, chiffres cles). Ne remplace PAS
      les couleurs de statut ci-dessous, qui portent un sens et restent
-     inchangees quel que soit le theme. */
-  --brand: #E2037A;
-  --brand-deep: #A10259;
+     inchangees quel que soit le theme. Aligne sur --primary de l'app
+     (#5462CF) pour qu'il n'y ait plus qu'une seule identite couleur. */
+  --brand: #5462CF;
+  --brand-deep: #293693;
   --gold: #F4C63A;
   --gold-deep: #8A6A00;
 
