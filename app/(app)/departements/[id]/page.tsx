@@ -156,6 +156,40 @@ export default async function DepartementDetailPage({
     : { data: null };
   const solde = (soldeData as number) ?? 0;
 
+  // ── Stats cultes du departement (30 derniers jours) ───────────────────────
+  // Reservee a peutGerer : la RLS sur presences_culte ne renvoie de toute
+  // facon que sa propre ligne a un membre/tresorier (cf. migration
+  // presence_culte_perimetre_departement), un agregat serait incomplet pour
+  // eux.
+  let tauxPresenceCulte30j: number | null = null;
+  let nbCultesPointes = 0;
+  if (peutGerer) {
+    const ouvrierIdsDept = (effectifs ?? [])
+      .filter((e) => e.statut === "actif")
+      .map((e) => e.ouvrier_id);
+
+    const { data: cultes30j } = await supabase
+      .from("cultes")
+      .select("id")
+      .gte("date_culte", ilY30);
+    const culte30jIds = (cultes30j ?? []).map((c) => c.id);
+
+    const { data: presencesCulteDept } =
+      culte30jIds.length && ouvrierIdsDept.length
+        ? await supabase
+            .from("presences_culte")
+            .select("culte_id, statut")
+            .in("culte_id", culte30jIds)
+            .in("ouvrier_id", ouvrierIdsDept)
+        : { data: [] };
+
+    const presentsCulte = (presencesCulteDept ?? []).filter((p) => p.statut === "present").length;
+    tauxPresenceCulte30j = presencesCulteDept?.length
+      ? Math.round((presentsCulte / presencesCulteDept.length) * 100)
+      : null;
+    nbCultesPointes = new Set((presencesCulteDept ?? []).map((p) => p.culte_id)).size;
+  }
+
   return (
     <>
       <TopBar title={dept.nom} />
@@ -224,23 +258,53 @@ export default async function DepartementDetailPage({
           </div>
         )}
 
-        {/* Présence, activités du mois, solde */}
-        <div className="grid grid-cols-2 gap-3">
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <p className="text-3xl font-bold text-primary">
-                {tauxPresence30j !== null ? `${tauxPresence30j}%` : "—"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">Présence (30j)</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <p className="text-3xl font-bold text-primary">{nbActivitesMois ?? 0}</p>
-              <p className="text-xs text-muted-foreground mt-1">Activités ce mois</p>
-            </CardContent>
-          </Card>
+        {/* Activités du département */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+            Activités du département
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Card>
+              <CardContent className="pt-4 text-center">
+                <p className="text-3xl font-bold text-primary">
+                  {tauxPresence30j !== null ? `${tauxPresence30j}%` : "—"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">Présence (30j)</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 text-center">
+                <p className="text-3xl font-bold text-primary">{nbActivitesMois ?? 0}</p>
+                <p className="text-xs text-muted-foreground mt-1">Activités ce mois</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
+
+        {/* Cultes — presence des membres du departement */}
+        {peutGerer && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+              Cultes
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <Card>
+                <CardContent className="pt-4 text-center">
+                  <p className="text-3xl font-bold text-primary">
+                    {tauxPresenceCulte30j !== null ? `${tauxPresenceCulte30j}%` : "—"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Présence culte (30j)</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 text-center">
+                  <p className="text-3xl font-bold text-primary">{nbCultesPointes}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Cultes pointés</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
 
         {peutVoirCaisse && (
           <Card>
