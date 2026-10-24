@@ -28,17 +28,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const departementIds = (affectations ?? []).map((a) => a.departement_id);
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Degrade "neon" discret en arriere-plan -- fixe (reste en place au
-          scroll), tres atténue pour ne jamais gêner la lecture : les
-          cartes (fond blanc opaque) le recouvrent, il ne transparait que
-          dans les marges/espaces entre les blocs. */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute top-1/3 -left-24 h-64 w-64 rounded-full bg-gold/10 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+    <div className="min-h-screen relative">
+      {/* Degrade "neon" en arriere-plan, fixe (reste en place au scroll).
+          Important : pas de bg-background ici sur le conteneur -- un fond
+          opaque sur ce div peignait par-dessus les formes (ordre
+          d'empilement CSS), les rendant invisibles malgre -z-10. Le fond de
+          page vient de body (globals.css) qui reste tout en bas ; cette
+          div, sans z-index explicite, se peint ensuite dans l'ordre du DOM
+          -- puis main/BottomNav par-dessus, car plus loin dans le DOM. */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-primary/25 blur-3xl" />
+        <div className="absolute top-1/3 -left-24 h-64 w-64 rounded-full bg-gold/20 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
       </div>
-      <main className="pb-24 max-w-lg mx-auto relative">
+      <main className="relative pb-24 max-w-lg mx-auto">
         {children}
       </main>
       <BottomNav
