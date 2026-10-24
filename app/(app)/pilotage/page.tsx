@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { IconChip } from "@/components/ui/icon-chip";
 import { Button } from "@/components/ui/button";
 import { Users, Building2, UserPlus, Plus, Church, FileText, Settings, TriangleAlert, Eye } from "lucide-react";
 import { calculerSante, type Sante } from "@/lib/sante";
@@ -310,9 +311,7 @@ export default async function PilotagePage() {
           <Link href="/ouvriers">
             <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
               <CardContent className="pt-4 flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Users size={18} className="text-primary" />
-                </div>
+                <IconChip icon={Users} size={18} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">Ouvriers</p>
                   <p className="text-xs text-muted-foreground truncate">Gérer l&apos;équipe</p>
@@ -323,9 +322,7 @@ export default async function PilotagePage() {
           <Link href="/departements">
             <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
               <CardContent className="pt-4 flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Building2 size={18} className="text-primary" />
-                </div>
+                <IconChip icon={Building2} size={18} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">Départements</p>
                   <p className="text-xs text-muted-foreground truncate">Vue d&apos;ensemble</p>
@@ -336,9 +333,7 @@ export default async function PilotagePage() {
           <Link href="/cultes">
             <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
               <CardContent className="pt-4 flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Church size={18} className="text-primary" />
-                </div>
+                <IconChip icon={Church} size={18} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">Cultes</p>
                   <p className="text-xs text-muted-foreground truncate">Présence à l&apos;église</p>
@@ -349,9 +344,7 @@ export default async function PilotagePage() {
           <Link href="/rapports">
             <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
               <CardContent className="pt-4 flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <FileText size={18} className="text-primary" />
-                </div>
+                <IconChip icon={FileText} size={18} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">Rapports</p>
                   <p className="text-xs text-muted-foreground truncate">Tous les départements</p>
@@ -363,9 +356,7 @@ export default async function PilotagePage() {
             <Link href="/parametres">
               <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <CardContent className="pt-4 flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Settings size={18} className="text-primary" />
-                  </div>
+                  <IconChip icon={Settings} size={18} />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold truncate">Paramètres</p>
                     <p className="text-xs text-muted-foreground truncate">Coordonnées de l&apos;église</p>

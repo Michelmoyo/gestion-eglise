@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
+import { IconChip } from "@/components/ui/icon-chip";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Pencil, Users } from "lucide-react";
 import { format } from "@/lib/format";
@@ -137,9 +138,7 @@ export default async function ActiviteDetailPage({
             <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
               <CardContent className="p-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Users size={18} className="text-primary" />
-                  </div>
+                  <IconChip icon={Users} size={18} chipSize={40} />
                   <p className="font-semibold text-sm">Présences</p>
                 </div>
                 <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />

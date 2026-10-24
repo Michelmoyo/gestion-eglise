@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { IconChip } from "@/components/ui/icon-chip";
 
 export default function NotFound() {
   return (
@@ -9,13 +10,11 @@ export default function NotFound() {
       <div className="pointer-events-none absolute bottom-0 right-0 h-64 w-64 rounded-full bg-gold/10 blur-3xl" />
 
       <div className="relative flex flex-col items-center text-center gap-5 max-w-sm">
-        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-          <Compass size={28} className="text-primary" />
-        </div>
+        <IconChip icon={Compass} size={28} chipSize={64} />
 
         <div className="space-y-1.5">
           <p className="text-sm font-semibold tracking-widest text-primary">404</p>
-          <h1 className="text-xl font-semibold">Page introuvable</h1>
+          <h1 className="font-display text-xl">Page introuvable</h1>
           <p className="text-sm text-muted-foreground">
             Cette page n&apos;existe pas ou a été déplacée. Vérifiez le lien, ou
             revenez à votre espace.

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
+import { IconChip } from "@/components/ui/icon-chip";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Plus, Building2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -45,9 +46,7 @@ export default async function RapportsPage() {
                 <Link key={d.id} href={`/departements/${d.id}/rapports`}>
                   <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                     <CardContent className="p-4 flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Building2 size={18} className="text-primary" />
-                      </div>
+                      <IconChip icon={Building2} size={18} chipSize={40} />
                       <p className="font-medium text-sm flex-1 truncate">{d.nom}</p>
                       <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
                     </CardContent>

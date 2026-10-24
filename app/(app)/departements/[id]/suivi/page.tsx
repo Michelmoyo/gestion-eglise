@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
+import { IconChip } from "@/components/ui/icon-chip";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ChevronLeft, ChevronRight, ListChecks } from "lucide-react";
 import { NouvelleListeForm } from "@/components/departements/nouvelle-liste-form";
@@ -93,9 +94,7 @@ export default async function SuiviPage({
                 <Link key={liste.id} href={`/departements/${id}/suivi/liste/${liste.id}`}>
                   <Card className="hover:bg-primary/5 hover:border-primary/30 transition-colors">
                     <CardContent className="p-4 flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <ListChecks size={18} className="text-primary" />
-                      </div>
+                      <IconChip icon={ListChecks} size={18} chipSize={36} />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold truncate">
                           {liste.nom}

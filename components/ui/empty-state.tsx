@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { IconChip } from "./icon-chip";
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -8,9 +9,7 @@ interface EmptyStateProps {
 export function EmptyState({ icon: Icon, message }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-        <Icon size={22} className="text-primary/70" />
-      </div>
+      <IconChip icon={Icon} size={22} chipSize={48} className="text-primary/70" />
       <p className="text-sm text-muted-foreground">{message}</p>
     </div>
   );

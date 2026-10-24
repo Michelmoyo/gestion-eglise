@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
+import { IconChip } from "@/components/ui/icon-chip";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Plus, CalendarDays, Clock, MapPin, Church } from "lucide-react";
@@ -75,9 +76,7 @@ export default async function CultesPage({
             <Link key={c.id} href={`/cultes/${c.id}`}>
               <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <CardContent className="p-4 flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Church size={18} className="text-primary" />
-                  </div>
+                  <IconChip icon={Church} size={18} chipSize={40} />
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-sm truncate">{c.type}</p>
                     <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
