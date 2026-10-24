@@ -47,8 +47,10 @@ export function BottomNav({ roleGlobal, departementIds }: BottomNavProps) {
   ].filter((l) => l.show);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border print:hidden">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+    <nav className="fixed bottom-3 left-3 right-3 z-50 print:hidden">
+      <div
+        className="flex items-center justify-around gap-1 h-16 max-w-lg mx-auto px-2 rounded-[1.75rem] border border-border/60 bg-card shadow-[0_1px_2px_rgba(20,10,15,0.04),0_12px_28px_-10px_rgba(20,10,15,0.18)]"
+      >
         {links.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
@@ -56,13 +58,13 @@ export function BottomNav({ roleGlobal, departementIds }: BottomNavProps) {
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+                "flex flex-col items-center gap-0.5 px-3 py-2 rounded-full text-xs font-medium transition-all duration-150",
                 active
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                  ? "text-primary-foreground bg-primary shadow-[0_3px_0_0_rgba(0,0,0,0.2)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
               )}
             >
-              <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
+              <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
               {label}
             </Link>
           );

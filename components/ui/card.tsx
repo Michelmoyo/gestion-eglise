@@ -6,14 +6,15 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     <div
       ref={ref}
       className={cn(
-        // Le theme est sombre (--background ~0% de luminosite) : une ombre
-        // noire classique s'y fond et ne lit comme "elevation" nulle part.
-        // Un filet clair en haut (comme une lumiere qui accroche le bord
-        // superieur) est le signal d'elevation qui fonctionne en sombre.
+        // rounded-lg (pas rounded-xl, qui est une valeur Tailwind statique
+        // non liee a --radius) pour suivre le rayon genereux du theme (20px,
+        // aligne sur les maquettes d'origine). Ombre douce et diffuse --
+        // le theme est desormais clair, elle se voit vraiment (contrairement
+        // au theme sombre precedent ou elle se fondait dans le fond).
         // transition-all pour que les hover: deja presents un peu partout
         // (hover:border-primary/30, hover:bg-primary/5...) s'animent au
         // lieu de basculer brutalement.
-        "rounded-xl border bg-card text-card-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-150",
+        "rounded-lg border border-border/60 bg-card text-card-foreground shadow-[0_1px_2px_rgba(20,10,15,0.04),0_8px_24px_-12px_rgba(20,10,15,0.12)] transition-all duration-150",
         className
       )}
       {...props}
