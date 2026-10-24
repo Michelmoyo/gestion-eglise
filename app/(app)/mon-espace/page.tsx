@@ -3,9 +3,10 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Clock, Church, ChevronRight, ListChecks } from "lucide-react";
+import { CalendarDays, Church, ChevronRight, ListChecks } from "lucide-react";
 import { format } from "@/lib/format";
 import { AvatarOuvrier } from "@/components/ouvriers/avatar-ouvrier";
+import { DateBadge } from "@/components/ui/date-badge";
 
 export default async function MonEspacePage() {
   const supabase = await createClient();
@@ -154,13 +155,15 @@ export default async function MonEspacePage() {
                 <Link
                   key={c.id}
                   href={`/cultes/${c.id}`}
-                  className="flex items-center justify-between gap-2 hover:opacity-80"
+                  className="flex items-center gap-3 hover:opacity-80"
                 >
-                  <span className="text-sm">{c.type}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {format.date(c.date_culte)}
-                    {c.heure ? ` · ${c.heure.slice(0, 5)}` : ""}
-                  </span>
+                  <DateBadge dateStr={c.date_culte} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{c.type}</p>
+                    {c.heure && (
+                      <p className="text-xs text-muted-foreground">{c.heure.slice(0, 5)}</p>
+                    )}
+                  </div>
                 </Link>
               ))
             )}
@@ -188,17 +191,14 @@ export default async function MonEspacePage() {
                 <Link
                   key={act.id}
                   href={`/departements/${act.departement_id}/activites/${act.id}`}
-                  className="flex items-start gap-3 hover:opacity-80"
+                  className="flex items-center gap-3 hover:opacity-80"
                 >
-                  <div className="mt-0.5">
-                    <Clock size={14} className="text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{act.titre}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format.date(act.date_activite)}
-                      {act.heure ? ` · ${act.heure.slice(0, 5)}` : ""}
-                      {act.departement_id ? ` · ${deptMap[act.departement_id] ?? ""}` : ""}
+                  <DateBadge dateStr={act.date_activite} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{act.titre}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {act.heure ? `${act.heure.slice(0, 5)} · ` : ""}
+                      {act.departement_id ? deptMap[act.departement_id] ?? "" : ""}
                       {act.lieu ? ` · ${act.lieu}` : ""}
                     </p>
                   </div>

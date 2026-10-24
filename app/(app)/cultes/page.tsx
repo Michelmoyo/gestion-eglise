@@ -3,11 +3,10 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
-import { IconChip } from "@/components/ui/icon-chip";
+import { DateBadge } from "@/components/ui/date-badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Plus, CalendarDays, Clock, MapPin, Church } from "lucide-react";
-import { format } from "@/lib/format";
+import { Plus, Clock, MapPin, Church } from "lucide-react";
 import { FiltresCultes } from "@/components/cultes/filtres-cultes";
 
 export default async function CultesPage({
@@ -76,14 +75,10 @@ export default async function CultesPage({
             <Link key={c.id} href={`/cultes/${c.id}`}>
               <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <CardContent className="p-4 flex items-center gap-3">
-                  <IconChip icon={Church} size={18} chipSize={40} />
+                  <DateBadge dateStr={c.date_culte} />
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-sm truncate">{c.type}</p>
                     <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <CalendarDays size={12} />
-                        {format.date(c.date_culte)}
-                      </span>
                       {c.heure && (
                         <span className="flex items-center gap-1">
                           <Clock size={12} />

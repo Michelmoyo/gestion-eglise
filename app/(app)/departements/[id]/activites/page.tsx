@@ -3,11 +3,10 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
-import { IconChip } from "@/components/ui/icon-chip";
+import { DateBadge } from "@/components/ui/date-badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Plus, CalendarDays, Clock, MapPin, ChevronLeft } from "lucide-react";
-import { format } from "@/lib/format";
 
 const STATUT_PRESENCE_STYLE: Record<string, { label: string; className: string }> = {
   present: { label: "Présent", className: "bg-green-100 text-green-700" },
@@ -118,14 +117,10 @@ export default async function ActivitesPage({
               >
                 <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                   <CardContent className="p-4 flex items-center gap-3">
-                    <IconChip icon={CalendarDays} size={18} chipSize={40} />
+                    <DateBadge dateStr={act.date_activite} />
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-sm truncate">{act.titre}</p>
                       <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <CalendarDays size={12} />
-                          {format.date(act.date_activite)}
-                        </span>
                         {act.heure && (
                           <span className="flex items-center gap-1">
                             <Clock size={12} />
