@@ -5,7 +5,7 @@ import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IconChip } from "@/components/ui/icon-chip";
 import { Button } from "@/components/ui/button";
-import { Users, Building2, UserPlus, Plus, Church, FileText, Settings, TriangleAlert, Eye } from "lucide-react";
+import { Users, Building2, UserPlus, Plus, Church, FileText, Settings, TriangleAlert, Eye, CalendarDays, ChevronRight } from "lucide-react";
 import { calculerSante, type Sante } from "@/lib/sante";
 
 const PASTILLE: Record<Sante, { bg: string; label: string }> = {
@@ -190,41 +190,54 @@ export default async function PilotagePage() {
       <div className="p-4 space-y-4">
 
         {/* Actions rapides */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/ouvriers/nouveau">
-            <Button className="w-full h-auto py-3 flex-col gap-1 text-xs">
-              <UserPlus size={22} />
-              <span className="truncate max-w-full">Nouvel ouvrier</span>
-            </Button>
-          </Link>
-          <Link href="/departements/nouveau">
-            <Button variant="outline" className="w-full h-auto py-3 flex-col gap-1 text-xs">
-              <Plus size={22} />
-              <span className="truncate max-w-full">Nouveau département</span>
-            </Button>
-          </Link>
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+            Actions rapides
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/ouvriers/nouveau">
+              <Button className="w-full h-auto py-3 flex-col gap-1 text-xs">
+                <UserPlus size={22} />
+                <span className="truncate max-w-full">Nouvel ouvrier</span>
+              </Button>
+            </Link>
+            <Link href="/departements/nouveau">
+              <Button variant="outline" className="w-full h-auto py-3 flex-col gap-1 text-xs">
+                <Plus size={22} />
+                <span className="truncate max-w-full">Nouveau département</span>
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Chiffres clés */}
-        <div className="grid grid-cols-3 gap-3">
-          <Card className="bg-primary/5">
-            <CardContent className="pt-4 text-center">
-              <p className="text-3xl font-bold text-primary">{nbOuvriers ?? 0}</p>
-              <p className="text-xs text-muted-foreground mt-1">Ouvriers</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-primary/5">
-            <CardContent className="pt-4 text-center">
-              <p className="text-3xl font-bold text-primary">{nbDepts}</p>
-              <p className="text-xs text-muted-foreground mt-1">Départements</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-primary/5">
-            <CardContent className="pt-4 text-center">
-              <p className="text-3xl font-bold text-primary">{nbActivitesMois ?? 0}</p>
-              <p className="text-xs text-muted-foreground mt-1">Activités</p>
-            </CardContent>
-          </Card>
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+            Chiffres clés
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            <Card className="bg-primary/5 border-primary/10">
+              <CardContent className="pt-4 flex flex-col items-center text-center gap-1.5">
+                <IconChip icon={Users} size={15} chipSize={32} />
+                <p className="text-2xl font-bold text-primary">{nbOuvriers ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Ouvriers</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-primary/5 border-primary/10">
+              <CardContent className="pt-4 flex flex-col items-center text-center gap-1.5">
+                <IconChip icon={Building2} size={15} chipSize={32} />
+                <p className="text-2xl font-bold text-primary">{nbDepts}</p>
+                <p className="text-xs text-muted-foreground">Départements</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-primary/5 border-primary/10">
+              <CardContent className="pt-4 flex flex-col items-center text-center gap-1.5">
+                <IconChip icon={CalendarDays} size={15} chipSize={32} />
+                <p className="text-2xl font-bold text-primary">{nbActivitesMois ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Activités</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Alertes globales */}
@@ -265,19 +278,22 @@ export default async function PilotagePage() {
                 const p = PASTILLE[dept.sante.statut];
                 return (
                   <Link key={dept.id} href={`/departements/${dept.id}`}>
-                    <div className="flex items-center justify-between py-3 hover:bg-primary/5 -mx-1 px-1 rounded transition-colors">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2 py-3 hover:bg-primary/5 -mx-1 px-1 rounded-lg transition-colors">
+                      <div className="flex items-center gap-2 min-w-0">
                         <span
                           className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${p.bg}`}
                           title={dept.sante.alertes.join(" · ") || "Bonne santé"}
                         />
-                        <p className="text-sm font-medium">{dept.nom}</p>
+                        <p className="text-sm font-medium truncate">{dept.nom}</p>
                       </div>
-                      {dept.sante.alertes.length > 0 && (
-                        <p className="text-xs text-muted-foreground truncate max-w-[140px] text-right">
-                          {dept.sante.alertes[0]}
-                        </p>
-                      )}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {dept.sante.alertes.length > 0 && (
+                          <p className="text-xs text-muted-foreground truncate max-w-[120px] text-right">
+                            {dept.sante.alertes[0]}
+                          </p>
+                        )}
+                        <ChevronRight size={16} className="text-muted-foreground/50" />
+                      </div>
                     </div>
                   </Link>
                 );
@@ -307,64 +323,69 @@ export default async function PilotagePage() {
         </Card>
 
         {/* Liens rapides */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/ouvriers">
-            <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-              <CardContent className="pt-4 flex items-center gap-3">
-                <IconChip icon={Users} size={18} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate">Ouvriers</p>
-                  <p className="text-xs text-muted-foreground truncate">Gérer l&apos;équipe</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/departements">
-            <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-              <CardContent className="pt-4 flex items-center gap-3">
-                <IconChip icon={Building2} size={18} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate">Départements</p>
-                  <p className="text-xs text-muted-foreground truncate">Vue d&apos;ensemble</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/cultes">
-            <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-              <CardContent className="pt-4 flex items-center gap-3">
-                <IconChip icon={Church} size={18} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate">Cultes</p>
-                  <p className="text-xs text-muted-foreground truncate">Présence à l&apos;église</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/rapports">
-            <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-              <CardContent className="pt-4 flex items-center gap-3">
-                <IconChip icon={FileText} size={18} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate">Rapports</p>
-                  <p className="text-xs text-muted-foreground truncate">Tous les départements</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          {moi.role_global === "pasteur" && (
-            <Link href="/parametres">
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+            Liens rapides
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/ouvriers">
               <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <CardContent className="pt-4 flex items-center gap-3">
-                  <IconChip icon={Settings} size={18} />
+                  <IconChip icon={Users} size={18} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate">Paramètres</p>
-                    <p className="text-xs text-muted-foreground truncate">Coordonnées de l&apos;église</p>
+                    <p className="text-sm font-semibold truncate">Ouvriers</p>
+                    <p className="text-xs text-muted-foreground truncate">Gérer l&apos;équipe</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
-          )}
+            <Link href="/departements">
+              <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
+                <CardContent className="pt-4 flex items-center gap-3">
+                  <IconChip icon={Building2} size={18} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate">Départements</p>
+                    <p className="text-xs text-muted-foreground truncate">Vue d&apos;ensemble</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/cultes">
+              <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
+                <CardContent className="pt-4 flex items-center gap-3">
+                  <IconChip icon={Church} size={18} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate">Cultes</p>
+                    <p className="text-xs text-muted-foreground truncate">Présence à l&apos;église</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/rapports">
+              <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
+                <CardContent className="pt-4 flex items-center gap-3">
+                  <IconChip icon={FileText} size={18} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate">Rapports</p>
+                    <p className="text-xs text-muted-foreground truncate">Tous les départements</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            {moi.role_global === "pasteur" && (
+              <Link href="/parametres">
+                <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
+                  <CardContent className="pt-4 flex items-center gap-3">
+                    <IconChip icon={Settings} size={18} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">Paramètres</p>
+                      <p className="text-xs text-muted-foreground truncate">Coordonnées de l&apos;église</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </>
