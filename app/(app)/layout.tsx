@@ -37,9 +37,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           div, sans z-index explicite, se peint ensuite dans l'ordre du DOM
           -- puis main/BottomNav par-dessus, car plus loin dans le DOM. */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-primary/25 blur-3xl" />
-        <div className="absolute top-1/3 -left-24 h-64 w-64 rounded-full bg-gold/20 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute top-1/3 -left-24 h-64 w-64 rounded-full bg-gold/15 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-primary/15 blur-3xl" />
       </div>
       <main className="relative pb-24 max-w-lg mx-auto">
         {children}
