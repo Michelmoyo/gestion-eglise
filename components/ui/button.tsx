@@ -4,15 +4,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-        outline: "border border-input bg-background shadow-sm hover:bg-primary/10 hover:border-primary/30 hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-primary/10 hover:text-accent-foreground",
+        // Effet "bouton physique" : une ombre pleine en guise de tranche,
+        // qui disparaît et se traduit en Y au clic -- impression de
+        // pression reelle plutot qu'un simple changement de couleur.
+        default: "bg-primary text-primary-foreground shadow-[0_3px_0_0_rgba(0,0,0,0.25)] hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[0_4px_0_0_rgba(0,0,0,0.25)] active:translate-y-[3px] active:shadow-none",
+        destructive: "bg-destructive text-destructive-foreground shadow-[0_3px_0_0_rgba(0,0,0,0.25)] hover:bg-destructive/90 hover:-translate-y-0.5 hover:shadow-[0_4px_0_0_rgba(0,0,0,0.25)] active:translate-y-[3px] active:shadow-none",
+        outline: "border border-input bg-background shadow-sm hover:bg-primary/10 hover:border-primary/30 hover:text-accent-foreground hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97]",
+        secondary: "bg-secondary text-secondary-foreground shadow-[0_3px_0_0_rgba(0,0,0,0.15)] hover:bg-secondary/80 hover:-translate-y-0.5 hover:shadow-[0_4px_0_0_rgba(0,0,0,0.15)] active:translate-y-[3px] active:shadow-none",
+        ghost: "hover:bg-primary/10 hover:text-accent-foreground active:scale-[0.97]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
