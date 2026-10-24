@@ -162,7 +162,7 @@ export default async function DepartementDetailPage({
   // presence_culte_perimetre_departement), un agregat serait incomplet pour
   // eux.
   let tauxPresenceCulte30j: number | null = null;
-  let nbCultesPointes = 0;
+  let nbCultes30j = 0;
   if (peutGerer) {
     const ouvrierIdsDept = (effectifs ?? [])
       .filter((e) => e.statut === "actif")
@@ -173,12 +173,13 @@ export default async function DepartementDetailPage({
       .select("id")
       .gte("date_culte", ilY30);
     const culte30jIds = (cultes30j ?? []).map((c) => c.id);
+    nbCultes30j = culte30jIds.length;
 
     const { data: presencesCulteDept } =
       culte30jIds.length && ouvrierIdsDept.length
         ? await supabase
             .from("presences_culte")
-            .select("culte_id, statut")
+            .select("statut")
             .in("culte_id", culte30jIds)
             .in("ouvrier_id", ouvrierIdsDept)
         : { data: [] };
@@ -187,7 +188,6 @@ export default async function DepartementDetailPage({
     tauxPresenceCulte30j = presencesCulteDept?.length
       ? Math.round((presentsCulte / presencesCulteDept.length) * 100)
       : null;
-    nbCultesPointes = new Set((presencesCulteDept ?? []).map((p) => p.culte_id)).size;
   }
 
   return (
@@ -298,8 +298,8 @@ export default async function DepartementDetailPage({
               </Card>
               <Card>
                 <CardContent className="pt-4 text-center">
-                  <p className="text-3xl font-bold text-primary">{nbCultesPointes}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Cultes pointés</p>
+                  <p className="text-3xl font-bold text-primary">{nbCultes30j}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Cultes (30j)</p>
                 </CardContent>
               </Card>
             </div>
