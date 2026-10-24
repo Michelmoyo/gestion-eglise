@@ -269,6 +269,14 @@ export default async function DepartementDetailPage({
               </Button>
             </Link>
           )}
+          {peutGerer && (
+            <Link href="/cultes">
+              <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
+                <span className="text-lg">⛪</span>
+                Cultes
+              </Button>
+            </Link>
+          )}
           {(["president", "vice_president", "tresorier"].includes(monAff?.role ?? "") || isPilotage) && (
             <Link href={`/departements/${id}/caisse`}>
               <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
