@@ -17,6 +17,7 @@ type Culte = {
   type: string;
   date_culte: string;
   heure: string | null;
+  heure_fin: string | null;
   lieu: string | null;
   description: string | null;
 };
@@ -66,14 +67,25 @@ export function CulteForm({ action, defaultValues, submitLabel = "Enregistrer" }
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="heure">Heure</Label>
-        <Input
-          id="heure"
-          name="heure"
-          type="time"
-          defaultValue={defaultValues?.heure ?? ""}
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label htmlFor="heure">Heure de début</Label>
+          <Input
+            id="heure"
+            name="heure"
+            type="time"
+            defaultValue={defaultValues?.heure ?? ""}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="heure_fin">Heure de fin</Label>
+          <Input
+            id="heure_fin"
+            name="heure_fin"
+            type="time"
+            defaultValue={defaultValues?.heure_fin ?? ""}
+          />
+        </div>
       </div>
 
       <div className="space-y-2">

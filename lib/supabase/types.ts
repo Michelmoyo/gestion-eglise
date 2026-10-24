@@ -262,6 +262,7 @@ export interface Database {
           type: string;
           date_culte: string;
           heure: string | null;
+          heure_fin: string | null;
           lieu: string | null;
           description: string | null;
           created_by: string;
@@ -273,6 +274,7 @@ export interface Database {
           type: string;
           date_culte: string;
           heure?: string | null;
+          heure_fin?: string | null;
           lieu?: string | null;
           description?: string | null;
           created_by: string;
@@ -282,6 +284,7 @@ export interface Database {
           type?: string;
           date_culte?: string;
           heure?: string | null;
+          heure_fin?: string | null;
           lieu?: string | null;
           description?: string | null;
           created_by?: string;

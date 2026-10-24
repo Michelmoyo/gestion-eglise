@@ -21,7 +21,7 @@ export default async function CulteDetailPage({
 
   const { data: culte } = await supabase
     .from("cultes")
-    .select("id, type, date_culte, heure, lieu, description")
+    .select("id, type, date_culte, heure, heure_fin, lieu, description")
     .eq("id", id)
     .single();
 
@@ -119,7 +119,7 @@ export default async function CulteDetailPage({
             <CardContent className="pt-4 space-y-1 text-sm">
               <p className="font-semibold text-base">{culte.type}</p>
               <p className="text-muted-foreground">
-                {format.date(culte.date_culte)}{culte.heure ? ` · ${culte.heure.slice(0, 5)}` : ""}
+                {format.date(culte.date_culte)}{culte.heure ? ` · ${culte.heure.slice(0, 5)}${culte.heure_fin ? ` – ${culte.heure_fin.slice(0, 5)}` : ""}` : ""}
               </p>
               {culte.lieu && <p className="text-muted-foreground">📍 {culte.lieu}</p>}
               {culte.description && <p className="mt-2">{culte.description}</p>}
@@ -192,7 +192,7 @@ export default async function CulteDetailPage({
           <CardContent className="pt-4 space-y-1 text-sm">
             <p className="font-semibold text-base">{culte.type}</p>
             <p className="text-muted-foreground">
-              {format.date(culte.date_culte)}{culte.heure ? ` · ${culte.heure.slice(0, 5)}` : ""}
+              {format.date(culte.date_culte)}{culte.heure ? ` · ${culte.heure.slice(0, 5)}${culte.heure_fin ? ` – ${culte.heure_fin.slice(0, 5)}` : ""}` : ""}
             </p>
             {culte.lieu && <p className="text-muted-foreground">📍 {culte.lieu}</p>}
             {culte.description && <p className="mt-2">{culte.description}</p>}

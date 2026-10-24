@@ -237,6 +237,7 @@ create table cultes (
   type         text not null,
   date_culte   date not null,
   heure        time,
+  heure_fin    time,
   lieu         text,
   description  text,
   created_by   uuid not null references ouvriers(id),

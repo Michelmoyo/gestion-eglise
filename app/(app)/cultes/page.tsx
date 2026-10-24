@@ -25,7 +25,7 @@ export default async function CultesPage() {
 
   const { data: cultes } = await supabase
     .from("cultes")
-    .select("id, type, date_culte, heure, lieu")
+    .select("id, type, date_culte, heure, heure_fin, lieu")
     .order("date_culte", { ascending: false });
 
   return (
@@ -64,6 +64,7 @@ export default async function CultesPage() {
                         <span className="flex items-center gap-1">
                           <Clock size={12} />
                           {c.heure.slice(0, 5)}
+                          {c.heure_fin ? ` – ${c.heure_fin.slice(0, 5)}` : ""}
                         </span>
                       )}
                       {c.lieu && (

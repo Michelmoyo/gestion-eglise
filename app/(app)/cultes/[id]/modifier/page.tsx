@@ -26,7 +26,7 @@ export default async function ModifierCultePage({
 
   const { data: culte } = await supabase
     .from("cultes")
-    .select("type, date_culte, heure, lieu, description")
+    .select("type, date_culte, heure, heure_fin, lieu, description")
     .eq("id", id)
     .single();
 
