@@ -49,17 +49,21 @@ export default async function PilotagePage() {
 
   // ── Calcul santé de chaque département ────────────────────────────────────
   const now = new Date();
+  const aujourdHui = now.toISOString().split("T")[0];
   const il_y_a_30 = new Date(now.getTime() - 30 * 86_400_000).toISOString().split("T")[0];
   const il_y_a_60 = new Date(now.getTime() - 60 * 86_400_000).toISOString().split("T")[0];
 
   const deptIds = (departements ?? []).map((d) => d.id);
 
-  // Dernière activité par département
+  // Dernière activité par département -- bornee a aujourd'hui, sinon une
+  // activite deja creee mais datee dans le futur ressortirait comme "derniere
+  // activite" alors qu'elle n'a pas encore eu lieu.
   const { data: dernieresActivites } = deptIds.length
     ? await supabase
         .from("activites")
         .select("departement_id, date_activite")
         .in("departement_id", deptIds)
+        .lte("date_activite", aujourdHui)
         .order("date_activite", { ascending: false })
     : { data: [] };
 
@@ -70,6 +74,7 @@ export default async function PilotagePage() {
         .select("id, departement_id")
         .in("departement_id", deptIds)
         .gte("date_activite", il_y_a_30)
+        .lte("date_activite", aujourdHui)
     : { data: [] };
 
   const activite30jIds = (activites30j ?? []).map((a) => a.id);
@@ -152,7 +157,8 @@ export default async function PilotagePage() {
   const { data: cultes30j } = await supabase
     .from("cultes")
     .select("id, type")
-    .gte("date_culte", il_y_a_30);
+    .gte("date_culte", il_y_a_30)
+    .lte("date_culte", aujourdHui);
 
   const culte30jIds = (cultes30j ?? []).map((c) => c.id);
   const { data: presencesCulte30j } = culte30jIds.length

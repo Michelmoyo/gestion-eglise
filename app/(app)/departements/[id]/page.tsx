@@ -89,15 +89,20 @@ export default async function DepartementDetailPage({
 
   // ── Tableau de bord : santé, présence, activités du mois, solde ──────────
   const now = new Date();
+  const aujourdHui = now.toISOString().split("T")[0];
   const debutMois = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
   const ilY30 = new Date(now.getTime() - 30 * 86_400_000).toISOString().split("T")[0];
   const ilY60 = new Date(now.getTime() - 60 * 86_400_000).toISOString().split("T")[0];
 
+  // Bornee a aujourd'hui : une activite/un culte deja cree mais date dans le
+  // futur (ex. prochaine occurrence d'un culte recurrent) ne doit pas compter
+  // dans une fenetre "N derniers jours", qui ne regarde que le passe.
   const { data: activitesRecentes } = await supabase
     .from("activites")
     .select("id, date_activite")
     .eq("departement_id", id)
-    .gte("date_activite", ilY60);
+    .gte("date_activite", ilY60)
+    .lte("date_activite", aujourdHui);
 
   const derniereActivite = (activitesRecentes ?? [])
     .map((a) => a.date_activite)
@@ -171,7 +176,8 @@ export default async function DepartementDetailPage({
     const { data: cultes30j } = await supabase
       .from("cultes")
       .select("id")
-      .gte("date_culte", ilY30);
+      .gte("date_culte", ilY30)
+      .lte("date_culte", aujourdHui);
     const culte30jIds = (cultes30j ?? []).map((c) => c.id);
     nbCultes30j = culte30jIds.length;
 
