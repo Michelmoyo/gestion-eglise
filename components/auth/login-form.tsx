@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { login } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export function LoginForm() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [afficherMotDePasse, setAfficherMotDePasse] = useState(false);
 
   const {
     register,
@@ -62,12 +64,23 @@ export function LoginForm() {
 
           <div className="space-y-2">
             <Label htmlFor="password">Mot de passe</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              {...register("password")}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={afficherMotDePasse ? "text" : "password"}
+                autoComplete="current-password"
+                className="pr-10"
+                {...register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setAfficherMotDePasse((v) => !v)}
+                aria-label={afficherMotDePasse ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {afficherMotDePasse ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-xs text-destructive">{errors.password.message}</p>
             )}
