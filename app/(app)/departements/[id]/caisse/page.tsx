@@ -133,13 +133,20 @@ export default async function CaissePage({
           </CardContent>
         </Card>
 
-        {/* Mini graphique entrées/sorties du mois */}
-        {peutEcrire && (totalEntreesMois > 0 || totalSortiesMois > 0) && (
+        {/* Mini graphique entrées/sorties du mois -- toujours visible (meme
+            a 0) quand on a le droit d'ecrire : sinon la fonctionnalite
+            semble absente les mois sans mouvement, au lieu de simplement
+            vide. */}
+        {peutEcrire && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Ce mois-ci</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              {totalEntreesMois === 0 && totalSortiesMois === 0 ? (
+                <p className="text-sm text-muted-foreground py-2">Aucun mouvement ce mois-ci.</p>
+              ) : (
+              <>
               <div className="flex items-end gap-4 h-16">
                 <div className="flex-1 flex flex-col items-center gap-1.5">
                   <div
@@ -160,6 +167,8 @@ export default async function CaissePage({
                 <span className="text-green-600">+{format.montant(totalEntreesMois)}</span>
                 <span className="text-destructive">−{format.montant(totalSortiesMois)}</span>
               </div>
+              </>
+              )}
             </CardContent>
           </Card>
         )}

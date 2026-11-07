@@ -202,9 +202,9 @@ export default async function PilotagePage() {
               </Button>
             </Link>
             <Link href="/departements/nouveau">
-              <Button variant="outline" className="w-full h-auto py-3 flex-col gap-1 text-xs">
+              <Button variant="outline" className="w-full h-auto py-3 flex-col gap-1 text-xs text-primary border-primary/20 hover:text-primary">
                 <Plus size={22} />
-                <span className="truncate max-w-full">Nouveau département</span>
+                <span className="whitespace-normal text-center leading-tight">Nouveau département</span>
               </Button>
             </Link>
           </div>
@@ -330,10 +330,10 @@ export default async function PilotagePage() {
           <div className="grid grid-cols-2 gap-3">
             <Link href="/ouvriers">
               <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                <CardContent className="pt-4 flex items-center gap-3">
-                  <IconChip icon={Users} size={18} />
+                <CardContent className="p-3.5 flex items-center gap-2.5">
+                  <IconChip icon={Users} size={16} chipSize={34} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate">Ouvriers</p>
+                    <p className="text-sm font-semibold leading-tight">Ouvriers</p>
                     <p className="text-xs text-muted-foreground truncate">Gérer l&apos;équipe</p>
                   </div>
                 </CardContent>
@@ -341,10 +341,10 @@ export default async function PilotagePage() {
             </Link>
             <Link href="/departements">
               <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                <CardContent className="pt-4 flex items-center gap-3">
-                  <IconChip icon={Building2} size={18} />
+                <CardContent className="p-3.5 flex items-center gap-2.5">
+                  <IconChip icon={Building2} size={16} chipSize={34} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate">Départements</p>
+                    <p className="text-sm font-semibold leading-tight">Départements</p>
                     <p className="text-xs text-muted-foreground truncate">Vue d&apos;ensemble</p>
                   </div>
                 </CardContent>
@@ -352,10 +352,10 @@ export default async function PilotagePage() {
             </Link>
             <Link href="/cultes">
               <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                <CardContent className="pt-4 flex items-center gap-3">
-                  <IconChip icon={Church} size={18} />
+                <CardContent className="p-3.5 flex items-center gap-2.5">
+                  <IconChip icon={Church} size={16} chipSize={34} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate">Cultes</p>
+                    <p className="text-sm font-semibold leading-tight">Cultes</p>
                     <p className="text-xs text-muted-foreground truncate">Présence à l&apos;église</p>
                   </div>
                 </CardContent>
@@ -363,10 +363,10 @@ export default async function PilotagePage() {
             </Link>
             <Link href="/rapports">
               <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                <CardContent className="pt-4 flex items-center gap-3">
-                  <IconChip icon={FileText} size={18} />
+                <CardContent className="p-3.5 flex items-center gap-2.5">
+                  <IconChip icon={FileText} size={16} chipSize={34} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate">Rapports</p>
+                    <p className="text-sm font-semibold leading-tight">Rapports</p>
                     <p className="text-xs text-muted-foreground truncate">Tous les départements</p>
                   </div>
                 </CardContent>
@@ -375,10 +375,10 @@ export default async function PilotagePage() {
             {moi.role_global === "pasteur" && (
               <Link href="/parametres">
                 <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                  <CardContent className="pt-4 flex items-center gap-3">
-                    <IconChip icon={Settings} size={18} />
+                  <CardContent className="p-3.5 flex items-center gap-2.5">
+                    <IconChip icon={Settings} size={16} chipSize={34} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold truncate">Paramètres</p>
+                      <p className="text-sm font-semibold leading-tight">Paramètres</p>
                       <p className="text-xs text-muted-foreground truncate">Coordonnées de l&apos;église</p>
                     </div>
                   </CardContent>

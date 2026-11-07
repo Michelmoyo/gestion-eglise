@@ -34,23 +34,23 @@ export async function TopBar({ title, prenom, badge }: TopBarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-primary px-4 h-14 flex items-center justify-between shadow-[0_2px_12px_-4px_rgba(108,60,240,0.35)]">
-      <div>
+    <header className="sticky top-0 z-40 bg-primary px-4 h-14 flex items-center justify-between gap-2 shadow-[0_2px_12px_-4px_rgba(108,60,240,0.35)]">
+      <div className="min-w-0 flex-1">
         {/* H1 du brief "Soft Cards" : 22/SemiBold. */}
-        <h1 className="text-[22px] font-semibold leading-tight text-primary-foreground">{title}</h1>
+        <h1 className="text-[22px] font-semibold leading-tight text-primary-foreground truncate">{title}</h1>
         {prenom && (
-          <p className="text-xs text-primary-foreground/75">Bonjour, {prenom}</p>
+          <p className="text-xs text-primary-foreground/75 truncate">Bonjour, {prenom}</p>
         )}
         {badge && (
-          <span className="mt-0.5 inline-flex items-center gap-1.5 rounded-full bg-white/18 px-2.5 py-0.5 w-fit">
+          <span className="mt-0.5 inline-flex items-center gap-1.5 rounded-full bg-white/18 px-2.5 py-0.5 max-w-full">
             <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", badge.dotClassName)} />
-            <span className="text-xs font-medium text-primary-foreground truncate max-w-[220px]">
+            <span className="text-xs font-medium text-primary-foreground truncate">
               {badge.label}
             </span>
           </span>
         )}
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-shrink-0">
         <Link href="/notifications">
           <Button
             variant="ghost"
