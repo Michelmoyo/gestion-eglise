@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Plus, Search, Users } from "lucide-react";
+import { ChevronRight, Plus, Search, Users } from "lucide-react";
 import { format } from "@/lib/format";
 import { AvatarOuvrier } from "@/components/ouvriers/avatar-ouvrier";
 
@@ -119,6 +119,7 @@ export default async function OuvriersPage({
                     >
                       {format.statut(statutAffiche)}
                     </span>
+                    <ChevronRight size={16} className="text-muted-foreground/50 flex-shrink-0" />
                   </CardContent>
                 </Card>
               </Link>

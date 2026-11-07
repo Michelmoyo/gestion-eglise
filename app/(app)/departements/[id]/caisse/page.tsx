@@ -98,13 +98,19 @@ export default async function CaissePage({
           {dept.nom}
         </Link>
 
-        {/* Solde */}
-        <Card>
+        {/* Solde -- carte "heros" en degrade de marque, seul chiffre de
+            l'ecran avec un fond plein pour qu'il se detache ; le rouge prend
+            le pas sur le degrade si le solde est negatif. */}
+        <Card
+          className={`border-none text-white ${
+            solde >= 0
+              ? "bg-gradient-to-br from-primary to-[#5527D6]"
+              : "bg-gradient-to-br from-destructive to-red-800"
+          }`}
+        >
           <CardContent className="pt-6 text-center">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Solde actuel</p>
-            <p className={`text-4xl font-bold ${solde >= 0 ? "text-green-600" : "text-destructive"}`}>
-              {format.montant(solde)}
-            </p>
+            <p className="text-xs uppercase tracking-wide mb-1 text-white/80">Solde actuel</p>
+            <p className="text-4xl font-bold">{format.montant(solde)}</p>
           </CardContent>
         </Card>
 
