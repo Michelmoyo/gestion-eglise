@@ -147,15 +147,18 @@ export default async function CaissePage({
                 <p className="text-sm text-muted-foreground py-2">Aucun mouvement ce mois-ci.</p>
               ) : (
               <>
+              {/* h-full sur chaque colonne : une hauteur en % ne se calcule
+                  que si le parent direct a une hauteur definie, sinon elle
+                  resout a 0 (barre invisible) meme avec des donnees. */}
               <div className="flex items-end gap-4 h-16">
-                <div className="flex-1 flex flex-col items-center gap-1.5">
+                <div className="flex-1 h-full flex flex-col justify-end items-center gap-1.5">
                   <div
                     className="w-full max-w-12 rounded-[10px] bg-green-500"
                     style={{ height: `${Math.max((totalEntreesMois / maxMois) * 100, 6)}%` }}
                   />
                   <span className="text-[10.5px] text-muted-foreground">Entrées</span>
                 </div>
-                <div className="flex-1 flex flex-col items-center gap-1.5">
+                <div className="flex-1 h-full flex flex-col justify-end items-center gap-1.5">
                   <div
                     className="w-full max-w-12 rounded-[10px] bg-destructive"
                     style={{ height: `${Math.max((totalSortiesMois / maxMois) * 100, 6)}%` }}
