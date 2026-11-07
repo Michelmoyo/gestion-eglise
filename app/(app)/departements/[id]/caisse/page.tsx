@@ -71,9 +71,16 @@ export default async function CaissePage({
         .limit(50)
     : { data: [] };
 
-  // Entrées/sorties du mois en cours, pour le mini graphique.
-  const debutMois = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-    .toISOString().split("T")[0];
+  // Entrées/sorties du mois en cours, pour le mini graphique. On recupere
+  // aussi le mois precedent : sans cette reference, normaliser les barres
+  // sur le max du mois courant les bloque a 100% des qu'une seule
+  // categorie a un montant (ex. que des entrees, jamais de sortie) -- la
+  // barre ne grandit alors jamais, meme si le montant triple d'une visite
+  // a l'autre.
+  const now0 = new Date();
+  const debutMois = new Date(now0.getFullYear(), now0.getMonth(), 1).toISOString().split("T")[0];
+  const debutMoisPrecedent = new Date(now0.getFullYear(), now0.getMonth() - 1, 1).toISOString().split("T")[0];
+
   const { data: mouvementsMois } = peutEcrire
     ? await supabase
         .from("mouvements_caisse")
@@ -82,13 +89,30 @@ export default async function CaissePage({
         .gte("date_mouvement", debutMois)
     : { data: [] };
 
-  const totalEntreesMois = (mouvementsMois ?? [])
-    .filter((m) => m.type === "entree")
-    .reduce((s, m) => s + m.montant, 0);
-  const totalSortiesMois = (mouvementsMois ?? [])
-    .filter((m) => m.type === "sortie")
-    .reduce((s, m) => s + m.montant, 0);
-  const maxMois = Math.max(totalEntreesMois, totalSortiesMois, 1);
+  const { data: mouvementsMoisPrecedent } = peutEcrire
+    ? await supabase
+        .from("mouvements_caisse")
+        .select("type, montant")
+        .eq("departement_id", id)
+        .gte("date_mouvement", debutMoisPrecedent)
+        .lt("date_mouvement", debutMois)
+    : { data: [] };
+
+  function sommeParType(lignes: { type: string; montant: number }[], type: string) {
+    return lignes.filter((m) => m.type === type).reduce((s, m) => s + m.montant, 0);
+  }
+
+  const totalEntreesMois = sommeParType(mouvementsMois ?? [], "entree");
+  const totalSortiesMois = sommeParType(mouvementsMois ?? [], "sortie");
+  const totalEntreesMoisPrecedent = sommeParType(mouvementsMoisPrecedent ?? [], "entree");
+  const totalSortiesMoisPrecedent = sommeParType(mouvementsMoisPrecedent ?? [], "sortie");
+  const maxMois = Math.max(
+    totalEntreesMois,
+    totalSortiesMois,
+    totalEntreesMoisPrecedent,
+    totalSortiesMoisPrecedent,
+    1
+  );
 
   // Noms des auteurs
   const auteurIds = [...new Set((mouvements ?? []).map((m) => m.auteur_id))];
