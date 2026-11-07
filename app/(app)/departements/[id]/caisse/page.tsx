@@ -71,6 +71,25 @@ export default async function CaissePage({
         .limit(50)
     : { data: [] };
 
+  // Entrées/sorties du mois en cours, pour le mini graphique.
+  const debutMois = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    .toISOString().split("T")[0];
+  const { data: mouvementsMois } = peutEcrire
+    ? await supabase
+        .from("mouvements_caisse")
+        .select("type, montant")
+        .eq("departement_id", id)
+        .gte("date_mouvement", debutMois)
+    : { data: [] };
+
+  const totalEntreesMois = (mouvementsMois ?? [])
+    .filter((m) => m.type === "entree")
+    .reduce((s, m) => s + m.montant, 0);
+  const totalSortiesMois = (mouvementsMois ?? [])
+    .filter((m) => m.type === "sortie")
+    .reduce((s, m) => s + m.montant, 0);
+  const maxMois = Math.max(totalEntreesMois, totalSortiesMois, 1);
+
   // Noms des auteurs
   const auteurIds = [...new Set((mouvements ?? []).map((m) => m.auteur_id))];
   const { data: auteurs } = auteurIds.length
@@ -113,6 +132,37 @@ export default async function CaissePage({
             <p className="text-4xl font-bold">{format.montant(solde)}</p>
           </CardContent>
         </Card>
+
+        {/* Mini graphique entrées/sorties du mois */}
+        {peutEcrire && (totalEntreesMois > 0 || totalSortiesMois > 0) && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Ce mois-ci</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-end gap-4 h-16">
+                <div className="flex-1 flex flex-col items-center gap-1.5">
+                  <div
+                    className="w-full max-w-12 rounded-[10px] bg-green-500"
+                    style={{ height: `${Math.max((totalEntreesMois / maxMois) * 100, 6)}%` }}
+                  />
+                  <span className="text-[10.5px] text-muted-foreground">Entrées</span>
+                </div>
+                <div className="flex-1 flex flex-col items-center gap-1.5">
+                  <div
+                    className="w-full max-w-12 rounded-[10px] bg-destructive"
+                    style={{ height: `${Math.max((totalSortiesMois / maxMois) * 100, 6)}%` }}
+                  />
+                  <span className="text-[10.5px] text-muted-foreground">Sorties</span>
+                </div>
+              </div>
+              <div className="flex justify-between text-xs font-semibold">
+                <span className="text-green-600">+{format.montant(totalEntreesMois)}</span>
+                <span className="text-destructive">−{format.montant(totalSortiesMois)}</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Formulaire nouveau mouvement */}
         {peutEcrire && <MouvementForm action={action} />}

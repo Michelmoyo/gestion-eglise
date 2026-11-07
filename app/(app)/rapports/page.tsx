@@ -29,6 +29,31 @@ export default async function RapportsPage() {
   if (isPilotage) {
     const { data: departements } = await supabase.from("departements").select("id, nom").order("nom");
 
+    const deptIds = (departements ?? []).map((d) => d.id);
+    const { data: derniersRapports } = deptIds.length
+      ? await supabase
+          .from("rapports")
+          .select("departement_id, date_soumission")
+          .in("departement_id", deptIds)
+          .order("date_soumission", { ascending: false })
+      : { data: [] };
+
+    // Meme seuil que fn_est_en_retard/calculerSante (cf. lib/sante.ts) :
+    // > 30j sans rapport = en retard, pas de date du tout = jamais soumis.
+    const now = Date.now();
+    function statutRapport(dateSoumission: string | undefined) {
+      if (!dateSoumission) return { label: "JAMAIS SOUMIS", cls: "bg-orange-100 text-orange-700" };
+      const jours = Math.floor((now - new Date(dateSoumission).getTime()) / 86_400_000);
+      return jours > 30
+        ? { label: "EN RETARD", cls: "bg-orange-100 text-orange-700" }
+        : { label: "À JOUR", cls: "bg-green-100 text-green-700" };
+    }
+
+    const departementsAvecStatut = (departements ?? []).map((d) => {
+      const dateSoumission = (derniersRapports ?? []).find((r) => r.departement_id === d.id)?.date_soumission;
+      return { ...d, statut: statutRapport(dateSoumission) };
+    });
+
     return (
       <>
         <TopBar title="Rapports" />
@@ -39,15 +64,18 @@ export default async function RapportsPage() {
           </p>
 
           <div className="flex flex-col gap-4">
-            {!departements?.length ? (
+            {!departementsAvecStatut.length ? (
               <EmptyState icon={Building2} message="Aucun département créé." />
             ) : (
-              departements.map((d) => (
+              departementsAvecStatut.map((d) => (
                 <Link key={d.id} href={`/departements/${d.id}/rapports`}>
                   <Card className="hover:border-primary/30 hover:bg-primary/5 transition-colors">
                     <CardContent className="p-4 flex items-center gap-3">
                       <IconChip icon={Building2} size={18} chipSize={40} />
                       <p className="font-medium text-sm flex-1 truncate">{d.nom}</p>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${d.statut.cls}`}>
+                        {d.statut.label}
+                      </span>
                       <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
                     </CardContent>
                   </Card>

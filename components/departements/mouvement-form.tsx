@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle } from "lucide-react";
+import { ArrowDown, ArrowUp, PlusCircle } from "lucide-react";
 
 interface Props {
   action: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
@@ -36,13 +36,15 @@ export function MouvementForm({ action }: Props) {
         <form action={formAction} className="space-y-3">
           {/* Type */}
           <div className="grid grid-cols-2 gap-2">
-            <label className="flex items-center gap-2 border rounded-md p-3 cursor-pointer has-[:checked]:border-green-500 has-[:checked]:bg-green-50">
-              <input type="radio" name="type" value="entree" defaultChecked className="accent-green-600" />
-              <span className="text-sm font-medium text-green-700">Entrée</span>
+            <label className="flex flex-col items-center gap-2 rounded-lg p-4 cursor-pointer bg-green-500/10 ring-2 ring-transparent has-[:checked]:ring-green-500">
+              <input type="radio" name="type" value="entree" defaultChecked className="sr-only" />
+              <ArrowUp size={22} strokeWidth={1.75} className="text-green-700" />
+              <span className="text-sm font-semibold text-green-700">Entrée</span>
             </label>
-            <label className="flex items-center gap-2 border rounded-md p-3 cursor-pointer has-[:checked]:border-red-500 has-[:checked]:bg-red-50">
-              <input type="radio" name="type" value="sortie" className="accent-red-600" />
-              <span className="text-sm font-medium text-red-700">Sortie</span>
+            <label className="flex flex-col items-center gap-2 rounded-lg p-4 cursor-pointer bg-destructive/10 ring-2 ring-transparent has-[:checked]:ring-destructive">
+              <input type="radio" name="type" value="sortie" className="sr-only" />
+              <ArrowDown size={22} strokeWidth={1.75} className="text-destructive" />
+              <span className="text-sm font-semibold text-destructive">Sortie</span>
             </label>
           </div>
 

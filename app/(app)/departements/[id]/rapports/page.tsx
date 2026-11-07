@@ -44,18 +44,32 @@ export default async function DepartementRapportsPage({
     auteurNom: auteurNomById[r.auteur_id] ?? "—",
   }));
 
+  // Meme seuil que fn_est_en_retard/calculerSante (cf. lib/sante.ts) :
+  // > 30j sans rapport = en retard, pas de date du tout = jamais soumis.
+  const dernierRapport = rapports?.[0]?.date_soumission;
+  const statut = !dernierRapport
+    ? { label: "JAMAIS SOUMIS", cls: "bg-orange-100 text-orange-700" }
+    : Math.floor((Date.now() - new Date(dernierRapport).getTime()) / 86_400_000) > 30
+    ? { label: "EN RETARD", cls: "bg-orange-100 text-orange-700" }
+    : { label: "À JOUR", cls: "bg-green-100 text-green-700" };
+
   return (
     <>
       <TopBar title={`${dept.nom} — Rapports`} />
 
       <div className="p-4 space-y-4">
-        <Link
-          href="/rapports"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft size={16} />
-          Rapports
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link
+            href="/rapports"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft size={16} />
+            Rapports
+          </Link>
+          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${statut.cls}`}>
+            {statut.label}
+          </span>
+        </div>
 
         <Link href={`/departements/${id}/rapport`} className="block">
           <Button className="w-full gap-2">
