@@ -4,9 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { IconChip } from "@/components/ui/icon-chip";
 import {
   ChevronLeft,
+  ChevronRight,
   Pencil,
   CalendarDays,
   Pin,
@@ -14,20 +14,14 @@ import {
   Wallet,
   FileText,
   Users,
-  UserCheck,
-  UserX,
-  CircleCheck,
-  TriangleAlert,
-  CircleAlert,
-  type LucideIcon,
 } from "lucide-react";
 import { format } from "@/lib/format";
 import { calculerSante, type Sante } from "@/lib/sante";
 
-const PASTILLE: Record<Sante, { icon: LucideIcon; chip: string; label: string }> = {
-  vert: { icon: CircleCheck, chip: "bg-green-500/10 text-green-600", label: "Bonne santé" },
-  orange: { icon: TriangleAlert, chip: "bg-orange-400/10 text-orange-600", label: "À surveiller" },
-  rouge: { icon: CircleAlert, chip: "bg-red-500/10 text-red-600", label: "En difficulté" },
+const PASTILLE: Record<Sante, { label: string }> = {
+  vert: { label: "Bonne santé" },
+  orange: { label: "À surveiller" },
+  rouge: { label: "En difficulté" },
 };
 
 // Palette fermee : une couleur par module, assignee une fois pour toutes --
@@ -232,9 +226,35 @@ export default async function DepartementDetailPage({
       : null;
   }
 
+  // Grille compacte des chiffres cles -- un seul coup d'oeil, le detail
+  // (effectifs nommes, historique des cultes...) reste sur les sous-ecrans
+  // dedies (Equipe, Cultes...). Nombre de tuiles variable selon le role.
+  const statsAccueil: { valeur: string; label: string; negatif?: boolean }[] = [];
+  if (!estSimpleMembre) statsAccueil.push({ valeur: String(nbActifs), label: "Actifs" });
+  statsAccueil.push({
+    valeur: tauxPresence30j !== null ? `${tauxPresence30j}%` : "—",
+    label: "Présence 30j",
+  });
+  statsAccueil.push({ valeur: String(nbActivitesMois ?? 0), label: "Activités ce mois" });
+  if (peutVoirCaisse) {
+    statsAccueil.push({ valeur: format.montant(solde), label: "Solde caisse", negatif: solde < 0 });
+  }
+  if (peutGerer) {
+    statsAccueil.push({ valeur: String(nbCultes30j), label: "Cultes (30j)" });
+  }
+
+  const badgeLabel = sante.alertes.length
+    ? `${PASTILLE[sante.statut].label} — ${sante.alertes[0]}`
+    : PASTILLE[sante.statut].label;
+  const badgeDot = {
+    vert: "bg-green-400",
+    orange: "bg-orange-300",
+    rouge: "bg-red-400",
+  }[sante.statut];
+
   return (
     <>
-      <TopBar title={dept.nom} />
+      <TopBar title={dept.nom} badge={{ label: badgeLabel, dotClassName: badgeDot }} />
 
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
@@ -256,170 +276,110 @@ export default async function DepartementDetailPage({
         </div>
 
         {/* Info département */}
-        <Card>
-          <CardContent className="pt-4 space-y-1">
-            {dept.description && (
+        {dept.description && (
+          <Card>
+            <CardContent className="pt-4">
               <p className="text-sm text-muted-foreground">{dept.description}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Créé le {format.date(dept.date_creation)}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Santé du département */}
-        <Card>
-          <CardContent className="pt-4 flex items-center gap-3">
-            <IconChip icon={PASTILLE[sante.statut].icon} className={PASTILLE[sante.statut].chip} size={18} chipSize={36} />
-            <div>
-              <p className="text-sm font-medium">{PASTILLE[sante.statut].label}</p>
-              {sante.alertes.length > 0 && (
-                <p className="text-xs text-muted-foreground">{sante.alertes[0]}</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Effectifs — masqué pour un simple membre */}
-        {!estSimpleMembre && (
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
-              Effectifs
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <Card>
-                <CardContent className="pt-4 flex flex-col items-center text-center gap-1.5">
-                  <IconChip icon={UserCheck} size={15} chipSize={32} className="bg-green-500/10 text-green-600" />
-                  <p className="text-2xl font-bold text-green-600">{nbActifs}</p>
-                  <p className="text-xs text-muted-foreground">Actifs</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4 flex flex-col items-center text-center gap-1.5">
-                  <IconChip icon={UserX} size={15} chipSize={32} className="bg-orange-400/10 text-orange-600" />
-                  <p className="text-2xl font-bold text-orange-500">{nbSuspendus}</p>
-                  <p className="text-xs text-muted-foreground">Suspendus</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* Activités du département */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
-            Activités du département
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <Card>
-              <CardContent className="pt-4 text-center">
-                <p className="text-3xl font-bold text-primary">
-                  {tauxPresence30j !== null ? `${tauxPresence30j}%` : "—"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Présence (30j)</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 text-center">
-                <p className="text-3xl font-bold text-primary">{nbActivitesMois ?? 0}</p>
-                <p className="text-xs text-muted-foreground mt-1">Activités ce mois</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Cultes — presence des membres du departement */}
-        {peutGerer && (
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
-              Cultes
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <Card>
-                <CardContent className="pt-4 text-center">
-                  <p className="text-3xl font-bold text-primary">
-                    {tauxPresenceCulte30j !== null ? `${tauxPresenceCulte30j}%` : "—"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Présence culte (30j)</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4 text-center">
-                  <p className="text-3xl font-bold text-primary">{nbCultes30j}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Cultes (30j)</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* Carte "heros" : seul chiffre de l'ecran avec un fond plein,
-            pour qu'il se detache des autres cartes blanches -- le rouge
-            prend le pas sur le degrade de marque si le solde est negatif,
-            ce signal ne doit pas se perdre dans le traitement visuel. */}
-        {peutVoirCaisse && (
-          <Card
-            className={`border-none text-white ${
-              solde >= 0
-                ? "bg-gradient-to-br from-primary to-[#5527D6]"
-                : "bg-gradient-to-br from-destructive to-red-800"
-            }`}
-          >
-            <CardContent className="pt-4 text-center">
-              <p className="text-xs uppercase tracking-wide mb-1 text-white/80">Solde de caisse</p>
-              <p className="text-3xl font-bold">{format.montant(solde)}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Créé le {format.date(dept.date_creation)}
+              </p>
             </CardContent>
           </Card>
         )}
 
-        {/* Liens vers les modules de gestion */}
+        {/* Chiffres clés */}
         <div className="grid grid-cols-2 gap-3">
-          <Link href={`/departements/${id}/activites`}>
-            <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-              <IconChip icon={CalendarDays} className={COULEUR_MODULE.activites} />
-              Activités
-            </Button>
-          </Link>
-          {peutGerer && (
-            <Link href={`/departements/${id}/suivi`}>
-              <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                <IconChip icon={Pin} className={COULEUR_MODULE.suivi} />
-                Suivi
-              </Button>
+          {statsAccueil.map((s) => (
+            <Card key={s.label}>
+              <CardContent className="pt-4 pb-3.5 px-3.5">
+                <p className={`text-lg font-bold ${s.negatif ? "text-destructive" : "text-primary"}`}>
+                  {s.valeur}
+                </p>
+                <p className="text-[11px] text-muted-foreground">{s.label}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Liens vers les modules de gestion -- tuiles pastel, meme langage
+            visuel que les stats, avec un chevron pour signaler que tout est
+            cliquable (y compris les modules sans ecran dedie pour l'instant). */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
+            Gérer
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href={`/departements/${id}/activites`}
+              className={`rounded-lg p-4 h-[92px] flex flex-col justify-between ${COULEUR_MODULE.activites}`}
+            >
+              <div className="flex items-center justify-between">
+                <CalendarDays size={22} strokeWidth={1.75} />
+                <ChevronRight size={14} strokeWidth={2} className="opacity-45" />
+              </div>
+              <span className="text-sm font-semibold">Activités</span>
             </Link>
-          )}
-          {peutGerer && (
-            <Link href="/cultes">
-              <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                <IconChip icon={Church} className={COULEUR_MODULE.cultes} />
-                Cultes
-              </Button>
-            </Link>
-          )}
-          {(["president", "vice_president", "tresorier"].includes(monAff?.role ?? "") || isPilotage) && (
-            <Link href={`/departements/${id}/caisse`}>
-              <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                <IconChip icon={Wallet} className={COULEUR_MODULE.caisse} />
-                Caisse
-              </Button>
-            </Link>
-          )}
-          {peutGerer && (
-            <>
-              <Link href={`/departements/${id}/rapports`}>
-                <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                  <IconChip icon={FileText} className={COULEUR_MODULE.rapports} />
-                  Rapports
-                </Button>
+            {peutGerer && (
+              <Link
+                href={`/departements/${id}/equipe`}
+                className={`rounded-lg p-4 h-[92px] flex flex-col justify-between ${COULEUR_MODULE.equipe}`}
+              >
+                <div className="flex items-center justify-between">
+                  <Users size={22} strokeWidth={1.75} />
+                  <ChevronRight size={14} strokeWidth={2} className="opacity-45" />
+                </div>
+                <span className="text-sm font-semibold">Équipe</span>
               </Link>
-              <Link href={`/departements/${id}/equipe`}>
-                <Button variant="outline" className="w-full text-sm h-auto py-3 flex-col gap-1">
-                  <IconChip icon={Users} className={COULEUR_MODULE.equipe} />
-                  Équipe
-                </Button>
+            )}
+            {(["president", "vice_president", "tresorier"].includes(monAff?.role ?? "") || isPilotage) && (
+              <Link
+                href={`/departements/${id}/caisse`}
+                className={`rounded-lg p-4 h-[92px] flex flex-col justify-between ${COULEUR_MODULE.caisse}`}
+              >
+                <div className="flex items-center justify-between">
+                  <Wallet size={22} strokeWidth={1.75} />
+                  <ChevronRight size={14} strokeWidth={2} className="opacity-45" />
+                </div>
+                <span className="text-sm font-semibold">Caisse</span>
               </Link>
-            </>
-          )}
+            )}
+            {peutGerer && (
+              <Link
+                href={`/departements/${id}/rapports`}
+                className={`rounded-lg p-4 h-[92px] flex flex-col justify-between ${COULEUR_MODULE.rapports}`}
+              >
+                <div className="flex items-center justify-between">
+                  <FileText size={22} strokeWidth={1.75} />
+                  <ChevronRight size={14} strokeWidth={2} className="opacity-45" />
+                </div>
+                <span className="text-sm font-semibold">Rapports</span>
+              </Link>
+            )}
+            {peutGerer && (
+              <Link
+                href="/cultes"
+                className={`rounded-lg p-4 h-[92px] flex flex-col justify-between ${COULEUR_MODULE.cultes}`}
+              >
+                <div className="flex items-center justify-between">
+                  <Church size={22} strokeWidth={1.75} />
+                  <ChevronRight size={14} strokeWidth={2} className="opacity-45" />
+                </div>
+                <span className="text-sm font-semibold">Cultes</span>
+              </Link>
+            )}
+            {peutGerer && (
+              <Link
+                href={`/departements/${id}/suivi`}
+                className={`rounded-lg p-4 h-[92px] flex flex-col justify-between ${COULEUR_MODULE.suivi}`}
+              >
+                <div className="flex items-center justify-between">
+                  <Pin size={22} strokeWidth={1.75} />
+                  <ChevronRight size={14} strokeWidth={2} className="opacity-45" />
+                </div>
+                <span className="text-sm font-semibold">Suivi</span>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </>

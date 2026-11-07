@@ -3,13 +3,15 @@ import { logout } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { LogOut, Bell, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 interface TopBarProps {
   title: string;
   prenom?: string;
+  badge?: { label: string; dotClassName: string };
 }
 
-export async function TopBar({ title, prenom }: TopBarProps) {
+export async function TopBar({ title, prenom, badge }: TopBarProps) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -38,6 +40,14 @@ export async function TopBar({ title, prenom }: TopBarProps) {
         <h1 className="text-[22px] font-semibold leading-tight text-primary-foreground">{title}</h1>
         {prenom && (
           <p className="text-xs text-primary-foreground/75">Bonjour, {prenom}</p>
+        )}
+        {badge && (
+          <span className="mt-0.5 inline-flex items-center gap-1.5 rounded-full bg-white/18 px-2.5 py-0.5 w-fit">
+            <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", badge.dotClassName)} />
+            <span className="text-xs font-medium text-primary-foreground truncate max-w-[220px]">
+              {badge.label}
+            </span>
+          </span>
         )}
       </div>
       <div className="flex items-center gap-1">

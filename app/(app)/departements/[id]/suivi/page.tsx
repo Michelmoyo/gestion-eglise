@@ -81,6 +81,8 @@ export default async function SuiviPage({
           {dept.nom}
         </Link>
 
+        <NouvelleListeForm action={ajouterListeAction} />
+
         {!listes?.length ? (
           <EmptyState icon={ListChecks} message="Aucune liste de suivi pour ce département." />
         ) : (
@@ -114,8 +116,6 @@ export default async function SuiviPage({
             })}
           </div>
         )}
-
-        <NouvelleListeForm action={ajouterListeAction} />
       </div>
     </>
   );

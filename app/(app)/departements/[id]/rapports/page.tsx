@@ -57,14 +57,14 @@ export default async function DepartementRapportsPage({
           Rapports
         </Link>
 
-        <ListeRapports rapports={rapportsAffiches} />
-
-        <Link href={`/departements/${id}/rapport`} className="block pt-2">
+        <Link href={`/departements/${id}/rapport`} className="block">
           <Button className="w-full gap-2">
             <Plus size={16} />
             Nouveau rapport
           </Button>
         </Link>
+
+        <ListeRapports rapports={rapportsAffiches} />
       </div>
     </>
   );
