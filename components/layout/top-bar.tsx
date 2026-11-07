@@ -32,11 +32,10 @@ export async function TopBar({ title, prenom }: TopBarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-primary px-4 h-14 flex items-center justify-between shadow-[0_2px_12px_-4px_rgba(0,0,0,0.25)]">
+    <header className="sticky top-0 z-40 bg-primary px-4 h-14 flex items-center justify-between shadow-[0_2px_12px_-4px_rgba(108,60,240,0.35)]">
       <div>
-        {/* Doubleplus n'a qu'une seule graisse (400) -- pas de
-            font-semibold, qui ne ferait que du faux-gras moche. */}
-        <h1 className="font-display text-lg leading-tight text-primary-foreground">{title}</h1>
+        {/* H1 du brief "Soft Cards" : 22/SemiBold. */}
+        <h1 className="text-[22px] font-semibold leading-tight text-primary-foreground">{title}</h1>
         {prenom && (
           <p className="text-xs text-primary-foreground/75">Bonjour, {prenom}</p>
         )}

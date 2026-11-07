@@ -14,7 +14,7 @@ export default function NotFound() {
 
         <div className="space-y-1.5">
           <p className="text-sm font-semibold tracking-widest text-primary">404</p>
-          <h1 className="font-display text-xl">Page introuvable</h1>
+          <h1 className="text-[22px] font-semibold">Page introuvable</h1>
           <p className="text-sm text-muted-foreground">
             Cette page n&apos;existe pas ou a été déplacée. Vérifiez le lien, ou
             revenez à votre espace.

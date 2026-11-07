@@ -15,42 +15,37 @@
 
 @layer base {
   :root {
-    /* Doubleplus pour les titres (coherent avec le rapport imprimable),
-       Titillium Web pour le corps de texte (next/font, variable injectee
-       par la classe titillium.variable sur <html> dans app/layout.tsx). */
+    /* Brief "Soft Cards" (dossier Drive UX & UI) : Poppins partout dans
+       l'app, plus de police d'affichage separee (le brief n'en demande
+       qu'une). --font-display/--font-titillium restent definis pour le
+       rapport imprimable UNIQUEMENT, qui garde sa propre identite
+       typographique (voir le override local dans rapport-pdf.module.css)
+       -- l'app et le document imprime divergent desormais aussi en
+       typographie, comme deja le cas pour la couleur de marque. */
     --font-display: "Doubleplus", var(--font-titillium), Georgia, serif;
-    --font-body: var(--font-titillium), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-body: var(--font-poppins), -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 
-    /* Theme clair "doux" : fond chaleureux (meme teinte que le papier du
-       rapport imprimable, --paper: #FBF9F3) plutot que le gris generique
-       du theme sombre precedent. --radius genereux (20px), aligne sur les
-       maquettes d'origine qui utilisaient deja border-radius:20px -- pas
-       une invention, un retour a l'intention initiale qui s'etait perdue
-       en cours de route.
-       --primary : bleu #5462CF (demande explicite), remplace le rose
-       d'origine -- le rapport imprimable (rapport-pdf.module.css) garde
-       son propre --brand rose, volontairement non touche ici : l'app et
-       le document officiel ont donc desormais deux identites couleur
-       distinctes, a signaler si ce n'est pas voulu. */
-    --background: 48 38% 97%;
-    --foreground: 20 10% 15%;
+    /* Fond lavande clair, violet de marque, ombres teintees (jamais
+       noires), rayon 20px -- deja notre valeur, coincidence heureuse. */
+    --background: 257 47% 97%;
+    --foreground: 249 26% 14%;
     --card: 0 0% 100%;
-    --card-foreground: 20 10% 15%;
+    --card-foreground: 249 26% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 20 10% 15%;
-    --primary: 233 56% 57%;
+    --popover-foreground: 249 26% 14%;
+    --primary: 256 86% 59%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 25% 94%;
-    --secondary-foreground: 20 10% 15%;
-    --muted: 40 25% 94%;
-    --muted-foreground: 25 8% 45%;
-    --accent: 233 56% 95%;
-    --accent-foreground: 233 56% 30%;
+    --secondary: 255 29% 95%;
+    --secondary-foreground: 249 26% 14%;
+    --muted: 255 29% 95%;
+    --muted-foreground: 248 10% 45%;
+    --accent: 256 92% 95%;
+    --accent-foreground: 256 70% 30%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 30 15% 89%;
-    --input: 30 15% 89%;
-    --ring: 233 56% 57%;
+    --border: 255 29% 92%;
+    --input: 255 29% 92%;
+    --ring: 256 86% 59%;
     --radius: 1.25rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;

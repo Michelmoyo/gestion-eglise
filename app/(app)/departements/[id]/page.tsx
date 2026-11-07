@@ -34,14 +34,20 @@ const PASTILLE: Record<Sante, { icon: LucideIcon; chip: string; label: string }>
 // casse la monotonie du rose partout sans devenir illisible (cf. retour
 // utilisateur + reference "Age+"). Ne pas piocher une couleur au hasard
 // ailleurs sans l'ajouter ici.
-// bleu ecarte volontairement : c'est desormais --primary (cf. globals.css).
+// Pastels du brief "Soft Cards" (§2) : "une categorie = une couleur
+// pastel stable". Icones en ardoise -- le brief limite a 3 couleurs
+// saturees visibles simultanement sur un ecran, or les 6 modules
+// s'affichent ensemble ici : les pastels (desatures, hors de cette
+// limite) sont le bon outil, pas les accents satures (corail/bleu
+// ciel/ardoise). Equipe reutilise le violet de marque (seul accent
+// sature de cet ecran, dans le budget de 3).
 const COULEUR_MODULE = {
-  activites: "bg-rose-500/10 text-rose-600",
-  suivi: "bg-violet-500/10 text-violet-600",
-  cultes: "bg-fuchsia-500/10 text-fuchsia-600",
-  caisse: "bg-green-500/10 text-green-600",
-  rapports: "bg-amber-500/10 text-amber-600",
-  equipe: "bg-teal-500/10 text-teal-600",
+  activites: "bg-[#FCEBDD] text-[#4A5160]",
+  suivi: "bg-[#ECE6FB] text-[#4A5160]",
+  cultes: "bg-[#FBE4E8] text-[#4A5160]",
+  caisse: "bg-[#DDF1E8] text-[#4A5160]",
+  rapports: "bg-[#DDF0FA] text-[#4A5160]",
+  equipe: "bg-[#EDE7FE] text-primary",
 };
 
 export default async function DepartementDetailPage({
@@ -355,7 +361,7 @@ export default async function DepartementDetailPage({
           <Card
             className={`border-none text-white ${
               solde >= 0
-                ? "bg-gradient-to-br from-primary to-[#293693]"
+                ? "bg-gradient-to-br from-primary to-[#5527D6]"
                 : "bg-gradient-to-br from-destructive to-red-800"
             }`}
           >

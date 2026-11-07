@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SwRegister } from "@/components/pwa/sw-register";
-import { titillium } from "@/lib/fonts";
+import { titillium, poppins } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: "Gestion Église",
@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Bleu de la marque (--primary), couleur de l'en-tete.
-  themeColor: "#5462CF",
+  // Violet de la marque (--primary, brief "Soft Cards"), couleur de l'en-tete.
+  themeColor: "#6C3CF0",
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr" className={titillium.variable}>
+    <html lang="fr" className={`${titillium.variable} ${poppins.variable}`}>
       <body>
         {children}
         <SwRegister />
